@@ -35,6 +35,12 @@ export async function getManifest() {
         ? `script-src \'self\' http://localhost:${port}; object-src \'self\'`
         : 'script-src \'self\'; object-src \'self\'',
     },
+    web_accessible_resources: [
+      {
+        resources: ['assets/*'],
+        matches: ['<all_urls>'],
+      },
+    ],
   }
   
   return manifest
