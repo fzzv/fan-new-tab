@@ -1,21 +1,22 @@
 <script setup lang="ts">
+import { useWebExtStorage } from '@/composables/useWebExtStorage'
 import { ref, onMounted, onUnmounted } from 'vue'
 
 interface SearchEngine {
   name: string
   url: string
-  icon?: string
+  icon: string
 }
 
 const searchQuery = ref('')
 const showEngineSettings = ref(false)
-const selectedEngine = ref<SearchEngine>({
+
+const { data: selectedEngine, dataReady: selectedEngineA } = useWebExtStorage('selectedEngine', {
   name: 'Google',
   url: 'https://www.google.com/search?q=',
   icon: '../../assets/google.jpg'
 })
-
-const searchEngines = ref<SearchEngine[]>([
+const { data: searchEngines, dataReady: searchEnginesA } = useWebExtStorage('searchEngines', [
   {
     name: 'Google',
     url: 'https://www.google.com/search?q=',
@@ -32,6 +33,7 @@ const searchEngines = ref<SearchEngine[]>([
     icon: '../../assets/baidu.png'
   }
 ])
+console.log(selectedEngine.value, selectedEngineA, searchEngines.value, searchEnginesA, '====')
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
@@ -57,19 +59,6 @@ const handleClickOutside = (event: MouseEvent) => {
 }
 
 onMounted(() => {
-  // Load saved search engines from chrome.storage
-  chrome.storage.sync.get(['searchEngines', 'selectedEngine'], (result) => {
-    if (result.searchEngines) {
-      // 确保是数组类型
-      searchEngines.value = Array.isArray(result.searchEngines) 
-        ? result.searchEngines 
-        : Object.values(result.searchEngines)
-    }
-    if (result.selectedEngine) {
-      selectedEngine.value = result.selectedEngine
-    }
-  })
-
   // 添加全局点击事件监听
   document.addEventListener('click', handleClickOutside)
 })
@@ -81,11 +70,7 @@ onUnmounted(() => {
 
 const saveSearchEngines = () => {
   // 转换为数组后再存储
-  const enginesArray = Array.from(searchEngines.value)
-  chrome.storage.sync.set({
-    searchEngines: enginesArray,
-    selectedEngine: selectedEngine.value
-  })
+  searchEngines.value = Array.from(searchEngines.value)
 }
 
 const removeSearchEngine = (index: number) => {
@@ -97,16 +82,6 @@ const removeSearchEngine = (index: number) => {
   searchEngines.value = Array.from(searchEngines.value).filter((_, i) => i !== index)
   saveSearchEngines()
 }
-
-// 监听存储变化，实现多标签页同步
-chrome.storage.onChanged.addListener((changes) => {
-  if (changes.searchEngines?.newValue) {
-    searchEngines.value = changes.searchEngines.newValue
-  }
-  if (changes.selectedEngine?.newValue) {
-    selectedEngine.value = changes.selectedEngine.newValue
-  }
-})
 
 const selectEngine = (engine: SearchEngine) => {
   selectedEngine.value = engine
