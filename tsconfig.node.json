@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-    "target": "ES2016",
+    "target": "ESNext",
     "lib": ["DOM", "ESNext"],
     "module": "ESNext",
     "baseUrl": ".",
@@ -10,8 +10,10 @@
     },
     "skipLibCheck": true,
 
-    /* node mode */
-    "moduleResolution": "node",
+    /* bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
 
