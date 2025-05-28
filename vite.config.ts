@@ -4,6 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import { r, isDev, port } from './scripts/utils'
 import packageJson from './package.json'
 import AutoImport from 'unplugin-auto-import/vite'
+import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
@@ -19,6 +20,7 @@ export default defineConfig(({ command }) => ({
   },
   plugins: [
     vue(),
+    tailwindcss(),
     AutoImport({
       imports: [
         'vue',
