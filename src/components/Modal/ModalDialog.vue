@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, computed } from 'vue'
+import { cn } from '@/lib/utils'
 
 export interface Props {
   // 层级
@@ -71,6 +72,7 @@ const isVShow = computed(() => {
 
 // 将类型转换为 any
 function bindTypeToAny($attrs: any) {
+  console.log($attrs)
   return $attrs as any
 }
 
@@ -106,8 +108,8 @@ function trapFocusDialog() {
             <div class="flex flex-1 items-center justify-center p-4">
               <div
                 ref="elDialogMain"
-                class="dialog-main rounded shadow-lg pointer-events-auto isolate bg-base border-base border-1px border-solid w-full
-                  max-h-full of-y-auto overscroll-contain touch-pan-y touch-pan-x"
+                :class="cn('dialog-main rounded shadow-lg pointer-events-auto isolate bg-white border-white border-1px border-solid w-full',
+                  'max-h-full of-y-auto overscroll-contain touch-pan-y touch-pan-x')"
                 v-bind="bindTypeToAny($attrs)"
               >
                 <slot />

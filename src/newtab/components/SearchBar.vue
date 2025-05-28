@@ -1,39 +1,11 @@
 <script setup lang="ts">
-import { useWebExtStorage } from '@/composables/useWebExtStorage'
 import { ref, onMounted, onUnmounted } from 'vue'
-
-interface SearchEngine {
-  name: string
-  url: string
-  icon: string
-}
+import { openAddEngineDialog } from '@/composables/useDialog'
+import { useEngine } from '@/composables/useEngine'
 
 const searchQuery = ref('')
 const showEngineSettings = ref(false)
-
-const { data: selectedEngine, dataReady: selectedEngineA } = useWebExtStorage('selectedEngine', {
-  name: 'Google',
-  url: 'https://www.google.com/search?q=',
-  icon: '../../assets/google.jpg'
-})
-const { data: searchEngines, dataReady: searchEnginesA } = useWebExtStorage('searchEngines', [
-  {
-    name: 'Google',
-    url: 'https://www.google.com/search?q=',
-    icon: '../../assets/google.jpg'
-  },
-  {
-    name: 'Bing',
-    url: 'https://www.bing.com/search?q=',
-    icon: '../../assets/bing.png'
-  },
-  {
-    name: 'Baidu',
-    url: 'https://www.baidu.com/s?wd=',
-    icon: '../../assets/baidu.png'
-  }
-])
-console.log(selectedEngine.value, selectedEngineA, searchEngines.value, searchEnginesA, '====')
+const { selectedEngine, searchEngines, removeSearchEngine, selectEngine } = useEngine()
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
@@ -68,25 +40,6 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-const saveSearchEngines = () => {
-  // 转换为数组后再存储
-  searchEngines.value = Array.from(searchEngines.value)
-}
-
-const removeSearchEngine = (index: number) => {
-  if (searchEngines.value.length <= 1) {
-    alert('至少保留一个搜索引擎')
-    return
-  }
-  
-  searchEngines.value = Array.from(searchEngines.value).filter((_, i) => i !== index)
-  saveSearchEngines()
-}
-
-const selectEngine = (engine: SearchEngine) => {
-  selectedEngine.value = engine
-  saveSearchEngines()
-}
 </script>
 
 <template>
@@ -127,6 +80,11 @@ const selectEngine = (engine: SearchEngine) => {
             </svg>
           </button>
         </div>
+        <!-- 添加按钮 -->
+        <div
+          class="engine-grid-item"
+          @click="openAddEngineDialog"
+        >+</div>
       </div>
     </div>
   </div>

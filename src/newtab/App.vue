@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import SearchBar from './components/SearchBar.vue'
 import bgImage from '../assets/bg.jpg'
+import ModalContainer from '@/components/Modal/ModalContainer.vue'
 
 const bgStyle = ref({
   backgroundImage: `url(${bgImage})`,
@@ -29,5 +30,6 @@ onMounted(() => {
     <div class="max-w-[1200px] mx-auto p-5 relative z-10">
       <SearchBar />
     </div>
+    <ModalContainer />
   </div>
 </template>
