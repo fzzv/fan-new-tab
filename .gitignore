@@ -14,6 +14,7 @@ dist-ssr
 
 src/auto-imports.d.ts
 extension/manifest.json
+.eslintcache
 
 # Editor directories and files
 .vscode/*

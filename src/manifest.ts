@@ -32,7 +32,7 @@ export async function getManifest() {
     content_security_policy: {
       extension_pages: isDev
         // 开发模式下，允许加载未经验证的内容脚本，以方便调试
-        ? `script-src \'self\' http://localhost:${port}; object-src \'self\'`
+        ? `script-src 'self' http://localhost:${port}; object-src 'self'`
         : 'script-src \'self\'; object-src \'self\'',
     },
     web_accessible_resources: [
