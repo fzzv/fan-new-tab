@@ -25,8 +25,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="app-container" :style="bgStyle">
-    <div class="content-container">
+  <div class="app-container pt-10 min-h-dvh w-full relative box-border" :style="bgStyle">
+    <div class="max-w-[1200px] mx-auto p-5 relative z-10">
       <SearchBar />
     </div>
   </div>
