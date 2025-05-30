@@ -30,30 +30,19 @@ const { data: searchEngines, dataReady: searchEnginesDataReady } = useWebExtStor
 ])
 
 export function useEngine() {
-  
-  const saveSearchEngines = () => {
-    // 转换为数组后再存储
-    searchEngines.value = Array.from(searchEngines.value)
-  }
-  
   const removeSearchEngine = (index: number) => {
     if (searchEngines.value.length <= 1) {
-      alert('至少保留一个搜索引擎')
       return
     }
-    
-    searchEngines.value = Array.from(searchEngines.value).filter((_, i) => i !== index)
-    saveSearchEngines()
+    searchEngines.value = searchEngines.value.filter((_, i) => i !== index)
   }
   
   const selectEngine = (engine: SearchEngine) => {
     selectedEngine.value = engine
-    saveSearchEngines()
   }
 
   const addSearchEngine = (engine: SearchEngine) => {
-    searchEngines.value.push(engine)
-    saveSearchEngines()
+    searchEngines.value = [...searchEngines.value, engine]
   }
 
   return {
@@ -61,7 +50,6 @@ export function useEngine() {
     searchEngines,
     selectedEngineDataReady,
     searchEnginesDataReady,
-    saveSearchEngines,
     removeSearchEngine,
     selectEngine,
     addSearchEngine
