@@ -22,7 +22,7 @@ defineOptions({
 
 const props = withDefaults(defineProps<Props>(), {
   zIndex: 100,
-  closeByMask: true,
+  closeByMask: false,
   useVIf: true,
   keepAlive: false,
 })
@@ -72,7 +72,6 @@ const isVShow = computed(() => {
 
 // 将类型转换为 any
 function bindTypeToAny($attrs: any) {
-  console.log($attrs)
   return $attrs as any
 }
 
