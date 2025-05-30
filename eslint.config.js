@@ -14,6 +14,7 @@ export default defineConfig([
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "off", // 允许使用 any
+      "vue/multi-word-component-names": "off", // 允许使用多个单词的组件名
     }
   },
 ]);
