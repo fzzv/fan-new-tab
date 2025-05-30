@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import { openAddEngineDialog } from '@/composables/useDialog'
 import { useEngine } from '@/composables/useEngine'
 import { Icon } from '@iconify/vue'
+import Input from '@/components/input/Input.vue'
+import Popover from '@/components/popover/Popover.vue'
+import { cn } from '@/lib/utils.ts'
 
 const searchQuery = ref('')
-const showEngineSettings = ref(false)
 const { selectedEngine, searchEngines, removeSearchEngine, selectEngine } = useEngine()
 
 const handleSearch = () => {
@@ -20,208 +22,63 @@ const handleKeyPress = (e: KeyboardEvent) => {
   }
 }
 
-const handleClickOutside = (event: MouseEvent) => {
-  const settingsPanel = document.querySelector('.engine-settings')
-  const searchBar = document.querySelector('.search-bar')
-  if (showEngineSettings.value && settingsPanel && searchBar) {
-    // 检查点击是否在设置面板外部且不是在搜索栏上
-    if (!settingsPanel.contains(event.target as Node) && !searchBar.contains(event.target as Node)) {
-      showEngineSettings.value = false
-    }
-  }
-}
-
-onMounted(() => {
-  // 添加全局点击事件监听
-  document.addEventListener('click', handleClickOutside)
-})
-
-// 组件卸载时移除事件监听
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
-
 </script>
 
 <template>
-  <div class="search-container">
-    <div class="search-bar">
-      <img
-        :src="selectedEngine.icon"
-        class="engine-icon"
-        @click="showEngineSettings = !showEngineSettings"
-      />
-      <input
+  <div class="w-full max-w-[600px] my-5 mx-auto">
+    <div>
+      <Input
         v-model="searchQuery"
         type="text"
         placeholder="输入搜索内容"
+        class="rounded-xl border-[var(--border)]"
         @keypress="handleKeyPress"
-      />
-      <button @click="handleSearch"><Icon icon="material-symbols:search-rounded" width="24" height="24" /></button>
-    </div>
-
-    <div v-if="showEngineSettings" class="engine-settings">
-      <div class="engine-grid">
-        <div
-          v-for="(engine, index) in searchEngines"
-          :key="engine.name"
-          class="engine-grid-item"
-          :class="{ active: selectedEngine.name === engine.name }"
-          @click="selectEngine(engine)"
-        >
-          <img :src="engine.icon" class="engine-icon-large" :alt="engine.name" />
-          <span class="engine-name">{{ engine.name }}</span>
-          <button
-            class="delete-btn"
-            @click.stop="removeSearchEngine(index)"
-            title="删除搜索引擎"
-          >
-            <Icon icon="material-symbols:close-small-outline-rounded" width="24" height="24" />
+      >
+        <template #prefix>
+          <Popover class="w-dvw max-w-[600px]" align="start" :alignOffset="-40" :sideOffset="40">
+            <template #trigger>
+              <img
+                :src="selectedEngine.icon"
+                class="w-6 h-6 rounded-full cursor-pointer"
+                alt="搜索引擎"
+              />
+            </template>
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-4 p-2">
+              <div
+                v-for="(engine, index) in searchEngines"
+                :key="engine.name"
+                :class="cn(' relative flex flex-col items-center justify-center aspect-square p-3 rounded-xl',
+                 'cursor-pointer transition-all duration-200 ease-in-out border-2 border-secondary hover:-translate-y-0.5',
+                  { 'border-2 border-primary': selectedEngine.name === engine.name }
+                )"
+                @click="selectEngine(engine)"
+              >
+                <img class="w-5 h-5 mb-2" :src="engine.icon" :alt="engine.name" />
+                <span class="text-xs text-secondary text-center overflow-hidden text-ellipsis whitespace-nowrap w-full">{{ engine.name }}</span>
+                <button
+                  class="absolute top-1 right-1 w-5 h-5 rounded-full cursor-pointer flex items-center justify-center"
+                  @click.stop="removeSearchEngine(index)"
+                  title="删除搜索引擎"
+                >
+                  <Icon icon="material-symbols:close-small-outline-rounded" width="24" height="24" />
+                </button>
+              </div>
+              <!-- 添加按钮 -->
+              <div
+                class="flex flex-col items-center justify-center aspect-square p-3 rounded-xl cursor-pointer transition-all duration-200 ease-in-out border-2 border-secondary hover:-translate-y-0.5"
+                @click="openAddEngineDialog"
+              >
+                <Icon class="text-secondary" icon="material-symbols:add-2-rounded" width="24" height="24" />
+              </div>
+            </div>
+          </Popover>
+        </template>
+        <template #suffix>
+          <button @click="handleSearch" class="cursor-pointer">
+            <Icon icon="material-symbols:search-rounded" width="24" height="24" />
           </button>
-        </div>
-        <!-- 添加按钮 -->
-        <div
-          class="engine-grid-item"
-          @click="openAddEngineDialog"
-        >
-          <Icon icon="material-symbols:add-2-rounded" width="24" height="24" />
-        </div>
-      </div>
+        </template>
+      </Input>
     </div>
   </div>
 </template>
-
-<style scoped>
-.search-container {
-  position: relative;
-  width: 100%;
-  max-width: 600px;
-  margin: 20px auto;
-}
-
-.search-bar {
-  display: flex;
-  align-items: center;
-  background: white;
-  border-radius: 24px;
-  padding: 8px 16px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.search-bar input {
-  flex: 1;
-  border: none;
-  outline: none;
-  padding: 8px;
-  font-size: 16px;
-  margin: 0 8px;
-}
-
-.search-bar button {
-  color: #4285f4;
-  padding: 8px;
-  cursor: pointer;
-}
-
-.engine-icon {
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-}
-
-.engine-settings {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 16px;
-  margin-top: 8px;
-  z-index: 1000;
-}
-
-.engine-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 16px;
-  padding: 8px;
-}
-
-.engine-grid-item {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 1;
-  padding: 12px;
-  border-radius: 12px;
-  background: #f8f9fa;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 2px solid transparent;
-}
-
-.engine-grid-item:hover {
-  background: #f0f2f5;
-  transform: translateY(-2px);
-}
-
-.engine-grid-item.active {
-  background: #e8f0fe;
-  border: 2px solid #4285f4;
-}
-
-.engine-icon-large {
-  width: 32px;
-  height: 32px;
-  margin-bottom: 8px;
-}
-
-.engine-name {
-  font-size: 12px;
-  color: #333;
-  text-align: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  width: 100%;
-}
-
-.delete-btn {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 20px;
-  height: 20px;
-  padding: 2px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(220, 53, 69, 0.1);
-  color: #dc3545;
-  cursor: pointer;
-  opacity: 0;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.engine-grid-item:hover .delete-btn {
-  opacity: 1;
-}
-
-.delete-btn:hover {
-  background: #dc3545;
-  color: white;
-  transform: scale(1.1);
-}
-
-.delete-icon {
-  width: 16px;
-  height: 16px;
-  fill: currentColor;
-}
-</style> 
