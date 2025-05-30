@@ -20,7 +20,7 @@ async function toggleDark() {
 </script>
 
 <template>
-  <div class="app-container pt-10 min-h-dvh w-full relative box-border bg-(image:--background-image) bg-cover bg-center bg-no-repeat">
+  <div class="app-container pt-10 min-h-dvh w-full relative box-border bg-image">
     <button @click="toggleDark" class="absolute top-0 left-0 bg-yellow-700 dark:bg-gray-700 rounded">
       切换主题
     </button>
