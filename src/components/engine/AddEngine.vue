@@ -1,17 +1,33 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { useEngine } from '@/composables/useEngine'
 import { closeAddEngineDialog } from '@/composables/useDialog'
+import { isValidDomain, getFavicon, generateAvatar } from "@/lib/utils"
 
 const engineName = ref('')
 const engineUrl = ref('')
+const engineIcon = ref('')
 const { addSearchEngine } = useEngine()
+
+const avatar = ref('')
+const activeIcon = ref(avatar.value)
+
+watch(engineUrl, (newValue) => {
+  if (newValue && isValidDomain(newValue)) {
+    engineIcon.value = getFavicon(newValue)
+  }
+})
+
+watch(engineName, (newValue) => {
+  avatar.value = generateAvatar(newValue)
+}, { immediate: true })
 
 const handleAddEngine = () => {
   if (engineName.value && engineUrl.value) {
     addSearchEngine({
       name: engineName.value,
       url: engineUrl.value,
-      icon: 'https://www.google.com/favicon.ico'
+      icon: activeIcon.value
     })
     closeAddEngineDialog()
   }
@@ -51,6 +67,24 @@ const handleAddEngine = () => {
         class="outline-none bg-transparent w-full max-w-50"
       />
     </div>
+    <div class="flex items-center w-full">
+      <span>图标：</span>
+      <img
+        :src="avatar"
+        class="w-10 h-10"
+        :class="{ active: activeIcon === avatar}"
+        alt="favicon"
+        @click="activeIcon = avatar"
+      />
+      <img
+        v-if="engineIcon"
+        :src="engineIcon"
+        class="w-10 h-10"
+        :class="{ active: activeIcon === engineIcon}"
+        alt="favicon"
+        @click="activeIcon = engineIcon"
+      />
+    </div>
     <button
       class="bg-primary-light text-white px-5 py-2 rounded bg-amber-600"
       @click="handleAddEngine"
@@ -59,3 +93,10 @@ const handleAddEngine = () => {
     </button>
   </form>
 </template>
+
+<style scoped>
+.active {
+  border: 2px solid #E17100;
+  border-radius: 50%;
+}
+</style>
