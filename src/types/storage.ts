@@ -60,6 +60,21 @@ export interface StorageOptions<T> {
    */
   shallow?: boolean;
   /**
+   * 读取数据时是否立即更新
+   */
+  immediate?: boolean;
+  /**
+   * 深度监听 递归监听对象内部值的变化
+   */
+  deep?: boolean | number;
+  /**
+   * 回调刷新时机
+   * pre: 更新前
+   * post: 更新后
+   * sync: 同步更新
+   */
+  flush?: 'pre' | 'post' | 'sync';
+  /**
    * 初始化数据
    */
   writeDefaults?: boolean;

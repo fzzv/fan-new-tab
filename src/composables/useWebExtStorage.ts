@@ -37,9 +37,11 @@ function guessSerializerType(initData: unknown) {
 export function useWebExtStorage<T>(key: string, defaultValue: MaybeRefOrGetter<T>, options: StorageOptions<T> = {}) {
   const {
     area = 'local',
+    flush = 'pre',
     shallow = false,
+    deep = true,
     writeDefaults = true,
-    mergeDefaults = true,
+    mergeDefaults = false,
     listenToStorageChanges = true,
     onError = (error: unknown) => {
       console.log(error)
@@ -102,8 +104,11 @@ export function useWebExtStorage<T>(key: string, defaultValue: MaybeRefOrGetter<
     read().then(() => resolve(data.value)).catch(reject)
   })
 
+  const { pause, resume } = watch(data, write, { deep, flush })
+
   // 写入 data 到 storage
   async function write() {
+    pause()
     try {
       await (
         data.value == null
@@ -114,9 +119,10 @@ export function useWebExtStorage<T>(key: string, defaultValue: MaybeRefOrGetter<
     catch (error) {
       onError(error)
     }
+    finally {
+      resume()
+    }
   }
-
-  const { pause, resume } = watch(data, write, { deep: true })
 
   // 监听 storage 变化，自动同步到 data
   if (listenToStorageChanges) {
@@ -129,6 +135,9 @@ export function useWebExtStorage<T>(key: string, defaultValue: MaybeRefOrGetter<
             newValue: change.newValue as string | null,
           })
         }
+      }
+      catch (error) {
+        onError(error)
       }
       finally {
         resume()
