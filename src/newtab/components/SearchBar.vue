@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { openAddEngineDialog } from '@/composables/useDialog'
 import { useEngine } from '@/composables/useEngine'
+import { Icon } from '@iconify/vue'
 
 const searchQuery = ref('')
 const showEngineSettings = ref(false)
@@ -56,7 +57,7 @@ onUnmounted(() => {
         placeholder="输入搜索内容"
         @keypress="handleKeyPress"
       />
-      <button @click="handleSearch">搜索</button>
+      <button @click="handleSearch"><Icon icon="material-symbols:search-rounded" width="24" height="24" /></button>
     </div>
 
     <div v-if="showEngineSettings" class="engine-settings">
@@ -75,16 +76,16 @@ onUnmounted(() => {
             @click.stop="removeSearchEngine(index)"
             title="删除搜索引擎"
           >
-            <svg viewBox="0 0 24 24" class="delete-icon">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-            </svg>
+            <Icon icon="material-symbols:close-small-outline-rounded" width="24" height="24" />
           </button>
         </div>
         <!-- 添加按钮 -->
         <div
           class="engine-grid-item"
           @click="openAddEngineDialog"
-        >+</div>
+        >
+          <Icon icon="material-symbols:add-2-rounded" width="24" height="24" />
+        </div>
       </div>
     </div>
   </div>
@@ -117,11 +118,8 @@ onUnmounted(() => {
 }
 
 .search-bar button {
-  background: #4285f4;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 20px;
+  color: #4285f4;
+  padding: 8px;
   cursor: pointer;
 }
 
@@ -163,6 +161,7 @@ onUnmounted(() => {
   background: #f8f9fa;
   cursor: pointer;
   transition: all 0.2s ease;
+  border: 2px solid transparent;
 }
 
 .engine-grid-item:hover {
