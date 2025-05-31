@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, nextTick, computed } from 'vue'
 import { cn } from '@/lib/utils'
-
 export interface Props {
   // 层级
   zIndex?: number
@@ -96,18 +95,17 @@ function trapFocusDialog() {
       >
         <!-- 样式' scrollbar-hide overscroll-none overflow-y-scroll '和' h="[calc(100%+0.5px)]" '用于实现滚动锁定 -->
         <!-- 蒙层 -->
-        <!-- TODO: getPreferences -->
         <div
           class="dialog-mask absolute inset-0 z-0 bg-transparent opacity-100 backdrop-filter touch-none"
         >
           <!-- 蒙层 -->
-          <div class="dialog-mask absolute inset-0 z-0 bg-black opacity-48 touch-none h=[calc(100%+0.5px)]" @click="clickMask" />
+          <div class="dialog-mask absolute inset-0 z-0 bg-black opacity-60 touch-none h=[calc(100%+0.5px)]" @click="clickMask" />
           <!-- 弹窗内容 -->
-          <div class="p-safe-area absolute inset-0 z-1 pointer-events-none opacity-100 flex">
+          <div class="absolute inset-0 z-1 pointer-events-none opacity-100 flex">
             <div class="flex flex-1 items-center justify-center p-4">
               <div
                 ref="elDialogMain"
-                :class="cn('dialog-main rounded shadow-lg pointer-events-auto isolate bg-white border-white border-1px border-solid w-full',
+                :class="cn('dialog-main pointer-events-auto isolate w-full',
                   'max-h-full of-y-auto overscroll-contain touch-pan-y touch-pan-x')"
                 v-bind="bindTypeToAny($attrs)"
               >
@@ -148,12 +146,5 @@ function trapFocusDialog() {
 .dialog-visible-leave-to .dialog-main {
   transform: translateY(50px);
   opacity: 0;
-}
-
-.p-safe-area {
-  padding-top: env(safe-area-inset-top);
-  padding-right: env(safe-area-inset-right);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
 }
 </style>
