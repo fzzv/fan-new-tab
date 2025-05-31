@@ -57,10 +57,8 @@ export function generateAvatar(name: string, size = 64): string {
   const ctx = canvas.getContext('2d')!
   const initials = (name[0] || '?').toUpperCase()
 
-  // 随机背景颜色（也可以使用哈希映射生成固定颜色）
-  const bgColor = '#000'
-  const textColor = '#FFFFFF'
-
+  const bgColor = getCssVar('border') || '#000'
+  const textColor = getCssVar('background') || '#FFFFFF'
   // 背景
   ctx.fillStyle = bgColor
   ctx.beginPath()
@@ -75,4 +73,9 @@ export function generateAvatar(name: string, size = 64): string {
   ctx.fillText(initials, size / 2, size / 2)
 
   return canvas.toDataURL('image/png')
+}
+
+// 获取CSS变量值
+export function getCssVar(name: string) {
+  return getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim()
 }
