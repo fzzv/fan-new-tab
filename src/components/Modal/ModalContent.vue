@@ -36,7 +36,7 @@ const dialogVariants = cva(
   },
 );
 
-const props = defineProps<{
+defineProps<{
   size?: 'auto' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | 'screen'
 }>()
 </script>

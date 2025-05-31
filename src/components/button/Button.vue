@@ -29,7 +29,7 @@ const buttonVariants = cva(
   },
 );
 
-const props = defineProps<{
+defineProps<{
   variant?: "default" | "secondary" | "outline" | "link";
   size?: "sm" | "md" | "lg" | "icon";
 }>();
