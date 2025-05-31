@@ -33,7 +33,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
       @keypress="handleKeyPress"
     >
       <template #prefix>
-        <Popover class="w-dvw max-w-[600px]" align="start" :alignOffset="-40" :sideOffset="40">
+        <Popover class="w-dvw max-w-[600px]" align="start" :alignOffset="-50" :sideOffset="45">
           <template #trigger>
             <img
               :src="selectedEngine.icon"
