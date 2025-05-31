@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import SearchBar from './components/SearchBar.vue'
 import ModalContainer from '@/components/modal/ModalContainer.vue'
 import { theme } from '@/composables/useTheme'
+import { Icon } from '@iconify/vue'
 
 onMounted(() => {
   // 设置主题模式
@@ -20,11 +21,12 @@ async function toggleDark() {
 </script>
 
 <template>
-  <div class="app-container pt-10 min-h-dvh w-full relative box-border bg-image">
-    <button @click="toggleDark" class="absolute top-0 left-0 bg-yellow-700 dark:bg-gray-700 rounded">
-      切换主题
+  <div class="app-container pt-10 min-h-dvh w-full relative box-border bg-background">
+    <button @click="toggleDark" class="absolute top-5 right-5 cursor-pointer">
+      <Icon v-if="isDark" class="text-border" icon="material-symbols:sunny-outline-rounded" width="24" height="24" />
+      <Icon v-else class="text-border" icon="material-symbols:moon-stars-outline-rounded" width="24" height="24" />
     </button>
-    <div class="max-w-[1200px] mx-auto p-5 relative z-10">
+    <div class="max-w-[1200px] mx-auto p-20 relative z-10">
       <SearchBar />
     </div>
     <ModalContainer />
