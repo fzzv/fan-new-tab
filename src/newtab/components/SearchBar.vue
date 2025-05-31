@@ -16,7 +16,7 @@ const handleSearch = () => {
   }
 }
 
-const handleKeyPress = (e: KeyboardEvent) => {
+const handleKeyDown = (e: KeyboardEvent) => {
   if (e.key === 'Enter') {
     handleSearch()
   }
@@ -30,7 +30,7 @@ const handleKeyPress = (e: KeyboardEvent) => {
       v-model="searchQuery"
       placeholder="输入搜索内容"
       class="rounded-xl py-4"
-      @keypress="handleKeyPress"
+      @keydown="handleKeyDown"
     >
       <template #prefix>
         <Popover class="w-dvw max-w-[600px]" align="start" :alignOffset="-50" :sideOffset="45">

@@ -17,6 +17,10 @@ const props = withDefaults(defineProps<InputProps>(), {
 })
 
 const modelValue = defineModel()
+
+const emit = defineEmits<{
+  (e: 'keydown', event: KeyboardEvent): void
+}>()
 </script>
 
 <template>
@@ -39,6 +43,7 @@ const modelValue = defineModel()
       :autocomplete="props.autocomplete"
       class="flex-1 px-2 text-base focus:outline-none bg-transparent text-foreground placeholder:text-muted-foreground"
       v-bind="$attrs"
+      @keydown="emit('keydown', $event)"
     />
     <slot name="suffix" />
   </div>
