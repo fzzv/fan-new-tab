@@ -4,6 +4,14 @@ import { tabs } from 'webextension-polyfill'
 import Label from '@/components/label/Label.vue'
 import Input from '@/components/input/Input.vue'
 import Button from '@/components/button/Button.vue'
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectPortal,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+} from '@/components/select'
 import { urlToBase64 } from '@/lib'
 
 // 网站名称
@@ -48,13 +56,20 @@ function handleStar() {
       <Label for="siteName" class="w-[70px] text-right font-bold text-base">
         收藏夹
       </Label>
-      <Input
-        v-model="folder"
-        id="siteName"
-        type="text"
-        placeholder="网站名称"
-        class="flex-1"
-      />
+      <SelectRoot v-model="folder" class="flex-1" id="siteName">
+        <SelectTrigger placeholder="请选择收藏夹" class="flex-1 text-base" />
+        <SelectPortal>
+          <SelectContent class="max-h-[100px] overflow-y-auto">
+            <SelectGroup class="text-base">
+              <SelectItem :value="1">1</SelectItem>
+              <SelectItem :value="2">2</SelectItem>
+              <SelectItem :value="3">3</SelectItem>
+              <SelectItem :value="4">4</SelectItem>
+              <SelectItem :value="5">5</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </SelectPortal>
+      </SelectRoot>
     </div>
     <div class="flex items-center gap-[15px]">
       <Label for="siteName" class="w-[70px] text-right font-bold text-base">
