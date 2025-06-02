@@ -1,8 +1,8 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
 /**
@@ -21,10 +21,10 @@ export function isValidDomain(input: string): boolean {
 // 国内或国外的图标获取接口
 export const FaviconServices = {
   google: (domain: string, size = 32) =>
-      `https://www.google.com/s2/favicons?sz=${size}&domain=${domain}`,
+    `https://www.google.com/s2/favicons?sz=${size}&domain=${domain}`,
 
   duckduckgo: (domain: string) =>
-      `https://icons.duckduckgo.com/ip3/${domain}.ico`,
+    `https://icons.duckduckgo.com/ip3/${domain}.ico`,
 }
 
 /**
@@ -32,9 +32,14 @@ export const FaviconServices = {
  * @param domain
  * @param service
  */
-export function getFavicon(domain: string, service: keyof typeof FaviconServices = 'duckduckgo'): string {
+export function getFavicon(
+  domain: string,
+  service: keyof typeof FaviconServices = 'duckduckgo',
+): string {
   try {
-    const url = new URL(domain.startsWith('http') ? domain : `https://${domain}`)
+    const url = new URL(
+      domain.startsWith('http') ? domain : `https://${domain}`,
+    )
     const hostname = url.hostname
     return FaviconServices[service](hostname)
   } catch (error) {
@@ -77,5 +82,29 @@ export function generateAvatar(name: string, size = 64): string {
 
 // 获取CSS变量值
 export function getCssVar(name: string) {
-  return getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim()
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue(`--${name}`)
+    .trim()
+}
+
+/**
+ * 将URL转为Base64
+ * @param url
+ */
+export async function urlToBase64(url: string): Promise<string> {
+  const response = await fetch(url)
+  const blob = await response.blob()
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result)
+      } else {
+        reject(new Error('Failed to convert image to base64'))
+      }
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
 }
