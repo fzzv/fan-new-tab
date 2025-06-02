@@ -1,0 +1,6 @@
+# Ignore artifacts:
+dist
+build
+src/auto-imports.d.ts
+extension/manifest.json
+.eslintcache
