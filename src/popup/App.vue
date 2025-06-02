@@ -1,25 +1,9 @@
 <script setup lang="ts">
+import StarTab from '@/popup/components/StarTab.vue'
 </script>
 
 <template>
-  <div>
-    <a href="https://react.dev" target="_blank">
-      <img src="../assets/react.png" class="logo" alt="React logo" />
-    </a>
+  <div class="px-5 py-5 bg-background">
+    <StarTab />
   </div>
 </template>
-
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
