@@ -2,9 +2,12 @@
 import { toRef } from 'vue'
 import { usePopper } from '@/composables/usePopper.ts'
 import { onClickOutside } from '@/lib'
+import { Icon } from '@iconify/vue'
+import ContextMenuItem from './ContextMenuItem.vue'
 import type { Ref, PropType } from 'vue'
 import type { VirtualElement } from '@popperjs/core'
 import type { PopperOptions } from '@/composables/usePopper.ts'
+import type { MenuItemType } from '@/types'
 
 const props = defineProps({
   virtualElement: {
@@ -19,9 +22,11 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  items: {
+    type: Array as PropType<MenuItemType[]>,
+    default: () => [],
+  },
 })
-
-defineEmits(['close'])
 
 const isOpen = defineModel<boolean>({ required: true })
 
@@ -32,22 +37,21 @@ const [, container] = usePopper(props.popper, virtualElement)
 onClickOutside(container, () => {
   isOpen.value = false
 })
-
-// 合并默认UI 前者覆盖后者
-// const ui = defu(props.ui, CONTEXTMENU_UI)
 </script>
 
 <template>
-  <div
-    v-if="isOpen"
-    ref="container"
-    class="bg-white border-2 shadow-md absolute top-2 min-w-20 z-20"
-    v-bind="$attrs"
-  >
+  <div v-if="isOpen" ref="container" class="bg-white border-2 shadow-md absolute top-2 min-w-20 z-20" v-bind="$attrs">
     <Transition name="menu" appear v-bind="ui.transition">
       <div>
-        <!-- <div :class="[ui.base, ui.ring, ui.shadow, ui.background]"> -->
-        <div class="focus:outline-none relative">
+        <div v-if="items.length" class="focus:outline-none relative">
+          <ContextMenuItem v-for="(item, index) in items" :key="`item-${index}`" @click="item.click">
+            <template v-if="item.icon">
+              <Icon :icon="item.icon" class="w-5 h-5 mr-2" />
+              <span class="text-black">{{ item.label }}</span>
+            </template>
+          </ContextMenuItem>
+        </div>
+        <div v-else class="focus:outline-none relative">
           <slot />
         </div>
       </div>
@@ -55,7 +59,7 @@ onClickOutside(container, () => {
   </div>
 </template>
 
-<style lang="postcss" scoped>
+<style scoped>
 .menu-enter-active {
   transition: all 0.2s ease-out;
 }

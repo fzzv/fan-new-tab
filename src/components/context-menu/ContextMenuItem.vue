@@ -8,7 +8,6 @@ import { cn } from '@/lib'
       cn(
         'relative text-black flex cursor-default select-none items-center rounded-xs px-2 py-1.5 text-sm',
         'outline-hidden transition-colors hover:bg-primary focus:bg-primary data-disabled:pointer-events-none data-disabled:opacity-50',
-        $attrs.class,
       )
     "
     v-bind="$attrs"
