@@ -22,24 +22,10 @@ async function toggleDark() {
 </script>
 
 <template>
-  <div
-    class="app-container pt-10 min-h-dvh w-full relative box-border bg-background text-base"
-  >
+  <div class="app-container pt-10 min-h-dvh w-full relative box-border bg-background text-base">
     <button @click="toggleDark" class="absolute top-5 right-5 cursor-pointer">
-      <Icon
-        v-if="isDark"
-        class="text-border"
-        icon="material-symbols:sunny-outline-rounded"
-        width="24"
-        height="24"
-      />
-      <Icon
-        v-else
-        class="text-border"
-        icon="material-symbols:moon-stars-outline-rounded"
-        width="24"
-        height="24"
-      />
+      <Icon v-if="isDark" class="text-border" icon="material-symbols:sunny-outline-rounded" width="24" height="24" />
+      <Icon v-else class="text-border" icon="material-symbols:moon-stars-outline-rounded" width="24" height="24" />
     </button>
     <div class="max-w-[1200px] mx-auto p-20 pb-10 relative z-10">
       <SearchBar />
