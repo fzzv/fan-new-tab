@@ -3,16 +3,10 @@ import { TabsRoot, TabsList, TabsTrigger, TabsContent } from './index'
 import { Icon } from '@iconify/vue'
 import { cn } from '@/lib/utils'
 import { useContextMenu } from '@/composables/useContextMenu.ts'
-import ContextMenu from '@/components/context-menu/ContextMenu.vue'
+import { ContextMenu } from '@/components/context-menu'
 import type { Placement } from '@popperjs/core'
-import type { MenuItemType } from '@/types'
-
-interface TabItem {
-  label: string
-  value: string
-  icon?: string
-  activeIcon?: string
-}
+import type { MenuItemType } from '@/components/context-menu'
+import type { TabItem } from './index'
 
 interface TabsProps {
   asChild?: boolean

@@ -3,11 +3,11 @@ import { toRef } from 'vue'
 import { usePopper } from '@/composables/usePopper.ts'
 import { onClickOutside } from '@/lib'
 import { Icon } from '@iconify/vue'
-import ContextMenuItem from './ContextMenuItem.vue'
+import { ContextMenuItem } from './index'
 import type { Ref, PropType } from 'vue'
 import type { VirtualElement } from '@popperjs/core'
 import type { PopperOptions } from '@/composables/usePopper.ts'
-import type { MenuItemType } from '@/types'
+import type { MenuItemType } from './index'
 
 const props = defineProps({
   virtualElement: {
