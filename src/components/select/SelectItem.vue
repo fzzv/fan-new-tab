@@ -2,9 +2,10 @@
 import { SelectItem, SelectItemIndicator, SelectItemText } from 'reka-ui'
 import { Icon } from '@iconify/vue'
 import { cn } from '@/lib/utils'
+import type { AcceptableValue } from 'reka-ui'
 
 interface ItemProps {
-  value: string
+  value: AcceptableValue
   disabled?: boolean
   icon?: string
 }
