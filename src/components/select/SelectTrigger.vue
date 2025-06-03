@@ -20,7 +20,7 @@ withDefaults(
     :class="
       cn(
         'flex h-10 min-w-40 items-center shadow-md justify-between border-2 border-input',
-        'border-black bg-transparent px-4 py-2 ring-offset-background placeholder:text-muted-foreground',
+        'border-black bg-transparent px-4 py-2 ring-offset-background data-placeholder:text-muted-foreground',
         'focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
       )
     "
