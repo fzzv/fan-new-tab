@@ -3,24 +3,28 @@ import { SelectItem, SelectItemIndicator, SelectItemText } from 'reka-ui'
 import { Icon } from '@iconify/vue'
 import { cn } from '@/lib/utils'
 
-withDefaults(
-  defineProps<{
-    icon?: string
-  }>(),
-  {
-    icon: 'radix-icons:check',
-  },
-)
+interface ItemProps {
+  value: string
+  disabled?: boolean
+  icon?: string
+}
+withDefaults(defineProps<ItemProps>(), {
+  value: '',
+  disabled: false,
+  icon: 'radix-icons:check',
+})
 </script>
 
 <template>
   <SelectItem
     :class="
       cn(
-        'relative flex w-full cursor-default select-none items-center py-1.5 px-2',
+        'relative flex w-full cursor-default select-none items-center py-1.5 px-4',
         'outline-hidden hover:bg-primary data-disabled:pointer-events-none data-disabled:opacity-50',
       )
     "
+    :disabled="disabled"
+    :value="value"
     v-bind="$attrs"
   >
     <SelectItemText>
