@@ -25,10 +25,15 @@ const emit = defineEmits<{
 
 <template>
   <div
-    :class="cn('flex px-4 py-2 items-center border-2 border-secondary shadow-md transition focus-within:shadow-xs focus-within:border-secondary',
-      { 'border-destructive text-destructive shadow-xs': $attrs['aria-invalid'] },
-      $props.class,
-    )"
+    :class="
+      cn(
+        'flex px-6 py-2 items-center text-base border-2 border-secondary shadow-md transition focus-within:shadow-xs focus-within:border-secondary',
+        {
+          'border-destructive text-destructive shadow-xs': $attrs['aria-invalid'],
+        },
+        $props.class,
+      )
+    "
   >
     <slot name="prefix" />
     <input
@@ -41,7 +46,7 @@ const emit = defineEmits<{
       :spellcheck="props.spellcheck"
       :autocorrect="props.autocorrect"
       :autocomplete="props.autocomplete"
-      class="flex-1 px-2 text-base focus:outline-none bg-transparent text-foreground placeholder:text-muted-foreground"
+      class="flex-1 focus:outline-none bg-transparent text-foreground placeholder:text-muted-foreground"
       v-bind="$attrs"
       @keydown="emit('keydown', $event)"
     />
