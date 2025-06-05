@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 
 interface InputProps extends /* @vue-ignore */ InputHTMLAttributes {
   class?: string
+  invalid?: boolean
 }
 
 const props = withDefaults(defineProps<InputProps>(), {
@@ -14,6 +15,7 @@ const props = withDefaults(defineProps<InputProps>(), {
   spellcheck: 'false',
   autocorrect: 'off',
   autocomplete: 'off',
+  invalid: false,
 })
 
 const modelValue = defineModel()
@@ -29,7 +31,7 @@ const emit = defineEmits<{
       cn(
         'flex px-6 py-2 items-center text-base border-2 border-secondary shadow-md transition focus-within:shadow-xs focus-within:border-secondary',
         {
-          'border-destructive text-destructive shadow-xs': $attrs['aria-invalid'],
+          'border-destructive text-destructive shadow-xs shadow-destructive focus-within:border-destructive': invalid,
         },
         $props.class,
       )
@@ -46,7 +48,11 @@ const emit = defineEmits<{
       :spellcheck="props.spellcheck"
       :autocorrect="props.autocorrect"
       :autocomplete="props.autocomplete"
-      class="flex-1 focus:outline-none bg-transparent text-foreground placeholder:text-muted-foreground"
+      :class="
+        cn('flex-1 focus:outline-none bg-transparent text-foreground placeholder:text-muted-foreground', {
+          'placeholder:text-destructive': invalid,
+        })
+      "
       v-bind="$attrs"
       @keydown="emit('keydown', $event)"
     />
