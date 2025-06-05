@@ -26,6 +26,10 @@ const props = defineProps({
     type: Array as PropType<MenuItemType[]>,
     default: () => [],
   },
+  currentItem: {
+    type: Object as PropType<MenuItemType>,
+    default: () => ({}),
+  },
 })
 
 const isOpen = defineModel<boolean>({ required: true })
@@ -37,6 +41,11 @@ const [, container] = usePopper(props.popper, virtualElement)
 onClickOutside(container, () => {
   isOpen.value = false
 })
+
+const handleClick = (item?: MenuItemType) => {
+  item?.click?.(props.currentItem)
+  isOpen.value = false
+}
 </script>
 
 <template>
@@ -44,7 +53,7 @@ onClickOutside(container, () => {
     <Transition name="menu" appear v-bind="ui.transition">
       <div>
         <div v-if="items.length" class="focus:outline-none relative">
-          <ContextMenuItem v-for="(item, index) in items" :key="`item-${index}`" @click="item.click">
+          <ContextMenuItem v-for="(item, index) in items" :key="`item-${index}`" @click="handleClick(item)">
             <template v-if="item.icon">
               <Icon :icon="item.icon" class="w-5 h-5 mr-2" />
               <span class="text-black">{{ item.label }}</span>

@@ -25,7 +25,7 @@ withDefaults(defineProps<TabsProps>(), {
 const modelValue = defineModel<string>('modelValue', { required: true })
 
 // 右击菜单
-const { isOpen, virtualElement, onContextMenu } = useContextMenu()
+const { isOpen, virtualElement, currentItem, onContextMenu } = useContextMenu()
 </script>
 
 <template>
@@ -36,7 +36,7 @@ const { isOpen, virtualElement, onContextMenu } = useContextMenu()
         :key="tab.value"
         :value="tab.value"
         :class="cn('flex items-center gap-2 px-4 py-1 border-border text-secondary')"
-        @contextmenu.prevent="onContextMenu"
+        @contextmenu.prevent="onContextMenu(tab)"
       >
         <Icon
           v-if="tab.value === modelValue"
@@ -58,5 +58,6 @@ const { isOpen, virtualElement, onContextMenu } = useContextMenu()
     :virtual-element="virtualElement"
     :popper="{ placement: popperPlacement }"
     :items="items"
+    :current-item="currentItem"
   />
 </template>

@@ -9,7 +9,9 @@ export function useContextMenu() {
   const isOpen = ref(false)
   const virtualElement = ref({ getBoundingClientRect: () => ({}) })
 
-  function onContextMenu() {
+  const currentItem = ref<any>(null)
+
+  function onContextMenu(item?: any) {
     const top = unref(y) - unref(windowY)
     const left = unref(x)
 
@@ -23,10 +25,12 @@ export function useContextMenu() {
     }
 
     isOpen.value = true
+    currentItem.value = item
   }
 
   return {
     isOpen,
+    currentItem,
     virtualElement,
     onContextMenu,
   }

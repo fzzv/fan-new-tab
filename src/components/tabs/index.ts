@@ -5,6 +5,7 @@ import TabsContent from './TabsContent.vue'
 import Tabs from './Tabs.vue'
 
 export interface TabItem {
+  id?: string
   label: string
   value: string
   icon?: string
