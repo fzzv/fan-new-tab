@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import SearchBar from './components/SearchBar.vue'
 import ModalContainer from '@/components/modal/ModalContainer.vue'
+import Button from '@/components/button/Button.vue'
 import { theme } from '@/composables/useTheme'
 import { Icon } from '@iconify/vue'
 import Bookmarks from './components/Bookmarks.vue'
@@ -23,10 +24,10 @@ async function toggleDark() {
 
 <template>
   <div class="app-container pt-10 min-h-dvh w-full relative box-border bg-background text-base">
-    <button @click="toggleDark" class="absolute top-5 right-5 cursor-pointer">
-      <Icon v-if="isDark" class="text-border" icon="material-symbols:sunny-outline-rounded" width="24" height="24" />
-      <Icon v-else class="text-border" icon="material-symbols:moon-stars-outline-rounded" width="24" height="24" />
-    </button>
+    <Button size="icon" @click="toggleDark" class="absolute top-5 right-5 cursor-pointer z-20">
+      <Icon v-if="isDark" icon="material-symbols:sunny-outline-rounded" width="24" height="24" />
+      <Icon v-else icon="material-symbols:moon-stars-outline-rounded" width="24" height="24" />
+    </Button>
     <div class="max-w-[1200px] mx-auto p-20 pb-10 relative z-10">
       <SearchBar />
     </div>
