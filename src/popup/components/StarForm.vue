@@ -1,16 +1,21 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { v4 as uuidV4 } from 'uuid'
 import { tabs } from 'webextension-polyfill'
 import Label from '@/components/label/Label.vue'
 import Input from '@/components/input/Input.vue'
 import Button from '@/components/button/Button.vue'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/avatar'
 import { SelectRoot, SelectTrigger, SelectPortal, SelectContent, SelectGroup, SelectItem } from '@/components/select'
-import { urlToBase64 } from '@/lib'
+import { urlToBase64, getCurrentTabUrl } from '@/lib'
+import { useFavorite } from '@/composables/useFavorite.ts'
+import { useSite } from '@/composables/useSite.ts'
+import { useWebExtStorage } from '@/composables/useWebExtStorage.ts'
 
 // 网站名称
 const siteName = ref('')
-// 收藏夹
-const folder = ref('')
+// 收藏夹 记录上次选择的收藏夹
+const { data: folder } = useWebExtStorage('folder', '')
 // 网站图标
 const favIcon = ref('')
 
@@ -26,9 +31,20 @@ onMounted(() => {
   })
 })
 
-function handleStar() {
+const { addSite } = useSite()
+
+async function handleStar() {
+  addSite({
+    id: uuidV4(),
+    title: siteName.value,
+    imageUrl: favIcon.value,
+    url: await getCurrentTabUrl(),
+    favoriteId: folder.value,
+  })
   window.close()
 }
+
+const { favorites } = useFavorite()
 </script>
 
 <template>
@@ -44,17 +60,9 @@ function handleStar() {
         <SelectPortal>
           <SelectContent class="max-h-[120px] w-[300px] overflow-y-auto">
             <SelectGroup class="text-sm">
-              <SelectItem :value="1">1</SelectItem>
-              <SelectItem :value="2">2</SelectItem>
-              <SelectItem :value="3">3</SelectItem>
-              <SelectItem :value="4">4</SelectItem>
-              <SelectItem :value="5">5</SelectItem>
-              <SelectItem :value="12">5</SelectItem>
-              <SelectItem :value="13">5</SelectItem>
-              <SelectItem :value="123">5</SelectItem>
-              <SelectItem :value="32">5</SelectItem>
-              <SelectItem :value="1243">5</SelectItem>
-              <SelectItem :value="14">5</SelectItem>
+              <SelectItem v-for="favorite in favorites" :key="favorite.value" :value="favorite.value">
+                {{ favorite.label }}
+              </SelectItem>
             </SelectGroup>
           </SelectContent>
         </SelectPortal>
@@ -63,7 +71,10 @@ function handleStar() {
     <div class="flex items-center gap-[15px]">
       <Label for="siteName" class="flex-1 text-right font-bold text-sm">网站图标</Label>
       <div class="w-[300px]">
-        <img class="w-10 h-10" :src="favIcon" :alt="siteName" />
+        <Avatar class="border-2 border-black w-10 h-10">
+          <AvatarImage :src="favIcon" :alt="siteName" />
+          <AvatarFallback>{{ siteName.charAt(0).toUpperCase() }}</AvatarFallback>
+        </Avatar>
       </div>
     </div>
     <div class="flex items-center justify-between">
