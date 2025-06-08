@@ -3,6 +3,7 @@ import { SelectItem, SelectItemIndicator, SelectItemText } from 'reka-ui'
 import { Icon } from '@iconify/vue'
 import { cn } from '@/lib/utils'
 import type { AcceptableValue } from 'reka-ui'
+import type { ClassValue } from 'clsx'
 
 interface ItemProps {
   value: AcceptableValue
@@ -22,6 +23,7 @@ withDefaults(defineProps<ItemProps>(), {
       cn(
         'relative flex w-full cursor-default select-none items-center py-1.5 px-4',
         'outline-hidden hover:bg-primary data-disabled:pointer-events-none data-disabled:opacity-50',
+        $attrs.class as ClassValue,
       )
     "
     :disabled="disabled"

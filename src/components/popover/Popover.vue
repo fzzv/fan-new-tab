@@ -11,6 +11,7 @@ import {
 import { cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils.ts'
 import { ref } from 'vue'
+import type { ClassValue } from 'clsx'
 
 const contentRef = ref()
 const popoverContentVariants = cva(
@@ -44,7 +45,7 @@ withDefaults(
         :class="
           cn(
             popoverContentVariants({
-              class: $attrs.class,
+              class: $attrs.class as ClassValue,
             }),
           )
         "

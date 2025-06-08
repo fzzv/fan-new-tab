@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { SelectPortal, SelectContent, SelectViewport } from 'reka-ui'
 import { cn } from '@/lib/utils'
+import type { ClassValue } from 'clsx'
 
 withDefaults(
   defineProps<{
@@ -23,6 +24,7 @@ withDefaults(
           'data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
           position === 'popper' &&
             'data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1',
+          $attrs.class as ClassValue,
         )
       "
       :position="position"

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
+import type { ClassValue } from 'clsx'
 
 const buttonVariants = cva(
   'font-head transition-all outline-hidden cursor-pointer duration-200 font-medium flex items-center',
@@ -11,7 +12,8 @@ const buttonVariants = cva(
           'shadow-md hover:shadow-none bg-primary text-black border-2 border-black transition hover:translate-y-1 hover:bg-primary-hover',
         secondary:
           'shadow-md hover:shadow-none bg-secondary shadow-primary text-secondary-foreground border-2 border-black transition hover:translate-y-1',
-        outline: 'shadow-md hover:shadow-none bg-transparent border-2 transition hover:translate-y-1',
+        outline:
+          'shadow-md hover:shadow-none bg-transparent border-2 border-border text-secondary transition hover:translate-y-1',
         link: 'bg-transparent hover:underline',
       },
       size: {
@@ -35,7 +37,7 @@ defineProps<{
 </script>
 
 <template>
-  <button :class="cn(buttonVariants({ variant, size }))" v-bind="$attrs">
+  <button :class="cn(buttonVariants({ variant, size }), $attrs.class as ClassValue)" v-bind="$attrs">
     <slot />
   </button>
 </template>
