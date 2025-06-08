@@ -12,8 +12,8 @@ defineProps<{
     :value="value"
     :class="
       cn(
-        'px-4 py-1 border-2 border-transparent data-active:border-border cursor-pointer ',
-        'data-active:bg-primary data-active:font-base focus:outline-hidden text-base',
+        'px-4 py-1 border-2 border-transparent data-active:border-black cursor-pointer ',
+        'data-active:bg-primary data-active:font-base data-active:text-black focus:outline-hidden text-base',
       )
     "
     v-bind="$attrs"
