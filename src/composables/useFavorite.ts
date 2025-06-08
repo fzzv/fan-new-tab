@@ -2,13 +2,7 @@ import { useWebExtStorage } from '@/composables/useWebExtStorage'
 import type { TabItem } from '@/components/tabs'
 import { v4 as uuidV4 } from 'uuid'
 
-const { data: favorites, dataReady: favoritesReady } = useWebExtStorage('favorite', [
-  {
-    id: '1',
-    label: 'Google',
-    value: '1',
-  },
-] as TabItem[])
+const { data: favorites, dataReady: favoritesReady } = useWebExtStorage('favorites', [] as TabItem[])
 
 export function useFavorite() {
   // 添加收藏夹
