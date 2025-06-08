@@ -5,7 +5,7 @@ import type { Storage } from 'webextension-polyfill'
 import type { StorageOptions, StorageLikeAsync } from '@/types'
 import { StorageSerializers } from '@/types'
 
-type MaybeRefOrGetter<T = any> = MaybeRef<T> | ComputedRef<T> | (() => T);
+type MaybeRefOrGetter<T = any> = MaybeRef<T> | ComputedRef<T> | (() => T)
 
 // 猜测序列化类型
 function guessSerializerType(initData: unknown) {
@@ -45,7 +45,7 @@ export function useWebExtStorage<T>(key: string, defaultValue: MaybeRefOrGetter<
     listenToStorageChanges = true,
     onError = (error: unknown) => {
       console.log(error)
-    }
+    },
   } = options
 
   const storageInterface: StorageLikeAsync = {
@@ -70,38 +70,37 @@ export function useWebExtStorage<T>(key: string, defaultValue: MaybeRefOrGetter<
   // 响应式数据
   const data = (shallow ? shallowRef : ref)(initData)
 
-   // 从 storage 读取数据并同步到 data
-   async function read(event?: { key: string, newValue: string | null }) {
-    if (event && event.key !== key)
-      return
+  // 从 storage 读取数据并同步到 data
+  async function read(event?: { key: string; newValue: string | null }) {
+    if (event && event.key !== key) return
 
     try {
       const rawValue = event ? event.newValue : await storageInterface.getItem(key)
       if (rawValue == null) {
         data.value = initData
-        if (writeDefaults && initData !== null)
-          await storageInterface.setItem(key, await serializer.write(initData))
-      }
-      else if (mergeDefaults) {
-        const value = await serializer.read(rawValue) as T
-        if (typeof mergeDefaults === 'function')
-          data.value = mergeDefaults(value, initData)
+        if (writeDefaults && initData !== null) await storageInterface.setItem(key, await serializer.write(initData))
+      } else if (mergeDefaults) {
+        const value = (await serializer.read(rawValue)) as T
+        if (typeof mergeDefaults === 'function') data.value = mergeDefaults(value, initData)
         else if (type === 'object' && !Array.isArray(value))
-          data.value = { ...(initData as Record<keyof unknown, unknown>), ...(value as Record<keyof unknown, unknown>) } as T
+          data.value = {
+            ...(initData as Record<keyof unknown, unknown>),
+            ...(value as Record<keyof unknown, unknown>),
+          } as T
         else data.value = value
+      } else {
+        data.value = (await serializer.read(rawValue)) as T
       }
-      else {
-        data.value = await serializer.read(rawValue) as T
-      }
-    }
-    catch (error) {
+    } catch (error) {
       onError(error)
     }
   }
 
-  // 初始化时读取一次数据
+  // 异步加载初始数据，确保 data.value 是存储中的最新状态
   const dataReadyPromise = new Promise<T>((resolve, reject) => {
-    read().then(() => resolve(data.value)).catch(reject)
+    read()
+      .then(() => resolve(data.value))
+      .catch(reject)
   })
 
   const { pause, resume } = watch(data, write, { deep, flush })
@@ -110,16 +109,12 @@ export function useWebExtStorage<T>(key: string, defaultValue: MaybeRefOrGetter<
   async function write() {
     pause()
     try {
-      await (
-        data.value == null
-          ? storageInterface.removeItem(key)
-          : storageInterface.setItem(key, await serializer.write(data.value))
-      )
-    }
-    catch (error) {
+      await (data.value == null
+        ? storageInterface.removeItem(key)
+        : storageInterface.setItem(key, await serializer.write(data.value)))
+    } catch (error) {
       onError(error)
-    }
-    finally {
+    } finally {
       resume()
     }
   }
@@ -135,11 +130,9 @@ export function useWebExtStorage<T>(key: string, defaultValue: MaybeRefOrGetter<
             newValue: change.newValue as string | null,
           })
         }
-      }
-      catch (error) {
+      } catch (error) {
         onError(error)
-      }
-      finally {
+      } finally {
         resume()
       }
     }
