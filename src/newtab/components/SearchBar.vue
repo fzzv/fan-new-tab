@@ -27,7 +27,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
   <div class="w-full max-w-[600px] my-5 mx-auto">
     <Input v-model="searchQuery" placeholder="输入搜索内容" class="rounded-xl py-4" @keydown="handleKeyDown">
       <template #prefix>
-        <Popover class="w-dvw max-w-[600px]" align="start" :alignOffset="-50" :sideOffset="45">
+        <Popover class="w-dvw max-w-[600px]" align="start" :alignOffset="-65" :sideOffset="45">
           <template #trigger>
             <img
               :src="selectedEngine.icon"
@@ -35,13 +35,13 @@ const handleKeyDown = (e: KeyboardEvent) => {
               alt="搜索引擎"
             />
           </template>
-          <div class="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-4 p-2">
+          <div class="grid grid-cols-[repeat(auto-fill,minmax(60px,1fr))] gap-4 p-2">
             <div
               v-for="(engine, index) in searchEngines"
               :key="engine.name"
               :class="
                 cn(
-                  ' relative flex flex-col items-center justify-center aspect-square p-3 rounded-xl',
+                  ' relative flex flex-col items-center justify-center aspect-square rounded-xl group',
                   'cursor-pointer transition-all duration-200 ease-in-out border-2 border-secondary hover:-translate-y-0.5',
                   { 'border-2 border-primary': selectedEngine.name === engine.name },
                 )
@@ -53,11 +53,19 @@ const handleKeyDown = (e: KeyboardEvent) => {
                 {{ engine.name }}
               </span>
               <button
-                class="absolute top-1 right-1 w-5 h-5 rounded-full cursor-pointer flex items-center justify-center"
+                :class="
+                  cn(
+                    'absolute top-0 right-0 w-5 h-5 rounded-full cursor-pointer',
+                    'flex items-center justify-center',
+                    'opacity-0 group-hover:opacity-100',
+                    'transition-opacity duration-200 ease-in-out',
+                    'bg-background/80 hover:bg-background',
+                  )
+                "
                 @click.stop="removeSearchEngine(index)"
                 title="删除搜索引擎"
               >
-                <Icon icon="material-symbols:close-small-outline-rounded" width="24" height="24" />
+                <Icon icon="material-symbols:close-small-outline-rounded" width="16" height="16" />
               </button>
             </div>
             <div
