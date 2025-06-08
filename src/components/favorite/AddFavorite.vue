@@ -34,7 +34,7 @@ const handleAddFavorite = () => {
 </script>
 
 <template>
-  <ModalContent size="md">
+  <ModalContent size="sm">
     <ModalHeader @close="closeAddFavoriteDialog">
       <div class="text-xl">添加收藏夹</div>
     </ModalHeader>
