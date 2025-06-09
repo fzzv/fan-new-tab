@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
+import type { ClassValue } from 'clsx'
 
 const dialogVariants = cva(
   `fixed z-50 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
@@ -19,22 +20,22 @@ const dialogVariants = cva(
   {
     variants: {
       size: {
-        auto: "max-w-fit",
-        sm: "lg:max-w-[30%]",
-        md: "lg:max-w-[40%]",
-        lg: "lg:max-w-[50%]",
-        xl: "lg:max-w-[60%]",
-        "2xl": "lg:max-w-[70%]",
-        "3xl": "lg:max-w-[80%]",
-        "4xl": "lg:max-w-[90%]",
-        screen: "max-w-[100%]",
+        auto: 'max-w-fit',
+        sm: 'lg:max-w-[30%]',
+        md: 'lg:max-w-[40%]',
+        lg: 'lg:max-w-[50%]',
+        xl: 'lg:max-w-[60%]',
+        '2xl': 'lg:max-w-[70%]',
+        '3xl': 'lg:max-w-[80%]',
+        '4xl': 'lg:max-w-[90%]',
+        screen: 'max-w-[100%]',
       },
     },
     defaultVariants: {
-      size: "auto",
+      size: 'auto',
     },
   },
-);
+)
 
 defineProps<{
   size?: 'auto' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | 'screen'
@@ -42,7 +43,7 @@ defineProps<{
 </script>
 
 <template>
-  <div :class="cn(dialogVariants({ size }), $attrs.class)" v-bind="$attrs">
+  <div :class="cn(dialogVariants({ size }), $attrs.class as ClassValue)" v-bind="$attrs">
     <div class="flex flex-col relative">
       <slot />
     </div>

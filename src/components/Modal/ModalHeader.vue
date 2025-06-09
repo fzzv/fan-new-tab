@@ -2,26 +2,23 @@
 import { cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import { Icon } from '@iconify/vue'
-import { defineEmits } from 'vue'
+import type { ClassValue } from 'clsx'
 
-const dialogHeaderVariants = cva(
-  "flex items-center justify-between border-b-2 px-4 min-h-12",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-black",
-      },
-      position: {
-        fixed: "sticky top-0",
-        static: "static",
-      },
+const dialogHeaderVariants = cva('flex items-center justify-between border-b-2 px-4 min-h-12', {
+  variants: {
+    variant: {
+      default: 'bg-primary text-black',
     },
-    defaultVariants: {
-      variant: "default",
-      position: "static",
+    position: {
+      fixed: 'sticky top-0',
+      static: 'static',
     },
   },
-);
+  defaultVariants: {
+    variant: 'default',
+    position: 'static',
+  },
+})
 
 defineProps<{
   variant?: 'default'
@@ -39,7 +36,10 @@ function close() {
 </script>
 
 <template>
-  <div :class="cn(dialogHeaderVariants({ variant, position }), $attrs.class)" v-bind="$attrs">
+  <div
+    :class="cn('font-head', dialogHeaderVariants({ variant, position }), $attrs.class as ClassValue)"
+    v-bind="$attrs"
+  >
     <template v-if="asChild">
       <slot />
     </template>
