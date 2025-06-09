@@ -1,11 +1,45 @@
 @import "tailwindcss";
 
+@font-face {
+  font-display: swap;
+  font-family: 'sans-font';
+  font-style: normal;
+  font-weight: 400;
+  src: url(../assets/fonts/DM-sans-v11.ttf) format('truetype');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'serif-font';
+  font-style: normal;
+  font-weight: 400;
+  src: url(../assets/fonts/DM-serif-display-v10.ttf) format('truetype');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'mono-font';
+  font-style: normal;
+  font-weight: 400;
+  src: url(../assets/fonts/DM-mono-v10.ttf) format('truetype');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'apple-font';
+  font-style: normal;
+  font-weight: 400;
+  src: url(../assets/fonts/homemade-apple-v18.ttf) format('truetype');
+}
+
 /* 主题切换 */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-head: var(--font-head);
   --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-apple: var(--font-apple);
 
   --shadow-xs: 1px 1px 0 0 var(--border);
   --shadow-sm: 2px 2px 0 0 var(--border);
@@ -36,6 +70,11 @@
 }
 
 :root {
+  --font-head: 'serif-font', 'sans-serif';
+  --font-sans: 'sans-font', 'sans-serif';
+  --font-mono: 'mono-font', 'monospace';
+  --font-apple: 'apple-font', 'sans-serif';
+
   --background: #fff;
   --foreground: #000;
   --card: #fff;
