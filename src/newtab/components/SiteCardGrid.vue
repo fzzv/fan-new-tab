@@ -42,15 +42,30 @@ const emit = defineEmits<{
 }>()
 
 // 验证行列数范围
-const validatedRows = computed(() => Math.max(2, Math.min(8, props.rows)))
-const validatedCols = computed(() => Math.max(2, Math.min(8, props.cols)))
+const validatedRows = computed(() => {
+  // 如果 rows 为 0 或负数，表示无限制，根据网站数量自动计算行数
+  if (props.rows <= 0) {
+    const sitesCount = props.sites.length
+    if (sitesCount === 0) return 1
+    return Math.ceil(sitesCount / validatedCols.value)
+  }
+  return Math.max(1, props.rows)
+})
+
+const validatedCols = computed(() => Math.max(1, Math.min(8, props.cols)))
 
 // 计算实际使用的间距
 const actualRowGap = computed(() => props.rowGap ?? props.gap)
 const actualColGap = computed(() => props.colGap ?? props.gap)
 
 // 计算网格总容量
-const totalSlots = computed(() => validatedRows.value * validatedCols.value)
+const totalSlots = computed(() => {
+  // 如果行数无限制（props.rows <= 0），则容量等于网站数量
+  if (props.rows <= 0) {
+    return props.sites.length
+  }
+  return validatedRows.value * validatedCols.value
+})
 
 // 显示的网站数据（限制在网格容量内）
 const displaySites = computed(() => props.sites.slice(0, totalSlots.value))

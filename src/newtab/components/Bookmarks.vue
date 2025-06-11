@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { Tabs } from '@/components/tabs'
 import { useFavorite } from '@/composables/useFavorite.ts'
 import type { MenuItemType } from '@/components/context-menu'
 import type { TabItem } from '@/components/tabs'
 import SiteCardGrid from '@/newtab/components/SiteCardGrid.vue'
 import { useSite } from '@/composables/useSite.ts'
+import { useGridLayout } from '@/composables/useGridLayout.ts'
 
 const { favorites, favoritesReady, removeFavorite } = useFavorite()
 
@@ -37,10 +38,25 @@ onMounted(() => {
 })
 
 const { sites } = useSite()
-const gridConfig = ref({
-  rows: 2,
-  cols: 4,
-  gap: 16,
+const { currentLayoutConfig, isFavoritesMode } = useGridLayout()
+
+// 根据收藏夹模式计算网格配置
+const gridConfig = computed(() => {
+  if (isFavoritesMode.value) {
+    // 收藏夹模式：行数无限制（设为 0 表示自动计算）
+    return {
+      rows: 0, // 0 表示无限制，根据内容自动计算行数
+      cols: currentLayoutConfig.value.cols,
+      gap: currentLayoutConfig.value.gap,
+    }
+  } else {
+    // 非收藏夹模式：使用配置的行数，最多 8x8
+    return {
+      rows: currentLayoutConfig.value.rows,
+      cols: currentLayoutConfig.value.cols,
+      gap: currentLayoutConfig.value.gap,
+    }
+  }
 })
 
 function getSitesByFavoriteId(id: string) {
@@ -56,7 +72,7 @@ function getSitesByFavoriteId(id: string) {
         :rows="gridConfig.rows"
         :cols="gridConfig.cols"
         :gap="gridConfig.gap"
-      ></SiteCardGrid>
+      />
     </template>
   </Tabs>
 </template>
