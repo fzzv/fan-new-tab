@@ -85,7 +85,7 @@ function trapFocusDialog() {
         aria-modal="true"
         :aria-labelledby="dialogLabelledBy"
         :style="{ 'z-index': zIndex }"
-        class="fixed inset-0 of-y-auto scrollbar-hide overscroll-none"
+        class="fixed inset-0 of-y-auto scrollbar-hide overscroll-none font-sans"
       >
         <div class="dialog-mask absolute inset-0 z-0 bg-transparent opacity-100 backdrop-filter touch-none">
           <!-- 样式' scrollbar-hide overscroll-none overflow-y-scroll '和' h="[calc(100%+0.5px)]" '用于实现滚动锁定 -->
