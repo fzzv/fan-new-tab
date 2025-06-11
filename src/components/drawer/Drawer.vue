@@ -118,46 +118,30 @@ const contentClasses = computed(() => {
     'shadow-lg',
     'flex',
     'flex-col',
-    'transition-transform',
-    'duration-300',
-    'ease-in-out',
   ]
 
   // 根据方向添加位置类
   switch (props.placement) {
     case 'top':
-      baseClasses.push('top-0', 'left-0', 'right-0', 'transform', visible.value ? 'translate-y-0' : '-translate-y-full')
+      baseClasses.push('top-0', 'left-0', 'right-0')
       break
     case 'right':
-      baseClasses.push(
-        'top-0',
-        'right-0',
-        'bottom-0',
-        'transform',
-        visible.value ? 'translate-x-0' : 'translate-x-full',
-      )
+      baseClasses.push('top-0', 'right-0', 'bottom-0')
       break
     case 'bottom':
-      baseClasses.push(
-        'bottom-0',
-        'left-0',
-        'right-0',
-        'transform',
-        visible.value ? 'translate-y-0' : 'translate-y-full',
-      )
+      baseClasses.push('bottom-0', 'left-0', 'right-0')
       break
     case 'left':
-      baseClasses.push(
-        'top-0',
-        'left-0',
-        'bottom-0',
-        'transform',
-        visible.value ? 'translate-x-0' : '-translate-x-full',
-      )
+      baseClasses.push('top-0', 'left-0', 'bottom-0')
       break
   }
 
   return baseClasses
+})
+
+// 计算动画名称
+const transitionName = computed(() => {
+  return `drawer-slide-${props.placement}`
 })
 
 // 尺寸预设
@@ -227,9 +211,17 @@ function trapFocus() {
         </Transition>
 
         <!-- 抽屉内容 -->
-        <div ref="drawerContentRef" :class="cn(contentClasses)" :style="finalContentStyle" tabindex="-1">
-          <slot />
-        </div>
+        <Transition :name="transitionName">
+          <div
+            v-if="visible"
+            ref="drawerContentRef"
+            :class="cn(contentClasses)"
+            :style="finalContentStyle"
+            tabindex="-1"
+          >
+            <slot />
+          </div>
+        </Transition>
       </div>
     </Transition>
   </Teleport>
@@ -258,5 +250,61 @@ function trapFocus() {
 
 .drawer-content {
   outline: none;
+}
+
+/* 右侧滑入滑出动画 */
+.drawer-slide-right-enter-active,
+.drawer-slide-right-leave-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-slide-right-enter-from {
+  transform: translateX(100%);
+}
+
+.drawer-slide-right-leave-to {
+  transform: translateX(100%);
+}
+
+/* 左侧滑入滑出动画 */
+.drawer-slide-left-enter-active,
+.drawer-slide-left-leave-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-slide-left-enter-from {
+  transform: translateX(-100%);
+}
+
+.drawer-slide-left-leave-to {
+  transform: translateX(-100%);
+}
+
+/* 顶部滑入滑出动画 */
+.drawer-slide-top-enter-active,
+.drawer-slide-top-leave-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-slide-top-enter-from {
+  transform: translateY(-100%);
+}
+
+.drawer-slide-top-leave-to {
+  transform: translateY(-100%);
+}
+
+/* 底部滑入滑出动画 */
+.drawer-slide-bottom-enter-active,
+.drawer-slide-bottom-leave-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-slide-bottom-enter-from {
+  transform: translateY(100%);
+}
+
+.drawer-slide-bottom-leave-to {
+  transform: translateY(100%);
 }
 </style>
