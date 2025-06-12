@@ -65,7 +65,9 @@ const isOpen = inject<Ref<boolean>>('collapsible-open')
     @click="handleClick"
   >
     <slot />
+    <slot v-if="$slots.expandIcon" name="expandIcon" />
     <Icon
+      v-else
       icon="material-symbols:expand-more"
       :class="
         cn('transition-transform duration-200', {
