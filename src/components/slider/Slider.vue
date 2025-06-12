@@ -128,7 +128,7 @@ const sliderRangeVariants = cva('absolute', {
 })
 
 const sliderThumbVariants = cva(
-  'block border-2 border-border bg-background shadow-md transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:scale-110 active:scale-95',
+  'block border-2 border-black bg-primary shadow-sm transition cursor-pointer hover:translate-y-[1px] hover:bg-primary-hover hover:shadow-none data-disabled:pointer-events-none data-disabled:opacity-50 data-disabled:cursor-not-allowed focus:outline-none',
   {
     variants: {
       size: {
@@ -137,8 +137,8 @@ const sliderThumbVariants = cva(
         lg: 'h-6 w-6',
       },
       variant: {
-        default: 'hover:bg-primary/10 focus-visible:ring-primary',
-        secondary: 'hover:bg-secondary/10 focus-visible:ring-secondary',
+        default: 'hover:bg-primary-hover',
+        secondary: 'hover:bg-secondary-hover',
       },
     },
     defaultVariants: {
@@ -201,7 +201,7 @@ const thumbCount = computed(() => {
     <SliderTrack :class="trackClasses">
       <SliderRange :class="rangeClasses" />
     </SliderTrack>
-    <SliderThumb v-for="index in thumbCount" :key="index" :class="thumbClasses" />
+    <SliderThumb v-for="index in thumbCount" :key="index" :class="thumbClasses" :data-disabled="disabled" />
   </SliderRoot>
 </template>
 
