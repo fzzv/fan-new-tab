@@ -6,7 +6,7 @@ import type { MenuItemType } from '@/components/context-menu'
 import type { TabItem } from '@/components/tabs'
 import SiteCardGrid from '@/newtab/components/SiteCardGrid.vue'
 import { useSite } from '@/composables/useSite.ts'
-import { useGridLayout } from '@/composables/useGridLayout.ts'
+import { useSettings } from '@/composables/useSettings.ts'
 
 const { favorites, favoritesReady, removeFavorite } = useFavorite()
 
@@ -38,11 +38,11 @@ onMounted(() => {
 })
 
 const { sites } = useSite()
-const { currentLayoutConfig, isFavoritesMode } = useGridLayout()
+const { currentLayoutConfig, currentDisplayMode } = useSettings()
 
-// 根据收藏夹模式计算网格配置
+// 根据显示模式计算网格配置
 const gridConfig = computed(() => {
-  if (isFavoritesMode.value) {
+  if (currentDisplayMode.value === 'favorites') {
     // 收藏夹模式：行数无限制（设为 0 表示自动计算）
     return {
       rows: 0, // 0 表示无限制，根据内容自动计算行数
@@ -50,7 +50,7 @@ const gridConfig = computed(() => {
       gap: currentLayoutConfig.value.gap,
     }
   } else {
-    // 非收藏夹模式：使用配置的行数，最多 8x8
+    // 标准模式和极简模式：使用配置的行数
     return {
       rows: currentLayoutConfig.value.rows,
       cols: currentLayoutConfig.value.cols,
