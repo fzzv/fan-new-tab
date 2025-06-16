@@ -58,7 +58,7 @@ const handleOpacityChange = (value: number[]) => {
   <CollapsibleRoot v-if="collapsible" v-model:open="isBackgroundOpen" class="w-full" variant="default" size="md">
     <CollapsibleTrigger variant="default" size="md" @click="isBackgroundOpen = !isBackgroundOpen">
       <div class="flex items-center gap-2">
-        <Icon icon="material-symbols:blur-on-outline" width="20" height="20" />
+        <Icon icon="material-symbols:background-grid-small-sharp" width="20" height="20" />
         <span class="text-lg font-semibold">{{ title }}</span>
       </div>
       <template #expandIcon>
