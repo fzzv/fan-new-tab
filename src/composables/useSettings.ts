@@ -17,8 +17,26 @@ const defaultLayoutConfig: GridLayoutConfig = {
   maxRows: 8, // 非收藏夹模式下最大 8 行
 }
 
+// 背景配置接口
+export interface BackgroundConfig {
+  blur: number[]
+  opacity: number[]
+}
+
+// 默认背景配置
+const defaultBackgroundConfig: BackgroundConfig = {
+  blur: [0],
+  opacity: [0],
+}
+
 // 显示模式类型
 export type DisplayMode = 'standard' | 'favorites' | 'minimal'
+
+// 背景设置
+const { data: backgroundConfig, dataReady: backgroundConfigReady } = useWebExtStorage(
+  'backgroundConfig',
+  defaultBackgroundConfig as BackgroundConfig,
+)
 
 // 模式设置
 const { data: displayMode } = useWebExtStorage('displayMode', 'standard' as DisplayMode)
@@ -214,6 +232,10 @@ export function useSettings() {
     isFavoritesMode, // 向后兼容
     currentLayoutConfig,
     currentGridLayoutConfig, // 当前模式的网格布局配置
+
+    // 背景设置
+    backgroundConfig: computed(() => backgroundConfig.value),
+    backgroundConfigReady,
 
     // 模式配置
     standardConfig,

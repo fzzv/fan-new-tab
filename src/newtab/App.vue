@@ -8,14 +8,21 @@ import { Icon } from '@iconify/vue'
 import Bookmarks from './components/Bookmarks.vue'
 import { openAddFavoriteDialog, openPageSettingDialog } from '@/composables/useDialog.ts'
 import { useWebExtStorage } from '@/composables/useWebExtStorage.ts'
+import { useSettings } from '@/composables/useSettings'
 
 const { data: isDark, dataReady: isDarkReady } = useWebExtStorage('isDark', false)
+const { backgroundConfig, backgroundConfigReady } = useSettings()
 
 onMounted(() => {
   // 设置主题模式
   isDarkReady.then(() => {
     isDark.value = theme.value === 'dark'
     document.documentElement.classList.toggle('dark', isDark.value)
+  })
+  // 设置背景的模糊度和透明度
+  backgroundConfigReady.then(() => {
+    document.documentElement.style.setProperty('--backdrop-filter-blur', `${backgroundConfig.value.blur[0]}px`)
+    document.documentElement.style.setProperty('--background-mask-opacity', `${backgroundConfig.value.opacity[0] / 100}`)
   })
 })
 
@@ -27,7 +34,7 @@ async function toggleDark() {
 </script>
 
 <template>
-  <div class="app-container pt-10 min-h-dvh w-full relative box-border bg-background text-base font-sans">
+  <div class="app-container pt-10 min-h-dvh w-full relative box-border bg-image text-base font-sans">
     <div class="absolute top-5 right-5 z-20 flex items-center gap-2">
       <Button size="icon" @click="openAddFavoriteDialog">添加收藏夹</Button>
       <Button size="icon" @click="openPageSettingDialog">

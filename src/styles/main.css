@@ -70,11 +70,6 @@
 }
 
 :root {
-  --font-head: 'serif-font', 'sans-serif';
-  --font-sans: 'sans-font', 'sans-serif';
-  --font-mono: 'mono-font', 'monospace';
-  --font-apple: 'apple-font', 'sans-serif';
-
   --background: #fff;
   --foreground: #000;
   --card: #fff;
@@ -91,7 +86,14 @@
   --destructive: #e63946;
   --destructive-foreground: #fff;
   --border: #000;
+
+  --font-head: 'serif-font', 'sans-serif';
+  --font-sans: 'sans-font', 'sans-serif';
+  --font-mono: 'mono-font', 'monospace';
+  --font-apple: 'apple-font', 'sans-serif';
   --background-image: url('../assets/bg.jpg');
+  --backdrop-filter-blur: 1px;
+  --background-mask-opacity: 0.1;
 }
 .dark {
   --background: #000000;
@@ -110,7 +112,6 @@
   --destructive: #e63946;
   --destructive-foreground: #fff;
   --border: #eee;
-  --background-image: url('../assets/bg.jpg');
 }
 
 .bg-image{

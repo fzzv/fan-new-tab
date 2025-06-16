@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Drawer, DrawerContent, DrawerFooter, DrawerHeader } from '@/components/drawer'
-import Button from '@/components/button/Button.vue'
+import { Drawer, DrawerContent, DrawerHeader } from '@/components/drawer'
 import { isPageSettingDialog, closePageSettingDialog } from '@/composables/useDialog'
 import { useSettings, type DisplayMode } from '@/composables/useSettings.ts'
 import { TabsRoot, TabsList, TabsTrigger, TabsContent } from '@/components/tabs'
 import { Icon } from '@iconify/vue'
 import SettingGridLayout from './SettingGridLayout.vue'
+import SettingBackground from './SettingBackground.vue'
 
 const { currentDisplayMode, updateDisplayMode } = useSettings()
 
@@ -64,9 +64,12 @@ const modeDescriptionText = computed(() => {
                 {{ option.label }}
               </TabsTrigger>
             </TabsList>
+            <!-- 公共的内容 -->
             <div class="my-3 p-3 bg-muted/50 rounded-lg">
               <p class="text-sm text-muted-foreground">{{ modeDescriptionText }}</p>
             </div>
+            <!-- 添加对背景的设置-->
+            <SettingBackground class="mb-5" />
             <TabsContent value="standard" class="p-0">
               <!-- 布局设置 -->
               <SettingGridLayout />
@@ -82,10 +85,6 @@ const modeDescriptionText = computed(() => {
         </div>
       </div>
     </DrawerContent>
-    <DrawerFooter>
-      <Button variant="outline" @click="closePageSettingDialog">取消</Button>
-      <Button @click="closePageSettingDialog">确定</Button>
-    </DrawerFooter>
   </Drawer>
 </template>
 
