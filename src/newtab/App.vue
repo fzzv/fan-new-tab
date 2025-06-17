@@ -1,35 +1,38 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import SearchBar from './components/SearchBar.vue'
 import ModalContainer from '@/components/modal/ModalContainer.vue'
 import Button from '@/components/button/Button.vue'
-import { theme } from '@/composables/useTheme'
+import { useTheme, Theme } from '@/composables/useTheme'
 import { Icon } from '@iconify/vue'
-import Bookmarks from './components/Bookmarks.vue'
 import { openAddFavoriteDialog, openPageSettingDialog } from '@/composables/useDialog.ts'
-import { useWebExtStorage } from '@/composables/useWebExtStorage.ts'
 import { useSettings } from '@/composables/useSettings'
+import FavoritesMode from './components/FavoritesMode.vue'
+import StandardMode from './components/StandardMode.vue'
 
-const { data: isDark, dataReady: isDarkReady } = useWebExtStorage('isDark', false)
-const { backgroundConfig, backgroundConfigReady } = useSettings()
+const { backgroundConfig, backgroundConfigReady, currentDisplayMode } = useSettings()
+const { theme, themeReady } = useTheme()
 
 onMounted(() => {
   // 设置主题模式
-  isDarkReady.then(() => {
-    isDark.value = theme.value === 'dark'
-    document.documentElement.classList.toggle('dark', isDark.value)
+  themeReady.then(() => {
+    document.documentElement.classList.toggle('dark', theme.value === Theme.Dark)
   })
   // 设置背景的模糊度和透明度
   backgroundConfigReady.then(() => {
     document.documentElement.style.setProperty('--backdrop-filter-blur', `${backgroundConfig.value.blur[0]}px`)
-    document.documentElement.style.setProperty('--background-mask-opacity', `${backgroundConfig.value.opacity[0] / 100}`)
+    document.documentElement.style.setProperty(
+      '--background-mask-opacity',
+      `${backgroundConfig.value.opacity[0] / 100}`,
+    )
   })
 })
 
+const isDark = computed(() => theme.value === Theme.Dark)
+
 async function toggleDark() {
-  isDark.value = !isDark.value
-  document.documentElement.classList.toggle('dark', isDark.value)
-  theme.value = isDark.value ? 'dark' : 'light'
+  theme.value = theme.value === Theme.Dark ? Theme.Light : Theme.Dark
+  document.documentElement.classList.toggle('dark', theme.value === Theme.Dark)
 }
 </script>
 
@@ -49,7 +52,8 @@ async function toggleDark() {
       <SearchBar />
     </div>
     <div class="max-w-[80vw] mx-auto p-20 pt-0 relative z-10">
-      <Bookmarks />
+      <FavoritesMode v-if="currentDisplayMode === 'favorites'" />
+      <StandardMode v-else />
     </div>
     <ModalContainer />
   </div>
