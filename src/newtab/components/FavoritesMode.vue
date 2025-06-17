@@ -2,11 +2,11 @@
 import { ref, onMounted, computed } from 'vue'
 import { Tabs } from '@/components/tabs'
 import { useFavorite } from '@/composables/useFavorite.ts'
-import type { MenuItemType } from '@/components/context-menu'
-import type { TabItem } from '@/components/tabs'
-import SiteCardGrid from '@/newtab/components/SiteCardGrid.vue'
 import { useSite } from '@/composables/useSite.ts'
 import { useSettings } from '@/composables/useSettings.ts'
+import SiteCardGrid from '@/newtab/components/SiteCardGrid.vue'
+import type { MenuItemType } from '@/components/context-menu'
+import type { TabItem } from '@/components/tabs'
 
 const { favorites, favoritesReady, removeFavorite } = useFavorite()
 
