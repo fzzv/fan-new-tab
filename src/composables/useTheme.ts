@@ -1,3 +1,15 @@
-import { useWebExtStorage } from "@/composables/useWebExtStorage.ts"
+import { useWebExtStorage } from '@/composables/useWebExtStorage.ts'
 
-export const { data: theme } = useWebExtStorage('theme', 'light')
+export enum Theme {
+  Light = 'light',
+  Dark = 'dark',
+}
+
+const { data: theme, dataReady: themeReady } = useWebExtStorage('theme', Theme.Light)
+
+export function useTheme() {
+  return {
+    theme,
+    themeReady,
+  }
+}
