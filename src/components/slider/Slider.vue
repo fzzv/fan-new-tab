@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { SliderRoot, SliderTrack, SliderRange, SliderThumb } from 'reka-ui'
+import { SliderRoot, SliderTrack, SliderRange, SliderThumb, useForwardPropsEmits } from 'reka-ui'
 import { cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import type { ClassValue } from 'clsx'
+import type { SliderRootProps, SliderRootEmits } from 'reka-ui'
 
-interface SliderProps {
+interface SliderProps extends SliderRootProps {
   modelValue?: number[]
   defaultValue?: number[]
   min?: number
@@ -31,10 +32,13 @@ const props = withDefaults(defineProps<SliderProps>(), {
   variant: 'default',
 })
 
-const emit = defineEmits<{
-  'update:modelValue': [value: number[]]
-  valueCommit: [value: number[]]
-}>()
+interface SliderEmits extends SliderRootEmits {
+  change: [value: number[]]
+}
+
+const emits = defineEmits<SliderEmits>()
+
+const forward = useForwardPropsEmits(props, emits)
 
 // 样式变体
 const sliderRootVariants = cva('relative flex touch-none select-none items-center', {
@@ -162,12 +166,13 @@ const thumbClasses = computed(() => cn(sliderThumbVariants({ size: props.size, v
 // 处理值更新
 const handleValueChange = (value?: number[]) => {
   if (value) {
-    emit('update:modelValue', value)
+    emits('change', value)
+    emits('update:modelValue', value)
   }
 }
 
 const handleValueCommit = (value: number[]) => {
-  emit('valueCommit', value)
+  emits('valueCommit', value)
 }
 
 // 计算thumb数量
@@ -185,18 +190,9 @@ const thumbCount = computed(() => {
 <template>
   <SliderRoot
     :class="cn(rootClasses, $attrs.class as ClassValue)"
-    :model-value="modelValue"
-    :default-value="defaultValue"
-    :min="min"
-    :max="max"
-    :step="step"
-    :disabled="disabled"
-    :orientation="orientation"
-    :inverted="inverted"
-    :min-steps-between-thumbs="minStepsBetweenThumbs"
     @update:model-value="handleValueChange"
     @value-commit="handleValueCommit"
-    v-bind="$attrs"
+    v-bind="forward"
   >
     <SliderTrack :class="trackClasses">
       <SliderRange :class="rangeClasses" />
