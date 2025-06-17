@@ -74,7 +74,7 @@ const handleOpacityChange = (value: number[]) => {
             <Label class="text-sm font-medium">背景模糊度</Label>
             <span class="text-xs text-muted-foreground">{{ config.blur[0] * 10 }}%</span>
           </div>
-          <Slider v-model="config.blur" :min="0" :max="10" :step="0.1" class="w-full" @valueCommit="handleBlurChange" />
+          <Slider v-model="config.blur" :min="0" :max="10" :step="0.1" class="w-full" @change="handleBlurChange" />
           <p class="text-xs text-muted-foreground">调整背景图片的模糊程度，数值越大越模糊</p>
         </div>
 
@@ -90,7 +90,7 @@ const handleOpacityChange = (value: number[]) => {
             :max="100"
             :step="1"
             class="w-full"
-            @valueCommit="handleOpacityChange"
+            @change="handleOpacityChange"
           />
           <p class="text-xs text-muted-foreground">调整背景遮罩的不透明度，数值越大背景越暗</p>
         </div>
