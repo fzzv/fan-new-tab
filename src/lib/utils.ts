@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { tabs } from 'webextension-polyfill'
+import { $fetch } from 'ofetch'
+import { saveAs } from 'file-saver'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -84,8 +86,12 @@ export function getCssVar(name: string) {
  * @param url
  */
 export async function urlToBase64(url: string): Promise<string> {
-  const response = await fetch(url)
-  const blob = await response.blob()
+  const response = await $fetch.raw(url, {
+    responseType: 'blob',
+  })
+  const blob = new Blob([response?._data ?? ''], {
+    type: response.headers.get('content-type') || 'application/octet-stream',
+  })
 
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -107,4 +113,43 @@ export async function urlToBase64(url: string): Promise<string> {
 export async function getCurrentTabUrl() {
   const [tab] = await tabs.query({ active: true, currentWindow: true })
   return tab?.url || ''
+}
+
+/**
+ * 判断是否为颜色
+ * @param val
+ * @returns
+ */
+export function isColor(val: string) {
+  return /^(#|rgb|hsl)/.test(val)
+}
+
+/**
+ * 从URL下载文件
+ * @param url
+ * @param filename
+ */
+export async function downloadFileFromUrl(url: string, filename?: string) {
+  try {
+    const defaultFilename = getFileNameFromUrl(url)
+    const response = await $fetch.raw(url, {
+      responseType: 'blob',
+    })
+    const blob = new Blob([response?._data ?? ''], {
+      type: response.headers.get('content-type') || 'application/octet-stream',
+    })
+    saveAs(blob, filename || defaultFilename)
+  } catch (err) {
+    console.error('下载失败:', err)
+  }
+}
+
+/**
+ * 获取url中的文件名
+ * @param url
+ * @returns
+ */
+export function getFileNameFromUrl(url: string) {
+  const urlObj = new URL(url)
+  return urlObj.pathname.split('/').pop()?.split('?')[0]
 }
