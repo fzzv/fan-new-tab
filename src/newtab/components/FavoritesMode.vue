@@ -33,7 +33,7 @@ const modelValue = ref('')
 
 onMounted(() => {
   favoritesReady.then(() => {
-    modelValue.value = favorites.value[0]?.value
+    modelValue.value = favorites.value[0]?.value || ''
   })
 })
 
