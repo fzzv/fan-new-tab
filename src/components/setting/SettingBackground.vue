@@ -5,6 +5,9 @@ import { CollapsibleRoot, CollapsibleTrigger, CollapsibleContent } from '@/compo
 import { Icon } from '@iconify/vue'
 import { Slider } from '@/components/slider'
 import { useSettings } from '@/composables/useSettings'
+import { Image } from '@/components/image'
+import { Button } from '@/components/button'
+import { downloadFileFromUrl } from '@/lib/utils'
 
 // 组件属性
 interface SettingBackgroundProps {
@@ -26,6 +29,13 @@ const { backgroundConfig, backgroundConfigReady } = useSettings()
 const config = ref({
   blur: [0],
   opacity: [0],
+  background: '',
+})
+
+onMounted(() => {
+  backgroundConfigReady.then(() => {
+    config.value = backgroundConfig.value
+  })
 })
 
 // 设置 CSS 变量值
@@ -37,10 +47,6 @@ const setCssVar = (varName: string, value: number) => {
   }
 }
 
-onMounted(() => {
-  backgroundConfigReady.then(() => (config.value = backgroundConfig.value))
-})
-
 // 处理滑块值变化
 const handleBlurChange = (value: number[]) => {
   backgroundConfig.value.blur = value
@@ -50,6 +56,11 @@ const handleBlurChange = (value: number[]) => {
 const handleOpacityChange = (value: number[]) => {
   backgroundConfig.value.opacity = value
   setCssVar('--background-mask-opacity', value[0] / 100)
+}
+
+// 下载背景图片
+const handleDownload = () => {
+  downloadFileFromUrl(backgroundConfig.value.background)
 }
 </script>
 
@@ -68,6 +79,29 @@ const handleOpacityChange = (value: number[]) => {
     </CollapsibleTrigger>
     <CollapsibleContent variant="default" size="md">
       <div class="p-4 space-y-6">
+        <!-- 背景图片设置 -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <Image
+              :src="backgroundConfig.background"
+              class="w-full h-[200px] object-cover border border-border rounded"
+            >
+              <template #previewMask>
+                <div class="text-white text-sm font-medium">
+                  <Icon icon="material-symbols:download-rounded" width="28" height="28" @click="handleDownload" />
+                </div>
+              </template>
+            </Image>
+          </div>
+          <!-- 切换背景图片 -->
+          <div class="flex items-center">
+            <Button size="sm" class="w-full justify-center">
+              <Icon icon="material-symbols:imagesmode-outline-rounded" width="24" height="24" />
+              切换背景图片
+            </Button>
+          </div>
+        </div>
+
         <!-- 背景模糊度设置 -->
         <div class="space-y-3">
           <div class="flex items-center justify-between">

@@ -21,12 +21,14 @@ const defaultLayoutConfig: GridLayoutConfig = {
 export interface BackgroundConfig {
   blur: number[]
   opacity: number[]
+  background: string
 }
 
 // 默认背景配置
 const defaultBackgroundConfig: BackgroundConfig = {
   blur: [0],
   opacity: [0],
+  background: 'https://wallpaper.xyu.fan/api/findaphoto/bigLink/10492.jpg',
 }
 
 // 显示模式类型

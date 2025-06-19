@@ -91,7 +91,7 @@
   --font-sans: 'sans-font', 'sans-serif';
   --font-mono: 'mono-font', 'monospace';
   --font-apple: 'apple-font', 'sans-serif';
-  --background-image: url('../assets/bg.jpg');
+  --background-image: '';
   --backdrop-filter-blur: 1px;
   --background-mask-opacity: 0.1;
 }
@@ -115,7 +115,7 @@
 }
 
 .bg-image{
-  background-image: var(--background-image);
+  background: var(--background-image);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

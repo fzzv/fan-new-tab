@@ -9,6 +9,7 @@ import { openAddFavoriteDialog, openPageSettingDialog } from '@/composables/useD
 import { useSettings } from '@/composables/useSettings'
 import FavoritesMode from './components/FavoritesMode.vue'
 import StandardMode from './components/StandardMode.vue'
+import { isColor } from '@/lib/utils'
 
 const { backgroundConfig, backgroundConfigReady, currentDisplayMode } = useSettings()
 const { theme, themeReady } = useTheme()
@@ -18,13 +19,15 @@ onMounted(() => {
   themeReady.then(() => {
     document.documentElement.classList.toggle('dark', theme.value === Theme.Dark)
   })
-  // 设置背景的模糊度和透明度
+  // 设置背景
   backgroundConfigReady.then(() => {
-    document.documentElement.style.setProperty('--backdrop-filter-blur', `${backgroundConfig.value.blur[0]}px`)
+    const { background, blur, opacity } = backgroundConfig.value
     document.documentElement.style.setProperty(
-      '--background-mask-opacity',
-      `${backgroundConfig.value.opacity[0] / 100}`,
+      '--background-image',
+      isColor(background) ? background : `url(${background})`,
     )
+    document.documentElement.style.setProperty('--backdrop-filter-blur', `${blur[0]}px`)
+    document.documentElement.style.setProperty('--background-mask-opacity', `${opacity[0] / 100}`)
   })
 })
 
