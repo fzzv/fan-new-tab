@@ -28,7 +28,7 @@ export interface PreviewType {
 const props = withDefaults(defineProps<ImageProps>(), {
   alt: '',
   fallback: PageNotFound,
-  placeholder: false,
+  placeholder: true,
   preview: true,
   previewMask: true,
 })
@@ -36,8 +36,10 @@ const props = withDefaults(defineProps<ImageProps>(), {
 // 图片地址
 const { src: imgSrc } = props
 
-const emit = defineEmits<{
+const emits = defineEmits<{
   error: [event: Event]
+  click: [event: Event]
+  preview: [event: Event]
 }>()
 
 // 状态管理
@@ -47,7 +49,7 @@ const ImageStatus = {
   LOADING: 'loading',
 } as const
 
-type ImageStatusType = typeof ImageStatus[keyof typeof ImageStatus]
+type ImageStatusType = (typeof ImageStatus)[keyof typeof ImageStatus]
 const status = ref<ImageStatusType>(props.placeholder ? ImageStatus.LOADING : ImageStatus.NORMAL)
 const showPreview = ref(false)
 
@@ -80,39 +82,17 @@ const isError = computed(() => status.value === ImageStatus.ERROR)
 const isLoading = computed(() => status.value === ImageStatus.LOADING)
 const isNormal = computed(() => status.value === ImageStatus.NORMAL)
 
-const img = ref<HTMLImageElement | null>(null);
+const img = ref<HTMLImageElement | null>(null)
 watch(
-  () => img,
+  () => img.value,
   () => {
-    if (status.value !== ImageStatus.LOADING || !img.value) return;
-    if (img.value.complete && (img.value.naturalWidth || img.value.naturalHeight)) {
-      handleLoad();
+    if (status.value !== ImageStatus.LOADING) return
+    if (img.value?.complete && (img.value.naturalWidth || img.value.naturalHeight)) {
+      // 元素加载完成，设置状态为正常
+      handleLoad()
     }
   },
-);
-
-// 事件处理
-const handleLoad = () => {
-  status.value = ImageStatus.NORMAL
-}
-
-const handleError = (event: Event) => {
-  console.log('handleError', event)
-  status.value = ImageStatus.ERROR
-  emit('error', event)
-}
-
-const handleClick = () => {
-  if (isPreviewEnabled.value && status.value !== ImageStatus.ERROR) {
-    showPreview.value = true
-    previewConfig.value.onVisibleChange?.(true)
-  }
-}
-
-const handlePreviewClose = () => {
-  showPreview.value = false
-  previewConfig.value.onVisibleChange?.(false)
-}
+)
 
 // 监听 src 变化，重置状态
 watch(
@@ -121,6 +101,33 @@ watch(
     status.value = props.placeholder ? ImageStatus.LOADING : ImageStatus.NORMAL
   },
 )
+
+// 事件处理
+const handleLoad = () => {
+  status.value = ImageStatus.NORMAL
+}
+
+const handleError = (event: Event) => {
+  status.value = ImageStatus.ERROR
+  emits('error', event)
+}
+
+const handlePreview = (event: Event) => {
+  if (isPreviewEnabled.value && status.value !== ImageStatus.ERROR) {
+    showPreview.value = true
+    previewConfig.value.onVisibleChange?.(true)
+  }
+  emits('preview', event)
+}
+
+const handleClick = (event: Event) => {
+  emits('click', event)
+}
+
+const handlePreviewClose = () => {
+  showPreview.value = false
+  previewConfig.value.onVisibleChange?.(false)
+}
 </script>
 
 <template>
@@ -170,16 +177,14 @@ watch(
       v-if="isPreviewEnabled && isNormal"
       :class="
         cn(
-          'absolute inset-0 flex items-center justify-center',
-          'bg-black bg-opacity-0 hover:bg-opacity-30',
+          'w-full h-full absolute inset-0 flex items-center justify-center',
+          'bg-transparent hover:bg-black/50 cursor-pointer',
           'opacity-0 hover:opacity-100 transition-all duration-200',
-          'cursor-pointer rounded',
         )
       "
-      @click="handleClick"
     >
       <slot name="previewMask">
-        <div v-if="previewMask !== false" class="text-white text-sm font-medium">
+        <div v-if="previewMask !== false" class="text-white text-sm font-medium" @click="handlePreview">
           {{ typeof previewMask === 'function' ? previewMask() : '点击预览' }}
         </div>
       </slot>
