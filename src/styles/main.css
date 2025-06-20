@@ -94,6 +94,9 @@
   --background-image: '';
   --backdrop-filter-blur: 1px;
   --background-mask-opacity: 0.1;
+
+  --search-width: 800px;
+  --search-height: 60px;
 }
 .dark {
   --background: #000000;
