@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { Tabs } from '@/components/tabs'
 import { useFavorite } from '@/composables/useFavorite.ts'
 import { useSite } from '@/composables/useSite.ts'
@@ -40,6 +40,9 @@ onMounted(() => {
 const { sites } = useSite()
 const { currentLayoutConfig, currentDisplayMode } = useSettings()
 
+// 计算内容区域的可用高度
+const contentHeight = ref<number>(0)
+
 // 根据显示模式计算网格配置
 const gridConfig = computed(() => {
   if (currentDisplayMode.value === 'favorites') {
@@ -59,13 +62,52 @@ const gridConfig = computed(() => {
   }
 })
 
+// 计算可用高度
+const calculateContentHeight = () => {
+  nextTick(() => {
+    // 页面总高度
+    const viewportHeight = window.innerHeight
+
+    // 搜索栏区域高度（包含padding）：pt-20 + pb-10 + 搜索栏高度
+    const searchAreaHeight = 80 + 40 + 60 // 80px(pt-20) + 40px(pb-10) + 60px(搜索栏)
+
+    // 标签栏高度（估算）
+    const tabsListHeight = 50
+
+    // 内容区域的padding：p-20 pt-0
+    const contentPadding = 80 // 80px(p-20, 但pt-0所以减去顶部)
+
+    // 底部预留空间
+    const bottomMargin = 210
+
+    // 计算可用高度
+    contentHeight.value = viewportHeight - searchAreaHeight - tabsListHeight - contentPadding - bottomMargin
+
+    // 最小高度限制
+    if (contentHeight.value < 200) {
+      contentHeight.value = 200
+    }
+  })
+}
+
 function getSitesByFavoriteId(id: string) {
   return sites.value.filter((site) => site.favoriteId === id)
 }
+
+// 监听窗口大小变化
+onMounted(() => {
+  calculateContentHeight()
+  window.addEventListener('resize', calculateContentHeight)
+})
+
+// 清理事件监听器
+onUnmounted(() => {
+  window.removeEventListener('resize', calculateContentHeight)
+})
 </script>
 
 <template>
-  <Tabs :tabs="favorites" v-model="modelValue" :items="menuItems">
+  <Tabs :tabs="favorites" v-model="modelValue" :items="menuItems" :content-height="contentHeight">
     <template v-for="tab in favorites" :key="tab.value" #[tab.value]>
       <SiteCardGrid
         :sites="getSitesByFavoriteId(tab?.id || tab.value)"

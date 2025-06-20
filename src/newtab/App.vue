@@ -40,7 +40,7 @@ async function toggleDark() {
 </script>
 
 <template>
-  <div class="app-container pt-10 min-h-dvh w-full relative box-border bg-image text-base font-sans">
+  <div class="app-container pt-20 min-h-dvh w-full relative box-border bg-image text-base font-sans">
     <div class="absolute top-5 right-5 z-20 flex items-center gap-2">
       <Button size="icon" @click="openAddFavoriteDialog">添加收藏夹</Button>
       <Button size="icon" @click="openPageSettingDialog">
@@ -54,7 +54,7 @@ async function toggleDark() {
     <div class="max-w-[1200px] mx-auto p-20 pb-10 relative z-10">
       <SearchBar />
     </div>
-    <div v-if="currentDisplayMode !== 'minimal'" class="max-w-[80vw] mx-auto p-20 pt-0 relative z-10">
+    <div v-if="currentDisplayMode !== 'minimal'" class="w-[80vw] mx-auto p-20 pt-0 relative z-10">
       <FavoritesMode v-if="currentDisplayMode === 'favorites'" />
       <StandardMode v-else />
     </div>
