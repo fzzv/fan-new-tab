@@ -54,7 +54,7 @@ async function toggleDark() {
     <div class="max-w-[1200px] mx-auto p-20 pb-10 relative z-10">
       <SearchBar />
     </div>
-    <div class="max-w-[80vw] mx-auto p-20 pt-0 relative z-10">
+    <div v-if="currentDisplayMode !== 'minimal'" class="max-w-[80vw] mx-auto p-20 pt-0 relative z-10">
       <FavoritesMode v-if="currentDisplayMode === 'favorites'" />
       <StandardMode v-else />
     </div>
