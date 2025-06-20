@@ -14,12 +14,14 @@ interface TabsProps {
   items?: MenuItemType[]
   popperPlacement?: Placement
   enableContextMenu?: boolean
+  contentHeight?: number
 }
 
-withDefaults(defineProps<TabsProps>(), {
+const props = withDefaults(defineProps<TabsProps>(), {
   tabs: () => [],
   popperPlacement: () => 'right-start',
   enableContextMenu: () => true,
+  contentHeight: undefined,
 })
 
 const modelValue = defineModel<string>('modelValue', { required: true })
@@ -48,7 +50,7 @@ const { isOpen, virtualElement, currentItem, onContextMenu } = useContextMenu()
         {{ tab.label }}
       </TabsTrigger>
     </TabsList>
-    <TabsContent v-for="tab in tabs" :key="tab.value" :value="tab.value">
+    <TabsContent v-for="tab in tabs" :key="tab.value" :value="tab.value" :content-height="props.contentHeight">
       <slot :name="tab.value" />
     </TabsContent>
   </TabsRoot>
