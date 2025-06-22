@@ -133,7 +133,7 @@ const layoutLimitText = computed(() => {
             <InputNumber
               v-model="currentGap"
               :min="0"
-              :max="64"
+              :max="32"
               :step="4"
               placeholder="间距(px)"
               size="md"
