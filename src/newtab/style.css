@@ -1,3 +1,7 @@
+body {
+  user-select: none;
+}
+
 .app-container {
   position: relative;
   z-index: 1;
