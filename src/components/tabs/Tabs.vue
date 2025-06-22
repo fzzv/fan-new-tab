@@ -31,7 +31,7 @@ const { isOpen, virtualElement, currentItem, onContextMenu } = useContextMenu()
 </script>
 
 <template>
-  <TabsRoot v-model="modelValue" @update:modelValue="modelValue = $event">
+  <TabsRoot v-model="modelValue" @update:modelValue="modelValue = $event" v-bind="$attrs">
     <TabsList>
       <TabsTrigger
         v-for="tab in tabs"
