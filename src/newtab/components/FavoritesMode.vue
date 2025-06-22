@@ -78,7 +78,7 @@ const calculateContentHeight = () => {
     const contentPadding = 80 // 80px(p-20, 但pt-0所以减去顶部)
 
     // 底部预留空间
-    const bottomMargin = 210
+    const bottomMargin = 100
 
     // 计算可用高度
     contentHeight.value = viewportHeight - searchAreaHeight - tabsListHeight - contentPadding - bottomMargin
@@ -107,7 +107,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Tabs :tabs="favorites" v-model="modelValue" :items="menuItems" :content-height="contentHeight">
+  <Tabs :tabs="favorites" v-model="modelValue" :items="menuItems" :content-height="contentHeight" class="w-[80vw]">
     <template v-for="tab in favorites" :key="tab.value" #[tab.value]>
       <SiteCardGrid
         :sites="getSitesByFavoriteId(tab?.id || tab.value)"

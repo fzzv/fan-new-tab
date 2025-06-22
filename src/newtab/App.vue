@@ -9,7 +9,7 @@ import { openAddFavoriteDialog, openPageSettingDialog } from '@/composables/useD
 import { useSettings } from '@/composables/useSettings'
 import FavoritesMode from './components/FavoritesMode.vue'
 import StandardMode from './components/StandardMode.vue'
-import { isColor } from '@/lib/utils'
+import { cn, isColor } from '@/lib/utils'
 
 const { backgroundConfig, backgroundConfigReady, currentDisplayMode } = useSettings()
 const { theme, themeReady } = useTheme()
@@ -40,7 +40,7 @@ async function toggleDark() {
 </script>
 
 <template>
-  <div class="app-container pt-20 min-h-dvh w-full relative box-border bg-image text-base font-sans">
+  <div class="app-container w-full relative box-border bg-image text-base font-sans">
     <div class="absolute top-5 right-5 z-20 flex items-center gap-2">
       <Button size="icon" @click="openAddFavoriteDialog">添加收藏夹</Button>
       <Button size="icon" @click="openPageSettingDialog">
@@ -51,10 +51,10 @@ async function toggleDark() {
         <Icon v-else icon="material-symbols:moon-stars-outline-rounded" width="24" height="24" />
       </Button>
     </div>
-    <div class="max-w-[1200px] mx-auto p-20 pb-10 relative z-10">
+    <div :class="cn('max-w-[1200px] mx-auto pb-10 relative z-10', currentDisplayMode !== 'minimal' && 'mt-40')">
       <SearchBar />
     </div>
-    <div v-if="currentDisplayMode !== 'minimal'" class="w-[80vw] mx-auto p-20 pt-0 relative z-10">
+    <div v-if="currentDisplayMode !== 'minimal'" class="flex-1 mx-auto py-20 pt-0 relative z-10">
       <FavoritesMode v-if="currentDisplayMode === 'favorites'" />
       <StandardMode v-else />
     </div>
