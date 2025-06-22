@@ -97,6 +97,9 @@
 
   --search-width: 800px;
   --search-height: 60px;
+
+  --icon-box-width: 0px;
+  --icon-box-height: 0px;
 }
 .dark {
   --background: #000000;
