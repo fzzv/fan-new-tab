@@ -29,7 +29,7 @@ const emit = defineEmits<{
   <div
     :class="
       cn(
-        'flex px-6 py-2 items-center text-base border-2 border-secondary shadow-md transition focus-within:shadow-xs focus-within:border-secondary',
+        'h-15 flex px-4 items-center text-base border-2 border-secondary shadow-md transition focus-within:shadow-xs focus-within:border-secondary',
         {
           'border-destructive text-destructive shadow-xs shadow-destructive focus-within:border-destructive': invalid,
         },
@@ -49,7 +49,7 @@ const emit = defineEmits<{
       :autocorrect="props.autocorrect"
       :autocomplete="props.autocomplete"
       :class="
-        cn('flex-1 focus:outline-none bg-transparent text-foreground placeholder:text-muted-foreground', {
+        cn('h-full flex-1 focus:outline-none bg-transparent text-foreground placeholder:text-muted-foreground', {
           'placeholder:text-destructive': invalid,
         })
       "

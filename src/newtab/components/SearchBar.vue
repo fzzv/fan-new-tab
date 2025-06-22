@@ -25,13 +25,13 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
 <template>
   <div class="w-[var(--search-width)] h-[var(--search-height)] my-5 mx-auto">
-    <Input v-model="searchQuery" placeholder="输入搜索内容" class="rounded-xl py-4" @keydown="handleKeyDown">
+    <Input v-model="searchQuery" placeholder="输入搜索内容" class="rounded-xl h-full" @keydown="handleKeyDown">
       <template #prefix>
         <Popover class="w-[var(--search-width)]" align="start" :alignOffset="-65" :sideOffset="45">
           <template #trigger>
             <img
               :src="selectedEngine.icon"
-              class="w-8 h-8 px-1 py-1 rounded-full cursor-pointer border-2 border-border mr-2"
+              class="w-10 h-10 px-1 py-1 rounded-full cursor-pointer border-2 border-border mr-2"
               alt="搜索引擎"
             />
           </template>
@@ -42,7 +42,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
               :class="
                 cn(
                   ' relative flex flex-col items-center justify-center aspect-square rounded-xl group',
-                  'cursor-pointer transition-all duration-200 ease-in-out border-2 border-secondary hover:-translate-y-0.5',
+                  'cursor-pointer transition-all duration-200 ease-in-out border-2 border-secondary',
                   { 'border-2 border-primary': selectedEngine.name === engine.name },
                 )
               "
@@ -55,11 +55,11 @@ const handleKeyDown = (e: KeyboardEvent) => {
               <button
                 :class="
                   cn(
-                    'absolute top-0 right-0 w-5 h-5 rounded-full cursor-pointer',
+                    'absolute -top-2 -right-2 w-5 h-5 rounded-full cursor-pointer',
                     'flex items-center justify-center',
                     'opacity-0 group-hover:opacity-100',
                     'transition-opacity duration-200 ease-in-out',
-                    'bg-background/80 hover:bg-background',
+                    'bg-destructive/80 text-background hover:text-primary',
                   )
                 "
                 @click.stop="removeSearchEngine(index)"
@@ -84,7 +84,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
       </template>
       <template #suffix>
         <button @click="handleSearch" class="cursor-pointer">
-          <Icon icon="material-symbols:search-rounded" width="24" height="24" class="text-secondary" />
+          <Icon icon="material-symbols:search-rounded" width="28" height="28" class="text-secondary" />
         </button>
       </template>
     </Input>
