@@ -24,6 +24,7 @@
     "motion-v": "^1.1.1",
     "ofetch": "^1.4.1",
     "reka-ui": "^2.3.0",
+    "swiper": "^11.2.8",
     "tailwind-merge": "^3.3.0",
     "tailwindcss": "^4.1.7",
     "uuid": "^11.1.0",
