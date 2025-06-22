@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { cn } from '@/lib/utils'
 import SiteCard from './SiteCard.vue'
+import type { ClassValue } from 'clsx'
 
 // 网站数据接口
 export interface SiteData {
@@ -22,7 +23,6 @@ interface SiteCardGridProps {
   rowGap?: number
   colGap?: number
   maxWidth?: string
-  className?: string
 }
 
 const props = withDefaults(defineProps<SiteCardGridProps>(), {
@@ -33,7 +33,6 @@ const props = withDefaults(defineProps<SiteCardGridProps>(), {
   rowGap: undefined,
   colGap: undefined,
   maxWidth: '100%',
-  className: '',
 })
 
 // 事件定义
@@ -93,10 +92,10 @@ const handleSiteClick = (site: SiteData) => {
 </script>
 
 <template>
-  <div :class="cn('site-card-grid', className)" :style="gridStyle">
+  <div :class="cn('site-card-grid', $attrs.class as ClassValue)" :style="gridStyle">
     <!-- 渲染网站卡片 -->
-    <div v-for="site in displaySites" :key="site.id" class="site-card-slot" @click="handleSiteClick(site)">
-      <SiteCard :image-url="site.imageUrl" :title="site.title" :alt="site.alt" />
+    <div v-for="site in displaySites" :key="site.id" class="site-card-slot">
+      <SiteCard :image-url="site.imageUrl" :title="site.title" :alt="site.alt" @click="handleSiteClick(site)" />
     </div>
   </div>
 </template>
