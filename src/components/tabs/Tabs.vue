@@ -15,6 +15,7 @@ interface TabsProps {
   popperPlacement?: Placement
   enableContextMenu?: boolean
   contentHeight?: number
+  showIcon?: boolean
 }
 
 const props = withDefaults(defineProps<TabsProps>(), {
@@ -22,6 +23,7 @@ const props = withDefaults(defineProps<TabsProps>(), {
   popperPlacement: () => 'right-start',
   enableContextMenu: () => true,
   contentHeight: undefined,
+  showIcon: false,
 })
 
 const modelValue = defineModel<string>('modelValue', { required: true })
@@ -40,13 +42,15 @@ const { isOpen, virtualElement, currentItem, onContextMenu } = useContextMenu()
         :class="cn('flex items-center gap-2 px-4 py-1 border-border text-secondary')"
         @contextmenu.prevent="onContextMenu(tab)"
       >
-        <Icon
-          v-if="tab.value === modelValue"
-          :icon="tab.activeIcon || tab.icon || 'material-symbols:folder-open-outline'"
-          width="24"
-          height="24"
-        />
-        <Icon v-else :icon="tab.icon || 'material-symbols:folder-outline'" width="24" height="24" />
+        <template v-if="showIcon">
+          <Icon
+            v-if="tab.value === modelValue"
+            :icon="tab.activeIcon || tab.icon || 'material-symbols:folder-open-outline'"
+            width="24"
+            height="24"
+          />
+          <Icon v-else :icon="tab.icon || 'material-symbols:folder-outline'" width="24" height="24" />
+        </template>
         {{ tab.label }}
       </TabsTrigger>
     </TabsList>
