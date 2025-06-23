@@ -107,7 +107,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Tabs :tabs="favorites" v-model="modelValue" :items="menuItems" :content-height="contentHeight" class="w-[80vw]">
+  <Tabs
+    :tabs="favorites"
+    v-model="modelValue"
+    :items="menuItems"
+    :show-icon="true"
+    :content-height="contentHeight"
+    class="w-[80vw]"
+  >
     <template v-for="tab in favorites" :key="tab.value" #[tab.value]>
       <SiteCardGrid
         :sites="getSitesByFavoriteId(tab?.id || tab.value)"
