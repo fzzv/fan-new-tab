@@ -154,7 +154,6 @@ const handlePreviewClose = () => {
       ref="img"
       :src="isError ? fallback : imgSrc"
       :alt="alt"
-      :style="imageStyle"
       :class="
         cn(
           'block max-w-full h-auto transition-opacity duration-200',
@@ -166,6 +165,7 @@ const handlePreviewClose = () => {
           $attrs.class as ClassValue,
         )
       "
+      :style="imageStyle"
       @load="!isError && handleLoad"
       @error="handleError"
       @click="handleClick"
