@@ -8,6 +8,7 @@ import { useSettings } from '@/composables/useSettings'
 import { Image } from '@/components/image'
 import { Button } from '@/components/button'
 import { downloadFileFromUrl } from '@/lib/utils'
+import { openWallpaperSelector } from '@/composables/useDialog.ts'
 
 // 组件属性
 interface SettingBackgroundProps {
@@ -95,7 +96,7 @@ const handleDownload = () => {
           </div>
           <!-- 切换背景图片 -->
           <div class="flex items-center">
-            <Button size="sm" class="w-full justify-center">
+            <Button size="sm" class="w-full justify-center" @click="openWallpaperSelector">
               <Icon icon="material-symbols:imagesmode-outline-rounded" width="24" height="24" />
               切换背景图片
             </Button>
@@ -118,14 +119,7 @@ const handleDownload = () => {
             <Label class="text-sm font-medium">背景遮罩透明度</Label>
             <span class="text-xs text-muted-foreground">{{ config.opacity[0] }}%</span>
           </div>
-          <Slider
-            v-model="config.opacity"
-            :min="0"
-            :max="100"
-            :step="1"
-            class="w-full"
-            @change="handleOpacityChange"
-          />
+          <Slider v-model="config.opacity" :min="0" :max="100" :step="1" class="w-full" @change="handleOpacityChange" />
           <p class="text-xs text-muted-foreground">调整背景遮罩的不透明度，数值越大背景越暗</p>
         </div>
       </div>

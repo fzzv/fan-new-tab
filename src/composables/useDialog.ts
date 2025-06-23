@@ -32,3 +32,14 @@ export const openPageSettingDialog = () => {
 export const closePageSettingDialog = () => {
   isPageSettingDialog.value = false
 }
+
+// 壁纸选择
+export const isWallpaperSelector = ref(false)
+
+export const openWallpaperSelector = () => {
+  isWallpaperSelector.value = true
+}
+
+export const closeWallpaperSelector = () => {
+  isWallpaperSelector.value = false
+}
