@@ -25,9 +25,7 @@ export default defineConfig(({ command }) => ({
       imports: [
         'vue',
         {
-          'webextension-polyfill': [
-            ['=', 'browser'],
-          ],
+          'webextension-polyfill': [['=', 'browser']],
         },
       ],
     }),
@@ -47,17 +45,22 @@ export default defineConfig(({ command }) => ({
       host: 'localhost',
     },
     origin: `http://localhost:${port}`,
+    proxy: {
+      '/api': {
+        target: 'https://wallpaper.xyu.fan/api/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
   build: {
-    watch: isDev
-      ? {}
-      : undefined,
+    watch: isDev ? {} : undefined,
     outDir: r('extension/dist'),
     emptyOutDir: false,
     sourcemap: isDev ? 'inline' : false,
   },
   rollupOptions: {
     popup: r('src/popup/index.html'),
-    newtab: r('src/newtab/index.html')
+    newtab: r('src/newtab/index.html'),
   },
 }))
