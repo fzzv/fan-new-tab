@@ -28,7 +28,7 @@ export interface BackgroundConfig {
 const defaultBackgroundConfig: BackgroundConfig = {
   blur: [0],
   opacity: [0],
-  background: 'https://wallpaper.xyu.fan/api/findaphoto/bigLink/10492.jpg',
+  background: 'http://wallpaper.xyu.fan/image/findaphoto/bigLink/10492.jpg',
 }
 
 // 显示模式类型
