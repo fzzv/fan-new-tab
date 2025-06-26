@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, inject } from 'vue'
-import isNumber from 'lodash-es/isNumber'
+import { isNumber } from 'lodash-es'
 import { cn } from '@/lib/utils'
 import type { ClassValue } from 'clsx'
 import ImagePreview from './ImagePreview.vue'
@@ -18,7 +18,6 @@ export interface ImageProps {
   crossOrigin?: 'anonymous' | 'use-credentials'
   decoding?: 'async' | 'auto' | 'sync'
   loading?: 'eager' | 'lazy'
-  referrerPolicy?: string
   sizes?: string
   srcSet?: string
 }
@@ -53,7 +52,6 @@ const props = withDefaults(defineProps<ImageProps>(), {
   crossOrigin: undefined,
   decoding: 'auto',
   loading: 'lazy',
-  referrerPolicy: undefined,
   sizes: undefined,
   srcSet: undefined,
 })
@@ -66,8 +64,8 @@ const emits = defineEmits<{
 }>()
 
 // 合并默认值
-const mergeDefaultValue = <T extends object>(obj: T, defaultValues: object): T => {
-  const res = { ...obj }
+const mergeDefaultValue = <T extends Record<string, any>>(obj: T, defaultValues: Record<string, any>): T => {
+  const res: any = { ...obj }
   Object.keys(defaultValues).forEach((key) => {
     if (obj[key] === undefined) {
       res[key] = defaultValues[key]
@@ -111,7 +109,7 @@ const previewGroup = inject<{
   unregisterImage: (src: string) => void
   showImagePreview: (src: string) => void
   isPreviewEnabled: any
-}>('imagePreviewGroup', null)
+} | null>('imagePreviewGroup', null)
 
 const toSizePx = (l: number | string) => (isNumber(l) ? l + 'px' : l)
 const isPreviewEnabled = computed(() => {
@@ -257,23 +255,26 @@ const placeholderContent = computed(() => {
 </script>
 
 <template>
-  <div ref="imgContainer" class="relative inline-block">
+  <div
+    ref="imgContainer"
+    class="relative"
+    :style="{
+      width: toSizePx(width),
+      height: toSizePx(height),
+    }"
+  >
     <!-- 占位符 -->
     <div
       v-if="isLoading || !shouldShowImage"
       :class="
         cn(
-          'flex items-center justify-center bg-muted text-muted-foreground',
+          'flex items-center justify-center bg-muted text-muted-foreground w-full h-full',
           {
             'animate-pulse': isLoading,
           },
           $attrs.class as ClassValue,
         )
       "
-      :style="{
-        width: toSizePx(width),
-        height: toSizePx(height),
-      }"
       role="img"
       :aria-label="alt || 'Loading image'"
     >
@@ -291,16 +292,15 @@ const placeholderContent = computed(() => {
       :crossorigin="crossOrigin"
       :decoding="decoding"
       :loading="loading"
-      :referrerpolicy="referrerPolicy"
       :sizes="sizes"
       :srcset="srcSet"
       :class="
         cn(
-          'block max-w-full h-auto transition-opacity duration-200',
+          'block w-full h-full',
           {
             'cursor-pointer': isPreviewEnabled && !isError,
-            'opacity-0': isLoading,
-            'opacity-100': !isLoading,
+            hidden: isLoading,
+            block: !isLoading,
           },
           $attrs.class as ClassValue,
         )
