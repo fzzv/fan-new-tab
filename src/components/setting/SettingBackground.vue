@@ -82,10 +82,12 @@ const handleDownload = () => {
       <div class="p-4 space-y-6">
         <!-- 背景图片设置 -->
         <div class="space-y-3">
-          <div class="flex items-center justify-between">
+          <div class="w-full flex items-center justify-between">
             <Image
               :src="backgroundConfig.background"
-              class="w-full h-[200px] object-cover border border-border rounded"
+              width="100%"
+              height="200px"
+              class="object-cover border border-border rounded"
             >
               <template #previewMask>
                 <div class="text-white text-sm font-medium">
