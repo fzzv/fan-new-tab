@@ -46,6 +46,10 @@ const props = withDefaults(defineProps<ScrollAreaProps>(), {
   vertical: true,
 })
 
+const emit = defineEmits<{
+  (e: 'areaScroll', event: Event): void
+}>()
+
 // 计算容器样式
 const containerStyle = computed(() => {
   const style: Record<string, string> = {}
@@ -69,7 +73,7 @@ const containerStyle = computed(() => {
     :class="cn('relative overflow-hidden', $attrs.class as ClassValue)"
     :style="containerStyle"
   >
-    <ScrollAreaViewport class="h-full w-full rounded-[inherit]">
+    <ScrollAreaViewport class="h-full w-full rounded-[inherit]" @scroll="(event) => emit('areaScroll', event)">
       <slot />
     </ScrollAreaViewport>
     <!-- 垂直滚动条 -->
