@@ -12,6 +12,8 @@ const props = withDefaults(defineProps<ImageProps>(), {
   objectFit: 'cover',
   showToolbar: true,
   showToolbarTooltip: true,
+  showMask: false,
+  maskBackground: 'rgba(0, 0, 0, 0.5)',
   imgClass: '',
 })
 
@@ -27,6 +29,7 @@ const currentSrc = ref('')
 const imageGroupContext = inject<ImageContext | null>('imageGroup', null)
 const imageIndex = ref(-1)
 const showPreview = ref(false)
+const isHovered = ref(false)
 
 const containerStyle = computed(() => ({
   width: typeof props.width === 'number' ? `${props.width}px` : props.width,
@@ -158,25 +161,53 @@ watch(
       <span class="text-sm text-muted-foreground">加载失败</span>
     </div>
 
-    <!-- 图片 -->
-    <img
+    <!-- 图片容器 -->
+    <div
       v-else-if="status === 'loaded'"
-      ref="imageRef"
-      :src="currentSrc"
-      :alt="alt"
-      :style="imageStyle"
-      :class="
-        cn(
-          'w-full h-full block transition-opacity duration-300',
-          props.preview && 'cursor-pointer hover:opacity-90',
-          props.imgClass as ClassValue,
-        )
-      "
-      v-bind="imgProps"
-      @click="handleClick"
-      @load="handleLoad"
-      @error="handleError"
-    />
+      class="relative w-full h-full group"
+      @mouseenter="isHovered = true"
+      @mouseleave="isHovered = false"
+    >
+      <!-- 图片 -->
+      <img
+        ref="imageRef"
+        :src="currentSrc"
+        :alt="alt"
+        :style="imageStyle"
+        :class="
+          cn(
+            'w-full h-full block transition-opacity duration-300',
+            props.preview && 'cursor-pointer',
+            props.imgClass as ClassValue,
+          )
+        "
+        v-bind="imgProps"
+        @click="handleClick"
+        @load="handleLoad"
+        @error="handleError"
+      />
+
+      <!-- Mask 蒙层 -->
+      <div
+        v-if="showMask && isHovered"
+        :class="cn('absolute inset-0 flex items-center justify-center transition-opacity duration-300 opacity-100')"
+        :style="{
+          background: props.maskBackground,
+        }"
+      >
+        <!-- 自定义 mask 内容 -->
+        <slot v-if="$slots.mask" name="mask" />
+
+        <!-- 默认预览图标 -->
+        <div
+          v-else-if="preview"
+          class="flex items-center justify-center text-white cursor-pointer hover:scale-110 transition-transform duration-200"
+          @click="handleClick"
+        >
+          <Icon icon="lucide:eye" width="24" height="24" />
+        </div>
+      </div>
+    </div>
 
     <!-- 占位符 -->
     <div

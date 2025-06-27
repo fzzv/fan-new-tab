@@ -13,6 +13,7 @@
 - ✅ 加载状态显示
 - ✅ 自定义尺寸
 - ✅ 智能预览模式（单独使用时内置预览，在图片组中使用组预览）
+- ✅ Mask 蒙层插槽（hover显示，支持自定义内容和操作按钮）
 
 ### ImageGroup 组件
 - ✅ 图片组管理
@@ -75,6 +76,58 @@ Image 组件的预览功能具有智能行为：
 这种设计让使用者可以：
 - 简单场景下无需关心预览组件的引入和管理
 - 复杂场景下仍有完全的控制权
+
+### Mask 蒙层插槽
+
+Image 组件支持 mask 插槽，可以在 hover 时显示自定义内容：
+
+```vue
+<template>
+  <!-- 基础预览功能 -->
+  <Image
+    src="/path/to/image.jpg"
+    :preview="true"
+    width="300"
+    height="200"
+  />
+
+  <!-- 自定义 mask 内容 -->
+  <Image
+    src="/path/to/image.jpg"
+    width="300"
+    height="200"
+  >
+    <template #mask>
+      <div class="flex items-center gap-4 text-white">
+        <button @click="handleDownload">
+          <Icon icon="material-symbols:download-rounded" />
+        </button>
+        <button @click="handleEdit">
+          <Icon icon="material-symbols:edit-outline" />
+        </button>
+      </div>
+    </template>
+  </Image>
+
+  <!-- 自定义 mask 背景色 -->
+  <Image
+    src="/path/to/image.jpg"
+    :preview="true"
+    mask-background="rgba(255, 0, 0, 0.3)"
+    width="300"
+    height="200"
+  />
+
+  <!-- 禁用 mask -->
+  <Image
+    src="/path/to/image.jpg"
+    :preview="true"
+    :show-mask="false"
+    width="300"
+    height="200"
+  />
+</template>
+```
 
 ### 图片组
 
@@ -143,7 +196,16 @@ const imageList = [
 | objectFit | string | 'cover' | 对象适应方式 |
 | showToolbar | boolean | true | 是否显示工具栏 |
 | showToolbarTooltip | boolean | true | 是否显示工具栏提示 |
+| showMask | boolean | true | 是否显示mask蒙层 |
+| maskBackground | string | 'rgba(0, 0, 0, 0.5)' | mask蒙层背景色 |
+| imgClass | string | - | 图片的样式类 |
 | imgProps | object | - | img 元素的原生属性 |
+
+### Image Slots
+
+| 插槽 | 说明 |
+|------|------|
+| mask | 自定义mask蒙层内容，hover时显示 |
 
 ### Image Events
 
