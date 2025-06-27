@@ -228,6 +228,25 @@ export function useSettings() {
     displayMode.value = mode
   }
 
+  // 设置壁纸
+  const setWallpaper = (imageUrl: string) => {
+    // 更新背景配置
+    backgroundConfig.value.background = imageUrl
+
+    // 立即更新 CSS 变量以应用新背景
+    const isColor = (str: string) => {
+      // 简单判断是否为颜色值（以#开头或包含rgb/rgba等）
+      return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(str) ||
+             /^rgb|rgba|hsl|hsla/i.test(str) ||
+             /^(transparent|inherit|initial|unset)$/i.test(str)
+    }
+
+    document.documentElement.style.setProperty(
+      '--background-image',
+      isColor(imageUrl) ? imageUrl : `url(${imageUrl})`
+    )
+  }
+
   return {
     // 状态
     currentDisplayMode,
@@ -263,5 +282,6 @@ export function useSettings() {
     updateCols,
     updateGap,
     resetToDefault,
+    setWallpaper,
   }
 }

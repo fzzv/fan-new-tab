@@ -8,6 +8,7 @@ import { $fetch } from 'ofetch'
 import { ScrollArea } from '@/components/scroll-area'
 import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
 import { useResponsiveGrid, responsivePresets } from '@/composables/useResponsiveGrid'
+import { useSettings } from '@/composables/useSettings'
 
 const classificationTabs = [
   {
@@ -45,6 +46,9 @@ const gridContainerRef = ref<HTMLElement | null>(null)
 // 使用响应式网格
 const { cols, gridStyle } = useResponsiveGrid(gridContainerRef, responsivePresets.imageGrid)
 
+// 设置
+const { setWallpaper } = useSettings()
+
 // 加载更多数据的函数
 async function loadMoreData() {
   page.value += 1
@@ -58,6 +62,7 @@ const { handleScroll, isLoading, hasMore, reset } = useInfiniteScroll(loadMoreDa
   debug: true, // 开启调试日志
 })
 
+// 获取云端的壁纸列表
 async function getWallpaperList(append = false) {
   try {
     const { data } = await $fetch(`http://localhost:3303/api/getWallpaperList`, {
@@ -82,6 +87,13 @@ async function getWallpaperList(append = false) {
     console.log('加载壁纸列表失败:', err)
     // 发生错误时也要停止加载更多
     hasMore.value = false
+  }
+}
+
+// 处理图片点击，设置为壁纸
+function handleImageClick(item: any) {
+  if (item?.src?.rawSrc) {
+    setWallpaper(item.src.rawSrc)
   }
 }
 
@@ -114,7 +126,7 @@ function handleAreaScroll(event: Event) {
 <template>
   <ModalContent size="xl">
     <ModalHeader @close="closeWallpaperSelector">
-      <div class="text-xl">选择</div>
+      <div class="text-xl">选择壁纸</div>
     </ModalHeader>
 
     <Tabs v-model="modelValue" :tabs="classificationTabs" :show-icon="false" class="p-5">
@@ -130,6 +142,7 @@ function handleAreaScroll(event: Event) {
                 :height="150"
                 :preview="false"
                 imgClass="border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
+                @click="() => handleImageClick(item)"
               />
             </div>
             <div v-if="isLoading" class="loading" :style="{ gridColumn: `1 / ${cols + 1}` }">加载中...</div>
