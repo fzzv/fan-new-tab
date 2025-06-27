@@ -111,22 +111,24 @@ onMounted(() => {
 
     <Tabs v-model="modelValue" :tabs="classificationTabs" :show-icon="false">
       <template v-for="tab in classificationTabs" :key="tab.value" #[tab.value]>
-        <ScrollArea v-if="modelValue === 'cloud'" :height="400" type="hover" @areaScroll="handleScroll">
-          <div ref="gridContainerRef" class="responsive-grid" :style="gridStyle">
-            <div v-for="item in images" :key="item._id" class="grid-item">
-              <Image
-                :src="item.src.rawSrc"
-                :alt="`wallpaper-${item._id}`"
-                :width="200"
-                :height="150"
-                :preview="false"
-                style="border: 1px solid #ddd; border-radius: 4px"
-              />
+        <template v-if="modelValue === 'cloud'">
+          <ScrollArea :height="400" type="hover" @areaScroll="handleScroll">
+            <div ref="gridContainerRef" class="responsive-grid" :style="gridStyle">
+              <div v-for="item in images" :key="item._id" class="grid-item">
+                <Image
+                  :src="item.src.rawSrc"
+                  :alt="`wallpaper-${item._id}`"
+                  :width="200"
+                  :height="150"
+                  :preview="false"
+                  imgClass="border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
+                />
+              </div>
+              <div v-if="isLoading" class="loading" :style="{ gridColumn: `1 / ${cols + 1}` }">加载中...</div>
+              <div v-else-if="!hasMore" class="no-more" :style="{ gridColumn: `1 / ${cols + 1}` }">没有更多了</div>
             </div>
-            <div v-if="isLoading" class="loading" :style="{ gridColumn: `1 / ${cols + 1}` }">加载中...</div>
-            <div v-else-if="!hasMore" class="no-more" :style="{ gridColumn: `1 / ${cols + 1}` }">没有更多了</div>
-          </div>
-        </ScrollArea>
+          </ScrollArea>
+        </template>
       </template>
     </Tabs>
   </ModalContent>
