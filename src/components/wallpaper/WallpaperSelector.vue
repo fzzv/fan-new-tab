@@ -101,6 +101,14 @@ onMounted(() => {
     getWallpaperList()
   }
 })
+
+// 区域滚动
+function handleAreaScroll(event: Event) {
+  // 云端壁纸支持滚动加载更多
+  if (modelValue.value === 'cloud') {
+    handleScroll(event)
+  }
+}
 </script>
 
 <template>
@@ -109,26 +117,25 @@ onMounted(() => {
       <div class="text-xl">选择</div>
     </ModalHeader>
 
-    <Tabs v-model="modelValue" :tabs="classificationTabs" :show-icon="false">
+    <Tabs v-model="modelValue" :tabs="classificationTabs" :show-icon="false" class="p-5">
       <template v-for="tab in classificationTabs" :key="tab.value" #[tab.value]>
-        <template v-if="modelValue === 'cloud'">
-          <ScrollArea :height="400" type="hover" @areaScroll="handleScroll">
-            <div ref="gridContainerRef" class="responsive-grid" :style="gridStyle">
-              <div v-for="item in images" :key="item._id" class="grid-item">
-                <Image
-                  :src="item.src.rawSrc"
-                  :alt="`wallpaper-${item._id}`"
-                  :width="200"
-                  :height="150"
-                  :preview="false"
-                  imgClass="border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
-                />
-              </div>
-              <div v-if="isLoading" class="loading" :style="{ gridColumn: `1 / ${cols + 1}` }">加载中...</div>
-              <div v-else-if="!hasMore" class="no-more" :style="{ gridColumn: `1 / ${cols + 1}` }">没有更多了</div>
+        <ScrollArea :height="400" type="hover" @areaScroll="handleAreaScroll">
+          <!-- 云端壁纸 -->
+          <div v-if="modelValue === 'cloud'" ref="gridContainerRef" class="responsive-grid" :style="gridStyle">
+            <div v-for="item in images" :key="item._id" class="grid-item">
+              <Image
+                :src="item.src.rawSrc"
+                :alt="`wallpaper-${item._id}`"
+                :width="200"
+                :height="150"
+                :preview="false"
+                imgClass="border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
+              />
             </div>
-          </ScrollArea>
-        </template>
+            <div v-if="isLoading" class="loading" :style="{ gridColumn: `1 / ${cols + 1}` }">加载中...</div>
+            <div v-else-if="!hasMore" class="no-more" :style="{ gridColumn: `1 / ${cols + 1}` }">没有更多了</div>
+          </div>
+        </ScrollArea>
       </template>
     </Tabs>
   </ModalContent>
