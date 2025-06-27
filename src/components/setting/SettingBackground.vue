@@ -87,11 +87,19 @@ const handleDownload = () => {
               :src="backgroundConfig.background"
               width="100%"
               height="200px"
-              class="object-cover border border-border rounded"
+              class="border-2 border-border rounded"
+              imgClass="rounded"
+              objectFit="cover"
             >
-              <template #previewMask>
+              <template #mask>
                 <div class="text-white text-sm font-medium">
-                  <Icon icon="material-symbols:download-rounded" width="28" height="28" @click="handleDownload" />
+                  <Icon
+                    icon="material-symbols:download-rounded"
+                    class="cursor-pointer"
+                    width="28"
+                    height="28"
+                    @click="handleDownload"
+                  />
                 </div>
               </template>
             </Image>
