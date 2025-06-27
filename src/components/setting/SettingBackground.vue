@@ -85,6 +85,7 @@ const handleDownload = () => {
           <div class="w-full flex items-center justify-between">
             <Image
               :src="backgroundConfig.background"
+              :showMask="true"
               width="100%"
               height="200px"
               class="border-2 border-border rounded"
