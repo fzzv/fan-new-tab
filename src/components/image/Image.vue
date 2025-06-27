@@ -1,358 +1,218 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, inject } from 'vue'
-import { isNumber } from 'lodash-es'
+import { ref, computed, onMounted, inject, watch } from 'vue'
+import type { ImageProps, ImageStatus, ImageContext } from './types'
 import { cn } from '@/lib/utils'
-import type { ClassValue } from 'clsx'
 import ImagePreview from './ImagePreview.vue'
 
-export interface ImageProps {
-  src: string
-  alt?: string
-  fallback?: string
-  width?: string | number
-  height?: string | number
-  placeholder?: boolean | string
-  preview?: boolean | PreviewType
-  previewMask?: boolean | (() => string)
-  lazy?: boolean
-  crossOrigin?: 'anonymous' | 'use-credentials'
-  decoding?: 'async' | 'auto' | 'sync'
-  loading?: 'eager' | 'lazy'
-  sizes?: string
-  srcSet?: string
-}
-
-type GetContainer = string | HTMLElement | (() => HTMLElement)
-
-export interface PreviewType {
-  src?: string
-  visible?: boolean
-  onVisibleChange?: (value: boolean) => void
-  getContainer?: GetContainer | false
-  mask?: boolean | (() => string)
-  maskClosable?: boolean
-  zIndex?: number
-  scaleStep?: number
-  minScale?: number
-  maxScale?: number
-  movable?: boolean
-  destroyOnClose?: boolean
-  closeIcon?: string
-  forceRender?: boolean
-}
-
 const props = withDefaults(defineProps<ImageProps>(), {
-  alt: '',
-  width: '',
-  height: '',
-  placeholder: true,
-  preview: true,
-  previewMask: true,
   lazy: false,
-  crossOrigin: undefined,
-  decoding: 'auto',
-  loading: 'lazy',
-  sizes: undefined,
-  srcSet: undefined,
+  preview: false,
+  objectFit: 'cover',
+  showToolbar: true,
+  showToolbarTooltip: true,
 })
 
-const emits = defineEmits<{
-  error: [event: Event]
-  load: [event: Event]
-  click: [event: Event]
-  preview: [event: Event]
+const emit = defineEmits<{
+  load: [e: Event]
+  error: [e: Event]
+  preview: []
 }>()
 
-// 合并默认值
-const mergeDefaultValue = <T extends Record<string, any>>(obj: T, defaultValues: Record<string, any>): T => {
-  const res: any = { ...obj }
-  Object.keys(defaultValues).forEach((key) => {
-    if (obj[key] === undefined) {
-      res[key] = defaultValues[key]
-    }
-  })
-  return res
-}
-
-// 合并 preview 的配置
-const previewConfig = computed<PreviewType>(() => {
-  const defaultValues = {
-    visible: undefined,
-    onVisibleChange: () => {},
-    getContainer: undefined,
-    maskClosable: true,
-    zIndex: 3000,
-    scaleStep: 0.5,
-    minScale: 0.25,
-    maxScale: 50,
-    movable: true,
-    destroyOnClose: false,
-    closeIcon: undefined,
-    forceRender: false,
-  }
-  return typeof props.preview === 'object' ? mergeDefaultValue(props.preview, defaultValues) : defaultValues
-})
-
-// 状态管理
-const ImageStatus = {
-  NORMAL: 'normal',
-  ERROR: 'error',
-  LOADING: 'loading',
-} as const
-
-type ImageStatusType = (typeof ImageStatus)[keyof typeof ImageStatus]
+const imageRef = ref<HTMLImageElement>()
+const status = ref<ImageStatus>('pending')
+const currentSrc = ref('')
+const imageGroupContext = inject<ImageContext>('imageGroup', null)
+const imageIndex = ref(-1)
 const showPreview = ref(false)
 
-// 注入PreviewGroup上下文
-const previewGroup = inject<{
-  registerImage: (src: string, alt?: string) => number
-  unregisterImage: (src: string) => void
-  showImagePreview: (src: string) => void
-  isPreviewEnabled: any
-} | null>('imagePreviewGroup', null)
+const containerStyle = computed(() => ({
+  width: typeof props.width === 'number' ? `${props.width}px` : props.width,
+  height: typeof props.height === 'number' ? `${props.height}px` : props.height,
+}))
 
-const toSizePx = (l: number | string) => (isNumber(l) ? l + 'px' : l)
-const isPreviewEnabled = computed(() => {
-  if (previewGroup) {
-    return previewGroup.isPreviewEnabled.value
+const imageStyle = computed(() => ({
+  objectFit: props.objectFit,
+}))
+
+// 图片加载
+function loadImage() {
+  if (!props.src) return
+
+  status.value = 'loading'
+  currentSrc.value = props.src
+
+  const img = new Image()
+  img.onload = () => {
+    status.value = 'loaded'
+    emit('load', new Event('load'))
   }
-  if (typeof props.preview === 'boolean') {
-    return props.preview
+  img.onerror = () => {
+    if (props.fallbackSrc && currentSrc.value !== props.fallbackSrc) {
+      currentSrc.value = props.fallbackSrc
+      img.src = props.fallbackSrc
+    } else {
+      status.value = 'error'
+      emit('error', new Event('error'))
+    }
   }
-  return true
-})
-
-const status = ref<ImageStatusType>(props.placeholder ? ImageStatus.LOADING : ImageStatus.NORMAL)
-const intersectionObserver = ref<IntersectionObserver | null>(null)
-const isIntersecting = ref(false)
-
-// 监听 src 变化，重置状态
-watch(
-  () => props.src,
-  () => {
-    status.value = props.placeholder ? ImageStatus.LOADING : ImageStatus.NORMAL
-  },
-)
-
-const isError = computed(() => status.value === ImageStatus.ERROR)
-const isLoading = computed(() => status.value === ImageStatus.LOADING)
-const isNormal = computed(() => status.value === ImageStatus.NORMAL)
+  img.src = props.src
+}
 
 // 事件处理
-const handleLoad = (event: Event) => {
-  status.value = ImageStatus.NORMAL
-  emits('load', event)
+function handleLoad(e: Event) {
+  emit('load', e)
 }
 
-const handleError = (event: Event) => {
-  status.value = ImageStatus.ERROR
-  emits('error', event)
+function handleError(e: Event) {
+  if (props.fallbackSrc && currentSrc.value !== props.fallbackSrc) {
+    currentSrc.value = props.fallbackSrc
+  } else {
+    status.value = 'error'
+    emit('error', e)
+  }
 }
 
-const img = ref<HTMLImageElement | null>(null)
-const imgContainer = ref<HTMLDivElement | null>(null)
-
-// 懒加载逻辑
-const setupLazyLoading = () => {
-  if (!props.lazy || !imgContainer.value) return
-
-  intersectionObserver.value = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          isIntersecting.value = true
-          intersectionObserver.value?.disconnect()
-        }
-      })
-    },
-    { threshold: 0.1 },
-  )
-
-  intersectionObserver.value.observe(imgContainer.value)
-}
-
-// 处理图片状态（判断是否已加载）
-watch(
-  () => img.value,
-  () => {
-    if (status.value !== ImageStatus.LOADING) return
-    if (img.value?.complete && (img.value.naturalWidth || img.value.naturalHeight)) {
-      // 元素加载完成，设置状态为正常
-      handleLoad(new Event('load'))
+function handleClick() {
+  if (props.preview) {
+    emit('preview')
+    if (imageGroupContext) {
+      imageGroupContext.preview(imageIndex.value)
+    } else {
+      // 如果不在图片组中，直接显示预览
+      showPreview.value = true
     }
-  },
-)
+  }
+}
 
 // 生命周期
 onMounted(() => {
-  if (props.lazy) {
-    setupLazyLoading()
-  } else {
-    isIntersecting.value = true
+  if (imageGroupContext) {
+    imageIndex.value = imageGroupContext.register(props.src || '', props.previewSrc)
   }
 
-  // 注册到PreviewGroup
-  if (previewGroup) {
-    previewGroup.registerImage(props.src, props.alt)
-  }
-})
-
-onUnmounted(() => {
-  intersectionObserver.value?.disconnect()
-
-  // 从PreviewGroup取消注册
-  if (previewGroup) {
-    previewGroup.unregisterImage(props.src)
-  }
-})
-
-const handlePreview = (event: Event) => {
-  if (isPreviewEnabled.value && status.value !== ImageStatus.ERROR) {
-    if (previewGroup) {
-      // 如果在PreviewGroup中，使用组的预览功能
-      previewGroup.showImagePreview(props.src)
+  if (props.src) {
+    if (props.lazy) {
+      // 简单的懒加载实现
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          loadImage()
+          observer.disconnect()
+        }
+      })
+      if (imageRef.value?.parentElement) {
+        observer.observe(imageRef.value.parentElement)
+      }
     } else {
-      // 独立预览
-      showPreview.value = true
-      previewConfig.value.onVisibleChange?.(true)
+      loadImage()
     }
   }
-  emits('preview', event)
-}
-
-const handleClick = (event: Event) => {
-  if (isPreviewEnabled.value && status.value !== ImageStatus.ERROR) {
-    handlePreview(event)
-  }
-  emits('click', event)
-}
-
-const handlePreviewClose = () => {
-  showPreview.value = false
-  previewConfig.value.onVisibleChange?.(false)
-}
-
-// 计算实际显示的src
-const actualSrc = computed(() => {
-  if (isError.value && props.fallback) {
-    return props.fallback
-  }
-  return props.src
 })
 
-// 是否应该显示图片
-const shouldShowImage = computed(() => {
-  return !props.lazy || isIntersecting.value
-})
-
-// 占位符内容
-const placeholderContent = computed(() => {
-  if (typeof props.placeholder === 'string') {
-    return props.placeholder
-  }
-  return isError.value ? '加载失败' : '加载中...'
-})
+// 监听 src 变化
+watch(
+  () => props.src,
+  (newSrc) => {
+    if (newSrc) {
+      loadImage()
+    } else {
+      status.value = 'pending'
+      currentSrc.value = ''
+    }
+  },
+)
 </script>
 
 <template>
-  <div
-    ref="imgContainer"
-    class="relative"
-    :style="{
-      width: toSizePx(width),
-      height: toSizePx(height),
-    }"
-  >
-    <!-- 占位符 -->
+  <div class="relative" :style="containerStyle">
+    <!-- 加载状态 -->
     <div
-      v-if="isLoading || !shouldShowImage"
+      v-if="status === 'loading'"
       :class="
         cn(
-          'flex items-center justify-center bg-muted text-muted-foreground w-full h-full',
-          {
-            'animate-pulse': isLoading,
-          },
-          $attrs.class as ClassValue,
+          'flex items-center justify-center bg-muted text-muted-foreground text-sm w-full h-full',
+          'border border-dashed border-border rounded',
         )
       "
-      role="img"
-      :aria-label="alt || 'Loading image'"
     >
-      <slot name="placeholder">
-        <div class="text-sm">{{ placeholderContent }}</div>
-      </slot>
+      <div class="text-muted-foreground">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity=".25" />
+          <path
+            d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z"
+          >
+            <animateTransform
+              attributeName="transform"
+              type="rotate"
+              dur="0.75s"
+              values="0 12 12;360 12 12"
+              repeatCount="indefinite"
+            />
+          </path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 错误状态 -->
+    <div
+      v-else-if="status === 'error'"
+      :class="
+        cn(
+          'flex flex-col items-center justify-center bg-muted text-muted-foreground text-sm w-full h-full',
+          'border border-border rounded',
+        )
+      "
+    >
+      <div class="text-2xl mb-2 text-muted-foreground">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M21,5V19a2,2,0,0,1-2,2H5a2,2,0,0,1-2-2V5A2,2,0,0,1,5,3H19A2,2,0,0,1,21,5ZM5,5V19H19V5ZM15.5,9.5L13,12l2.5,2.5L14,16l-2-2-2,2L8.5,14.5,11,12,8.5,9.5,10,8l2,2,2-2Z"
+          />
+        </svg>
+      </div>
+      <span class="text-sm text-muted-foreground">加载失败</span>
     </div>
 
     <!-- 图片 -->
     <img
-      v-if="shouldShowImage"
-      ref="img"
-      :src="actualSrc"
+      v-else-if="status === 'loaded'"
+      ref="imageRef"
+      :src="currentSrc"
       :alt="alt"
-      :crossorigin="crossOrigin"
-      :decoding="decoding"
-      :loading="loading"
-      :sizes="sizes"
-      :srcset="srcSet"
+      :style="imageStyle"
       :class="
-        cn(
-          'block w-full h-full',
-          {
-            'cursor-pointer': isPreviewEnabled && !isError,
-            hidden: isLoading,
-            block: !isLoading,
-          },
-          $attrs.class as ClassValue,
-        )
+        cn('w-full h-full block transition-opacity duration-300', props.preview && 'cursor-pointer hover:opacity-90')
       "
-      :style="{
-        width: toSizePx(width),
-        height: toSizePx(height),
-      }"
+      v-bind="imgProps"
+      @click="handleClick"
       @load="handleLoad"
       @error="handleError"
-      @click="handleClick"
     />
 
-    <!-- 预览遮罩 -->
+    <!-- 占位符 -->
     <div
-      v-if="isPreviewEnabled && isNormal && shouldShowImage"
+      v-else
       :class="
         cn(
-          'w-full h-full absolute inset-0 flex items-center justify-center',
-          'bg-transparent hover:bg-black/50 cursor-pointer',
-          'opacity-0 hover:opacity-100 transition-all duration-200',
+          'flex items-center justify-center bg-muted text-muted-foreground text-sm w-full h-full',
+          'border border-dashed border-border rounded',
         )
       "
-      role="button"
-      tabindex="0"
-      :aria-label="`Preview ${alt || 'image'}`"
-      @click="handlePreview"
-      @keydown.enter="handlePreview"
-      @keydown.space.prevent="handlePreview"
     >
-      <slot name="previewMask">
-        <div v-if="previewMask !== false" class="text-white text-sm font-medium">
-          {{ typeof previewMask === 'function' ? previewMask() : '点击预览' }}
-        </div>
-      </slot>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="text-muted-foreground">
+        <path
+          d="M21,19V5c0-1.1-0.9-2-2-2H5c-1.1,0-2,0.9-2,2v14c0,1.1,0.9,2,2,2h14C20.1,21,21,20.1,21,19z M8.5,13.5l2.5,3.01 L14.5,12l4.5,6H5L8.5,13.5z"
+        />
+      </svg>
     </div>
 
-    <!-- 图片预览 (仅在非PreviewGroup模式下显示) -->
+    <!-- 内置图片预览 -->
     <ImagePreview
-      v-if="isPreviewEnabled && !previewGroup"
-      v-model:visible="showPreview"
-      :src="previewConfig.src || props.src"
-      :alt="alt"
-      :config="previewConfig"
-      @close="handlePreviewClose"
+      v-if="preview && !imageGroupContext"
+      v-model:show="showPreview"
+      :src="previewSrc || currentSrc"
+      :show-toolbar="showToolbar"
+      :show-toolbar-tooltip="showToolbarTooltip"
+      @close="showPreview = false"
     />
   </div>
 </template>
-
-<style scoped>
-/* 确保图片在容器中正确显示 */
-img {
-  vertical-align: middle;
-}
-</style>
