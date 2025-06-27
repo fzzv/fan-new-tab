@@ -21,7 +21,7 @@ const emit = defineEmits<{
 const imageRef = ref<HTMLImageElement>()
 const status = ref<ImageStatus>('pending')
 const currentSrc = ref('')
-const imageGroupContext = inject<ImageContext>('imageGroup', null)
+const imageGroupContext = inject<ImageContext | null>('imageGroup', null)
 const imageIndex = ref(-1)
 const showPreview = ref(false)
 
