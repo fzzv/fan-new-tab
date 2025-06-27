@@ -21,6 +21,10 @@ export interface ImageProps {
   showToolbar?: boolean
   /** 是否显示工具栏 */
   showToolbarTooltip?: boolean
+  /** 是否显示mask蒙层 */
+  showMask?: boolean
+  /** mask蒙层背景色 */
+  maskBackground?: string
   /** 图片加载完成回调 */
   onLoad?: (e: Event) => void
   /** 图片加载失败回调 */
@@ -29,7 +33,7 @@ export interface ImageProps {
   onPreview?: () => void
   /** img 元素的原生属性 */
   imgProps?: Record<string, any>
-  /** 图片的样式 */
+  /** 图片的样式类 */
   imgClass?: string
 }
 
