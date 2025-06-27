@@ -7,6 +7,7 @@ import { Image } from '@/components/image'
 import { $fetch } from 'ofetch'
 import { ScrollArea } from '@/components/scroll-area'
 import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
+import { useResponsiveGrid, responsivePresets } from '@/composables/useResponsiveGrid'
 
 const classificationTabs = [
   {
@@ -37,6 +38,12 @@ const images = ref<any[]>([])
 const page = ref(1)
 const pageSize = ref(10)
 const source = ref('')
+
+// 响应式网格容器引用
+const gridContainerRef = ref<HTMLElement | null>(null)
+
+// 使用响应式网格
+const { cols, gridStyle } = useResponsiveGrid(gridContainerRef, responsivePresets.imageGrid)
 
 // 加载更多数据的函数
 async function loadMoreData() {
@@ -105,19 +112,19 @@ onMounted(() => {
     <Tabs v-model="modelValue" :tabs="classificationTabs" :show-icon="false">
       <template v-for="tab in classificationTabs" :key="tab.value" #[tab.value]>
         <ScrollArea v-if="modelValue === 'cloud'" :height="400" type="hover" @areaScroll="handleScroll">
-          <div class="grid">
-            <Image
-              v-for="item in images"
-              :key="item._id"
-              :src="item.src.rawSrc"
-              :preview="false"
-              alt="image"
-              width="200px"
-              height="150px"
-              class="cursor-pointer"
-            />
-            <div v-if="isLoading" class="loading">加载中...</div>
-            <div v-else-if="!hasMore" class="no-more">没有更多了</div>
+          <div ref="gridContainerRef" class="responsive-grid" :style="gridStyle">
+            <div v-for="item in images" :key="item._id" class="grid-item">
+              <Image
+                :src="item.src.rawSrc"
+                :alt="`wallpaper-${item._id}`"
+                :width="200"
+                :height="150"
+                :preview="false"
+                style="border: 1px solid #ddd; border-radius: 4px"
+              />
+            </div>
+            <div v-if="isLoading" class="loading" :style="{ gridColumn: `1 / ${cols + 1}` }">加载中...</div>
+            <div v-else-if="!hasMore" class="no-more" :style="{ gridColumn: `1 / ${cols + 1}` }">没有更多了</div>
           </div>
         </ScrollArea>
       </template>
@@ -126,22 +133,57 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+.responsive-grid {
   padding: 8px;
+  container-type: inline-size;
 }
+
+.grid-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
 .loading {
-  grid-column: 1 / -1;
   text-align: center;
   color: #888;
-  padding: 12px 0;
+  padding: 20px 0;
+  font-size: 14px;
 }
+
 .no-more {
-  grid-column: 1 / -1;
   text-align: center;
   color: #bbb;
-  padding: 12px 0;
+  padding: 20px 0;
+  font-size: 14px;
+}
+
+/* 响应式调整 */
+@container (max-width: 600px) {
+  .responsive-grid {
+    padding: 6px;
+  }
+
+  .grid-item {
+    border-radius: 6px;
+  }
+}
+
+@container (max-width: 400px) {
+  .responsive-grid {
+    padding: 4px;
+  }
+
+  .grid-item {
+    border-radius: 4px;
+  }
+
+  .loading,
+  .no-more {
+    padding: 16px 0;
+    font-size: 12px;
+  }
 }
 </style>
