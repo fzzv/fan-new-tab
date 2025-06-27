@@ -29,6 +29,8 @@ export interface ImageProps {
   onPreview?: () => void
   /** img 元素的原生属性 */
   imgProps?: Record<string, any>
+  /** 图片的样式 */
+  imgClass?: string
 }
 
 export interface ImageGroupProps {
