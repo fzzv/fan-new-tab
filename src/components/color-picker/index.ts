@@ -1,5 +1,18 @@
 export { default as ColorPicker } from './ColorPicker.vue'
-export { default as ColorPickerExample } from './ColorPickerExample.vue'
 
-export * from './types'
-export * from './utils'
+// 导出类型
+export type {
+  ColorPickerProps,
+  ColorPickerEmits,
+  ColorPickerState,
+  SaturationPanelProps,
+  SaturationPanelEmits,
+  HueSliderProps,
+  HueSliderEmits,
+  AlphaSliderProps,
+  AlphaSliderEmits,
+  ColorInputProps,
+  ColorInputEmits,
+  ColorPresetsProps,
+  ColorPresetsEmits,
+} from './types'

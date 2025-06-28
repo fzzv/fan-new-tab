@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
-import { cn } from '@/lib/utils'
-import Input from '@/components/input/Input.vue'
-import Button from '@/components/button/Button.vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import {
   PopoverRoot,
   PopoverTrigger,
@@ -13,264 +10,520 @@ import {
   SliderRange,
   SliderThumb,
 } from 'reka-ui'
-import type { ColorMode, ColorPickerProps, ColorPickerEmits, ColorState } from './types'
-import { parseColor, formatColor, isValidColor, DEFAULT_PRESETS, hsvToRgb, rgbToHex, rgbToHsl } from './utils'
+import { cn } from '@/lib/utils'
+import { Input } from '@/components/input'
+import { Button } from '@/components/button'
+import {
+  parseColor,
+  formatColor,
+  rgbaToHsv,
+  hsvToRgba,
+  isValidColor,
+  DEFAULT_PRESETS,
+  type RGBA,
+  type ColorFormat,
+} from '@/lib/colorUtils.ts'
+import type { ClassValue } from 'clsx'
+import type { ColorPickerProps, ColorPickerEmits } from './types'
 
 const props = withDefaults(defineProps<ColorPickerProps>(), {
+  modelValue: '#ffffff',
   mode: 'hex',
   showAlpha: true,
-  showPresets: false,
-  presets: () => DEFAULT_PRESETS,
   disabled: false,
-  size: 'md',
-  placement: 'bottom',
+  presets: () => DEFAULT_PRESETS,
+  showPresets: false,
+  showInput: true,
+  showFormatSwitch: true,
+  showPreview: false,
+  placement: 'bottom-start',
 })
 
-const emit = defineEmits<ColorPickerEmits>()
+const emits = defineEmits<ColorPickerEmits>()
 
-// 响应式状态
-const isOpen = ref(false)
-const currentMode = ref<ColorMode>(props.mode)
-const colorState = ref<ColorState>(parseColor(props.modelValue || '#000000'))
+// 弹出层
+const popoverOpen = ref(false)
+const currentFormat = ref<ColorFormat>(props.mode)
 const inputValue = ref('')
-
-// DOM 引用
-const saturationRef = ref<HTMLElement>()
-
-// Slider 值
-const hueValue = ref([0])
-const alphaValue = ref([100])
-
-// 拖拽状态
 const isDragging = ref(false)
+// 是否是更新色相滑块的值
+const isSaturationBrightnessUpdate = ref(false)
 
-// 计算属性
-const displayValue = computed(() => {
-  return formatColor(colorState.value, currentMode.value)
+// 解析当前颜色
+const currentRgba = computed(() => {
+  return parseColor(props.modelValue)
 })
 
-const triggerStyle = computed(() => {
-  const { rgb, alpha } = colorState.value
-  return {
-    backgroundColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`,
-  }
+// 转换为 HSV
+const currentHsv = computed(() => {
+  return rgbaToHsv(currentRgba.value)
 })
 
-const saturationStyle = computed(() => {
-  const hue = colorState.value.hsv.h
-  return {
-    backgroundColor: `hsl(${hue}, 100%, 50%)`,
-  }
-})
+// 色相滑块值 (0-360)
+const hueValue = ref([currentHsv.value.h])
 
-const saturationPointerStyle = computed(() => {
-  const { s, v } = colorState.value.hsv
-  return {
-    left: `${s}%`,
-    top: `${100 - v}%`,
-  }
-})
+// 透明度滑块值 (0-100)
+const alphaValue = ref([Math.round(currentRgba.value.a * 100)])
 
-// 同步 slider 值与颜色状态（避免循环更新）
-let isUpdatingFromSlider = false
+// 饱和度/亮度面板的引用
+const saturationPanelRef = ref<HTMLElement>()
 
-watch(
-  () => colorState.value.hsv.h,
-  (newHue) => {
-    if (!isUpdatingFromSlider) {
-      hueValue.value = [newHue]
-    }
-  },
-  { immediate: true },
-)
+// 当前饱和度和亮度
+const saturation = ref(currentHsv.value.s)
+const brightness = ref(currentHsv.value.v)
 
-watch(
-  () => colorState.value.alpha,
-  (newAlpha) => {
-    if (!isUpdatingFromSlider) {
-      alphaValue.value = [Math.round(newAlpha * 100)]
-    }
-  },
-  { immediate: true },
-)
-
+// 监听颜色变化，更新内部状态
 watch(
   () => props.modelValue,
   (newValue) => {
-    if (newValue && newValue !== displayValue.value) {
-      colorState.value = parseColor(newValue)
-      inputValue.value = displayValue.value
+    const rgba = parseColor(newValue)
+    const hsv = rgbaToHsv(rgba)
+
+    // 只有在非饱和度/亮度更新时才更新色相值
+    if (!isSaturationBrightnessUpdate.value) {
+      hueValue.value = [hsv.h]
     }
+
+    alphaValue.value = [Math.round(rgba.a * 100)]
+    saturation.value = hsv.s
+    brightness.value = hsv.v
+
+    updateInputValue()
+
+    // 重置标志
+    isSaturationBrightnessUpdate.value = false
   },
   { immediate: true },
 )
 
-watch(displayValue, (newValue) => {
-  inputValue.value = newValue
-  emit('update:modelValue', newValue)
-  emit('change', newValue, currentMode.value)
-})
+// 监听格式变化
+watch(
+  () => props.mode,
+  (newMode) => {
+    currentFormat.value = newMode
+    updateInputValue()
+  },
+  { immediate: true },
+)
 
-function updateColorFromHsv(hsv: Partial<typeof colorState.value.hsv>) {
-  const newHsv = { ...colorState.value.hsv, ...hsv }
-  const newRgb = hsvToRgb(newHsv)
-  newRgb.a = colorState.value.alpha
-
-  // 直接更新颜色状态，避免重新解析导致的精度丢失
-  colorState.value = {
-    rgb: newRgb,
-    hsl: rgbToHsl(newRgb),
-    hsv: newHsv,
-    hex: rgbToHex(newRgb),
-    alpha: colorState.value.alpha,
+// 更新输入框值
+function updateInputValue() {
+  // 如果颜色有透明度且当前格式不支持透明度，则使用支持透明度的格式显示
+  let displayFormat = currentFormat.value
+  if (currentRgba.value.a < 1) {
+    switch (currentFormat.value) {
+      case 'hex':
+        displayFormat = 'hex' // hex 格式会自动处理透明度
+        break
+      case 'rgb':
+        displayFormat = 'rgba'
+        break
+      case 'hsl':
+        displayFormat = 'hsla'
+        break
+      case 'hsv':
+        displayFormat = 'hsva'
+        break
+    }
   }
+
+  inputValue.value = formatColor(currentRgba.value, displayFormat)
 }
 
-function handleSaturationChange(event: MouseEvent) {
-  if (!saturationRef.value) return
+// 触发颜色变化事件
+const emitColorChange = (rgba: RGBA, isSaturationBrightness = false) => {
+  // 如果是饱和度/亮度更新，设置标志
+  if (isSaturationBrightness) {
+    isSaturationBrightnessUpdate.value = true
+  }
 
-  const rect = saturationRef.value.getBoundingClientRect()
-  const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width))
-  const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height))
+  // 如果颜色有透明度且当前格式不支持透明度，则使用支持透明度的格式
+  let outputFormat = currentFormat.value
+  if (rgba.a < 1) {
+    switch (currentFormat.value) {
+      case 'hex':
+        outputFormat = 'hex' // hex 格式会自动处理透明度
+        break
+      case 'rgb':
+        outputFormat = 'rgba'
+        break
+      case 'hsl':
+        outputFormat = 'hsla'
+        break
+      case 'hsv':
+        outputFormat = 'hsva'
+        break
+    }
+  }
 
-  updateColorFromHsv({
-    s: Math.round(x * 100),
-    v: Math.round((1 - y) * 100),
-  })
+  const colorString = formatColor(rgba, outputFormat)
+  emits('update:modelValue', colorString)
+  emits('change', colorString, rgba)
 }
 
-function handleHueSliderChange(value: number[]) {
-  isUpdatingFromSlider = true
-  updateColorFromHsv({
+// 处理色相滑块变化
+const handleHueChange = (value: number[] | undefined) => {
+  if (!value || value.length === 0) return
+
+  const newHsv = {
     h: value[0],
-  })
-  nextTick(() => {
-    isUpdatingFromSlider = false
-  })
+    s: saturation.value,
+    v: brightness.value,
+    a: currentRgba.value.a,
+  }
+  const newRgba = hsvToRgba(newHsv)
+  emitColorChange(newRgba)
 }
 
-function handleAlphaSliderChange(value: number[]) {
-  isUpdatingFromSlider = true
+// 处理透明度滑块变化
+const handleAlphaChange = (value: number[] | undefined) => {
+  if (!value || value.length === 0) return
+
   const newAlpha = value[0] / 100
 
-  // 正确更新颜色状态，保持RGB值不变，只更新alpha
-  const newRgb = { ...colorState.value.rgb, a: newAlpha }
-  const newColorState = {
-    ...colorState.value,
-    rgb: newRgb,
-    alpha: newAlpha
+  // 更新内部状态
+  alphaValue.value = [value[0]]
+
+  // 创建新的RGBA颜色，保持当前的RGB值，只更新透明度
+  const newRgba = {
+    ...currentRgba.value,
+    a: newAlpha,
   }
 
-  colorState.value = newColorState
-
-  nextTick(() => {
-    isUpdatingFromSlider = false
-  })
+  // 触发颜色变化事件
+  emitColorChange(newRgba)
 }
 
-function startDragging(handler: (event: MouseEvent) => void) {
-  isDragging.value = true
+// 更新饱和度和亮度的通用函数
+const updateSaturationBrightness = (event: MouseEvent | Touch) => {
+  if (props.disabled) return
 
-  const handleMouseMove = (event: MouseEvent) => {
-    event.preventDefault()
-    handler(event)
+  const rect = saturationPanelRef.value?.getBoundingClientRect()
+  if (!rect) return
+
+  // 确保坐标在面板范围内
+  const x = Math.max(0, Math.min(rect.width, event.clientX - rect.left))
+  const y = Math.max(0, Math.min(rect.height, event.clientY - rect.top))
+
+  // 计算新的饱和度和亮度值，并进行精度控制
+  const newSaturation = Math.round((x / rect.width) * 100 * 100) / 100
+  const newBrightness = Math.round((100 - (y / rect.height) * 100) * 100) / 100
+
+  // 只有当值发生变化时才更新
+  if (Math.abs(saturation.value - newSaturation) < 0.01 && Math.abs(brightness.value - newBrightness) < 0.01) {
+    return
   }
 
-  const handleMouseUp = () => {
+  saturation.value = newSaturation
+  brightness.value = newBrightness
+
+  const newHsv = {
+    h: hueValue.value[0],
+    s: newSaturation,
+    v: newBrightness,
+    a: currentRgba.value.a,
+  }
+  const newRgba = hsvToRgba(newHsv)
+  emitColorChange(newRgba, true)
+}
+
+// 处理饱和度/亮度面板点击
+const handleSaturationPanelClick = (event: MouseEvent) => {
+  updateSaturationBrightness(event)
+}
+
+// 处理饱和度/亮度面板鼠标按下
+const handleSaturationPanelMouseDown = (event: MouseEvent) => {
+  if (props.disabled) return
+
+  isDragging.value = true
+  updateSaturationBrightness(event)
+
+  // 阻止默认行为和事件冒泡
+  event.preventDefault()
+  event.stopPropagation()
+
+  // 添加全局鼠标事件监听，使用 passive: false 提高性能
+  document.addEventListener('mousemove', handleMouseMove, { passive: false })
+  document.addEventListener('mouseup', handleMouseUp, { passive: true })
+}
+
+// 处理鼠标移动
+const handleMouseMove = (event: MouseEvent) => {
+  if (!isDragging.value || props.disabled) return
+
+  // 使用 requestAnimationFrame 优化渲染性能
+  requestAnimationFrame(() => {
+    updateSaturationBrightness(event)
+  })
+
+  event.preventDefault()
+}
+
+// 处理鼠标释放
+const handleMouseUp = () => {
+  if (isDragging.value) {
     isDragging.value = false
+
+    // 移除全局事件监听
     document.removeEventListener('mousemove', handleMouseMove)
     document.removeEventListener('mouseup', handleMouseUp)
   }
-
-  document.addEventListener('mousemove', handleMouseMove)
-  document.addEventListener('mouseup', handleMouseUp)
 }
 
-function handlePresetClick(preset: string) {
-  colorState.value = parseColor(preset)
+// 处理触摸开始
+const handleSaturationPanelTouchStart = (event: TouchEvent) => {
+  if (props.disabled) return
+
+  isDragging.value = true
+  const touch = event.touches[0]
+  updateSaturationBrightness(touch)
+
+  event.preventDefault()
+
+  // 添加全局触摸事件监听
+  document.addEventListener('touchmove', handleTouchMove, { passive: false })
+  document.addEventListener('touchend', handleTouchEnd, { passive: true })
 }
 
-function handleInputChange() {
-  if (isValidColor(inputValue.value)) {
-    colorState.value = parseColor(inputValue.value)
+// 处理触摸移动
+const handleTouchMove = (event: TouchEvent) => {
+  if (!isDragging.value || props.disabled) return
+
+  const touch = event.touches[0]
+
+  // 使用 requestAnimationFrame 优化渲染性能
+  requestAnimationFrame(() => {
+    updateSaturationBrightness(touch)
+  })
+
+  event.preventDefault()
+}
+
+// 处理触摸结束
+const handleTouchEnd = () => {
+  if (isDragging.value) {
+    isDragging.value = false
+
+    // 移除全局事件监听
+    document.removeEventListener('touchmove', handleTouchMove)
+    document.removeEventListener('touchend', handleTouchEnd)
   }
 }
 
-function handleModeChange(mode: ColorMode) {
-  currentMode.value = mode
+// 处理键盘事件
+const handleSaturationPanelKeyDown = (event: KeyboardEvent) => {
+  if (props.disabled) return
+
+  const step = event.shiftKey ? 10 : 1 // Shift键加速
+  let newSaturation = saturation.value
+  let newBrightness = brightness.value
+
+  switch (event.key) {
+    case 'ArrowLeft':
+      newSaturation = Math.max(0, saturation.value - step)
+      break
+    case 'ArrowRight':
+      newSaturation = Math.min(100, saturation.value + step)
+      break
+    case 'ArrowUp':
+      newBrightness = Math.min(100, brightness.value + step)
+      break
+    case 'ArrowDown':
+      newBrightness = Math.max(0, brightness.value - step)
+      break
+    default:
+      return // 不处理其他按键
+  }
+
+  event.preventDefault()
+
+  saturation.value = newSaturation
+  brightness.value = newBrightness
+
+  const newHsv = {
+    h: hueValue.value[0],
+    s: newSaturation,
+    v: newBrightness,
+    a: currentRgba.value.a,
+  }
+  const newRgba = hsvToRgba(newHsv)
+  emitColorChange(newRgba, true)
 }
 
-// 尺寸样式
-const sizeClasses = {
-  sm: 'w-6 h-6',
-  md: 'w-8 h-8',
-  lg: 'w-10 h-10',
+// 处理输入框变化
+const handleInputChange = (value: string) => {
+  if (isValidColor(value)) {
+    const rgba = parseColor(value)
+    const hsv = rgbaToHsv(rgba)
+
+    hueValue.value = [hsv.h]
+    alphaValue.value = [Math.round(rgba.a * 100)]
+    saturation.value = hsv.s
+    brightness.value = hsv.v
+
+    emitColorChange(rgba)
+  }
 }
+
+// 处理格式切换
+const handleFormatChange = (format: ColorFormat) => {
+  currentFormat.value = format
+  updateInputValue()
+  emits('format-change', format)
+}
+
+// 处理预设颜色选择
+const handlePresetSelect = (color: string) => {
+  const rgba = parseColor(color)
+  const hsv = rgbaToHsv(rgba)
+
+  hueValue.value = [hsv.h]
+  alphaValue.value = [Math.round(rgba.a * 100)]
+  saturation.value = hsv.s
+  brightness.value = hsv.v
+
+  emitColorChange(rgba)
+  updateInputValue()
+}
+
+// 计算饱和度/亮度面板的背景
+const saturationPanelBackground = computed(() => {
+  const hue = hueValue.value[0]
+  return `
+    linear-gradient(to top, #000, transparent),
+    linear-gradient(to right, #fff, hsl(${hue}, 100%, 50%))
+  `
+})
+
+// 计算饱和度/亮度面板指示器位置
+const saturationIndicatorStyle = computed(() => {
+  return {
+    left: `${saturation.value}%`,
+    top: `${100 - brightness.value}%`,
+  }
+})
+
+// 计算当前颜色的预览
+const currentColorPreview = computed(() => {
+  return formatColor(currentRgba.value, 'rgba')
+})
+
+// 计算色相滑块指示器的背景颜色
+const hueThumbBackground = computed(() => {
+  const hue = hueValue.value[0]
+  return `hsl(${hue}, 100%, 50%)`
+})
+
+// 计算透明度滑块指示器的背景颜色
+const alphaThumbBackground = computed(() => {
+  const alpha = alphaValue.value[0] / 100
+  return `rgba(${currentRgba.value.r}, ${currentRgba.value.g}, ${currentRgba.value.b}, ${alpha})`
+})
+
+// 初始化输入框值
+updateInputValue()
+
+// 组件卸载时清理事件监听器
+onUnmounted(() => {
+  // 清理鼠标事件
+  document.removeEventListener('mousemove', handleMouseMove)
+  document.removeEventListener('mouseup', handleMouseUp)
+
+  // 清理触摸事件
+  document.removeEventListener('touchmove', handleTouchMove)
+  document.removeEventListener('touchend', handleTouchEnd)
+})
 </script>
 
 <template>
-  <PopoverRoot v-model:open="isOpen">
-    <PopoverTrigger as-child>
-      <button
+  <PopoverRoot v-model:open="popoverOpen">
+    <PopoverTrigger>
+      <Button
         :disabled="disabled"
-        :class="
-          cn(
-            'border-2 border-border rounded cursor-pointer transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed',
-            sizeClasses[size],
-            $props.class,
-          )
-        "
-        :style="triggerStyle"
+        :class="cn('relative h-8 w-8', $attrs.class as ClassValue)"
+        variant="outline"
+        size="icon"
       >
-        <span class="sr-only">选择颜色</span>
-      </button>
+        <!-- 透明度背景 -->
+        <div
+          class="absolute inset-0"
+          style="background: repeating-conic-gradient(#ccc 0% 25%, transparent 0% 50%) 50% / 8px 8px"
+        />
+        <!-- 颜色预览 -->
+        <div class="absolute inset-0" :style="{ backgroundColor: currentColorPreview }" />
+      </Button>
     </PopoverTrigger>
 
     <PopoverPortal>
       <PopoverContent
-        class="w-64 p-4 bg-background border-2 border-border shadow-lg rounded z-[3000] select-none"
-        :side="placement"
-        :side-offset="4"
+        :class="
+          cn(
+            'z-[3000] w-80 p-4 bg-background border-2 border-border rounded-lg shadow-lg',
+            'data-[state=open]:animate-in data-[state=closed]:animate-out',
+            'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+            'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+            popoverClass,
+          )
+        "
+        :side="placement.split('-')[0] as any"
+        :align="placement.includes('-') ? (placement.split('-')[1] as any) : 'center'"
+        :side-offset="8"
+        :collision-padding="8"
       >
-        <!-- 饱和度/亮度面板 -->
-        <div
-          ref="saturationRef"
-          class="relative w-full h-32 mb-4 cursor-crosshair rounded border border-border overflow-hidden select-none"
-          :style="saturationStyle"
-          @mousedown="
-            (e) => {
-              handleSaturationChange(e)
-              startDragging(handleSaturationChange)
-            }
-          "
-        >
-          <!-- 白色到透明渐变 -->
-          <div class="absolute inset-0 bg-gradient-to-r from-white to-transparent"></div>
-          <!-- 透明到黑色渐变 -->
-          <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-          <!-- 指针 -->
-          <div
-            class="absolute w-3 h-3 border-2 border-white rounded-full shadow-sm transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
-            :style="saturationPointerStyle"
-          ></div>
-        </div>
-
-        <!-- 色相滑块 -->
-        <div class="mb-4">
-          <div class="text-xs text-muted-foreground mb-2">色相</div>
+        <div class="space-y-4">
+          <!-- 饱和度/亮度面板 -->
           <div class="relative">
+            <div
+              ref="saturationPanelRef"
+              :class="
+                cn(
+                  'relative w-full h-48 rounded-md border-2 border-border select-none touch-none',
+                  'focus:outline-none',
+                  'cursor-crosshair',
+                )
+              "
+              :style="{ background: saturationPanelBackground }"
+              tabindex="0"
+              role="slider"
+              aria-label="选择颜色饱和度和亮度"
+              :aria-valuetext="`饱和度 ${Math.round(saturation)}%, 亮度 ${Math.round(brightness)}%`"
+              @click="handleSaturationPanelClick"
+              @mousedown="handleSaturationPanelMouseDown"
+              @touchstart="handleSaturationPanelTouchStart"
+              @keydown="handleSaturationPanelKeyDown"
+            >
+              <!-- 指示器 -->
+              <div
+                :class="
+                  cn(
+                    'absolute border-2 border-white rounded-full pointer-events-none',
+                    'w-4 h-4 transform -translate-x-1/2 -translate-y-1/2',
+                  )
+                "
+                :style="saturationIndicatorStyle"
+              >
+                <!-- 内部圆点，显示当前颜色 -->
+                <div class="absolute inset-0 rounded-full" :style="{ backgroundColor: currentColorPreview }" />
+              </div>
+            </div>
+          </div>
+
+          <!-- 色相滑块 -->
+          <div class="space-y-2">
             <SliderRoot
               v-model="hueValue"
               :min="0"
               :max="360"
               :step="1"
+              :disabled="disabled"
               class="relative flex w-full touch-none select-none items-center"
-              @update:modelValue="handleHueSliderChange"
+              @update:model-value="handleHueChange"
             >
-              <SliderTrack class="relative h-3 w-full grow overflow-hidden rounded border border-border">
-                <!-- 色相背景 -->
+              <SliderTrack class="relative h-3 w-full grow overflow-hidden rounded border-2 border-border">
+                <!-- 色相背景渐变 -->
                 <div
-                  class="absolute inset-0 rounded"
+                  class="absolute inset-0"
                   style="
                     background: linear-gradient(
                       to right,
@@ -283,87 +536,102 @@ const sizeClasses = {
                       #ff0000 100%
                     );
                   "
-                ></div>
+                />
                 <SliderRange class="absolute h-full bg-transparent" />
               </SliderTrack>
               <SliderThumb
-                class="block h-4 w-4 rounded-full border-2 border-white bg-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                class="block h-4 w-4 rounded-full border-2 border-white shadow-sm focus:outline-none hover:translate-y-[1px] hover:shadow-none"
+                :style="{ backgroundColor: hueThumbBackground }"
               />
             </SliderRoot>
           </div>
-        </div>
 
-        <!-- 透明度滑块 -->
-        <div v-if="showAlpha" class="mb-4">
-          <div class="text-xs text-muted-foreground mb-2">透明度</div>
-          <div class="relative">
+          <!-- 透明度滑块 -->
+          <div v-if="showAlpha" class="space-y-2">
             <SliderRoot
               v-model="alphaValue"
               :min="0"
               :max="100"
               :step="1"
+              :disabled="disabled"
               class="relative flex w-full touch-none select-none items-center"
-              @update:modelValue="handleAlphaSliderChange"
+              @update:model-value="handleAlphaChange"
             >
-              <SliderTrack class="relative h-3 w-full grow overflow-hidden rounded border border-border">
+              <SliderTrack class="relative h-3 w-full grow overflow-hidden rounded border-2 border-border">
                 <!-- 透明度背景 -->
                 <div
-                  class="absolute inset-0 rounded"
+                  class="absolute inset-0"
                   style="background: repeating-conic-gradient(#ccc 0% 25%, transparent 0% 50%) 50% / 8px 8px"
                 >
                   <div
-                    class="absolute inset-0 rounded"
+                    class="absolute inset-0"
                     :style="{
-                      background: `linear-gradient(to right, transparent, rgb(${colorState.rgb.r}, ${colorState.rgb.g}, ${colorState.rgb.b}))`,
+                      background: `linear-gradient(to right, transparent, rgb(${currentRgba.r}, ${currentRgba.g}, ${currentRgba.b}))`,
                     }"
-                  ></div>
+                  />
                 </div>
                 <SliderRange class="absolute h-full bg-transparent" />
               </SliderTrack>
               <SliderThumb
-                class="block h-4 w-4 rounded-full border-2 border-white bg-white shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                class="block h-4 w-4 rounded-full border-2 border-white shadow-sm focus:outline-none hover:translate-y-[1px] hover:shadow-none"
+                :style="{ backgroundColor: alphaThumbBackground }"
               />
             </SliderRoot>
           </div>
-        </div>
 
-        <!-- 模式切换 -->
-        <div class="flex gap-1 mb-3">
-          <Button
-            v-for="mode in ['hex', 'rgb', 'hsl', 'hsv']"
-            :key="mode"
-            size="sm"
-            :variant="currentMode === mode ? 'default' : 'outline'"
-            @click="handleModeChange(mode as ColorMode)"
-          >
-            {{ mode.toUpperCase() }}
-          </Button>
-        </div>
+          <!-- 颜色值输入和格式切换 -->
+          <div v-if="showInput" class="space-y-2">
+            <div class="flex items-center justify-between">
+              <div v-if="showFormatSwitch" class="flex gap-1">
+                <Button
+                  v-for="format in ['hex', 'rgb', 'hsl', 'hsv'] as ColorFormat[]"
+                  :key="format"
+                  :variant="currentFormat === format ? 'default' : 'outline'"
+                  size="sm"
+                  class="px-2 py-1 text-xs"
+                  @click="handleFormatChange(format)"
+                >
+                  {{ format.toUpperCase() }}
+                </Button>
+              </div>
+            </div>
+            <Input
+              v-model="inputValue"
+              :disabled="disabled"
+              class="font-mono text-sm h-10"
+              @blur="handleInputChange(inputValue)"
+              @keydown.enter="handleInputChange(inputValue)"
+            />
+          </div>
 
-        <!-- 颜色值输入 -->
-        <div class="mb-4">
-          <Input
-            v-model="inputValue"
-            :placeholder="`输入 ${currentMode.toUpperCase()} 值`"
-            class="h-10 py-2 font-mono"
-            @blur="handleInputChange"
-            @keydown.enter="handleInputChange"
-          />
-        </div>
+          <!-- 预设颜色 -->
+          <div v-if="showPresets && presets.length > 0" class="space-y-2">
+            <div class="grid grid-cols-10 gap-2">
+              <button
+                v-for="preset in presets"
+                :key="preset"
+                :disabled="disabled"
+                class="w-6 h-6 rounded border-2 border-border hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-primary"
+                :style="{ backgroundColor: preset }"
+                @click="handlePresetSelect(preset)"
+              />
+            </div>
+          </div>
 
-        <!-- 预设颜色 -->
-        <div v-if="showPresets && presets.length" class="space-y-2">
-          <div class="text-sm font-medium text-foreground">预设颜色</div>
-          <div class="grid grid-cols-8 gap-1">
-            <button
-              v-for="preset in presets"
-              :key="preset"
-              class="w-6 h-6 border border-border rounded cursor-pointer hover:scale-110 transition-transform"
-              :style="{ backgroundColor: preset }"
-              @click="handlePresetClick(preset)"
-            >
-              <span class="sr-only">{{ preset }}</span>
-            </button>
+          <!-- 当前颜色预览 -->
+          <div v-if="showPreview" class="flex items-center gap-3 pt-2 border-t border-border">
+            <div class="flex items-center gap-2">
+              <div class="relative w-8 h-8 rounded border-2 border-border overflow-hidden">
+                <!-- 透明度背景 -->
+                <div
+                  class="absolute inset-0"
+                  style="background: repeating-conic-gradient(#ccc 0% 25%, transparent 0% 50%) 50% / 4px 4px"
+                />
+                <!-- 颜色预览 -->
+                <div class="absolute inset-0" :style="{ backgroundColor: currentColorPreview }" />
+              </div>
+              <div class="text-muted-foreground font-mono text-xs">{{ inputValue }}</div>
+            </div>
           </div>
         </div>
       </PopoverContent>
