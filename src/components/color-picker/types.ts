@@ -173,3 +173,39 @@ export interface ColorPresetsEmits {
   /** 颜色选择事件 */
   select: [color: string]
 }
+
+/**
+ * 颜色选择器面板组件属性
+ */
+export interface ColorPickerPanelProps {
+  /** 当前颜色值 */
+  modelValue?: string
+  /** 颜色格式模式 */
+  mode?: ColorFormat
+  /** 是否显示透明度控制 */
+  showAlpha?: boolean
+  /** 是否禁用 */
+  disabled?: boolean
+  /** 预设颜色 */
+  presets?: string[]
+  /** 是否显示预设颜色 */
+  showPresets?: boolean
+  /** 是否显示颜色值输入框 */
+  showInput?: boolean
+  /** 是否显示格式切换 */
+  showFormatSwitch?: boolean
+  /** 是否显示颜色预览 */
+  showPreview?: boolean
+}
+
+/**
+ * 颜色选择器面板组件事件
+ */
+export interface ColorPickerPanelEmits {
+  /** 颜色值更新事件 */
+  'update:modelValue': [value: string]
+  /** 颜色变化事件 */
+  change: [value: string, rgba: RGBA]
+  /** 格式变化事件 */
+  'format-change': [format: ColorFormat]
+}

@@ -1,120 +1,188 @@
 # ColorPicker 颜色选择器
 
-一个功能完整的颜色选择器组件，支持多种颜色格式和丰富的交互功能。
+基于 reka-ui 和 seemly 库实现的功能完整的颜色选择器组件，支持多种颜色格式和丰富的交互功能。
+
+## 组件
+
+### ColorPicker
+带有弹出层的完整颜色选择器组件，适用于表单和工具栏等场景。
+
+### ColorPickerPanel
+独立的颜色选择面板组件，可以单独使用而无需弹出层，适用于侧边栏、模态框等场景。
 
 ## 特性
 
-- 🎨 **多种颜色模式**: 支持 RGB、HEX、HSL、HSV 四种颜色格式
-- 🎯 **直观操作**: 色相条、饱和度/亮度面板、透明度滑块
+- 🎨 **多格式支持**: HEX、RGB、RGBA、HSL、HSLA、HSV、HSVA
+- 🎯 **基于 reka-ui**: 使用原生 Popover 和 Slider 组件，无额外封装
+- 🎛️ **完整交互**: 饱和度/亮度面板 + 色相滑块 + 透明度滑块
 - 🎪 **预设颜色**: 内置常用颜色，支持自定义预设
-- 📱 **响应式设计**: 适配桌面端和移动端
-- ♿ **无障碍支持**: 支持键盘导航和屏幕阅读器
-- 🎛️ **高度可定制**: 丰富的配置选项和样式定制
-- 💪 **TypeScript**: 完整的类型定义支持
-- 🎚️ **基于 reka-ui 原生 Slider**: 使用 reka-ui 的原生 Slider 组件实现滑块功能
+- 📝 **颜色输入**: 支持直接输入颜色值，实时验证
+- 🔄 **格式切换**: 一键切换不同颜色格式
+- 📱 **响应式设计**: 移动端友好，触摸设备支持
+- ♿ **无障碍支持**: 完整的键盘导航和屏幕阅读器支持
+- 🌙 **主题适配**: 支持暗色模式，与项目主题一致
+- 🔧 **高度可配置**: 丰富的配置选项，满足不同需求
+- ⚡ **高性能**: 基于 seemly 库的高效颜色转换
+- 🎭 **平滑动画**: 优雅的交互动画和视觉反馈
+- 🧩 **模块化设计**: 可以单独使用面板组件，灵活组合
+
+## 安装依赖
+
+组件依赖以下库（项目中已包含）：
+
+```bash
+npm install reka-ui seemly lodash-es clsx tailwind-merge
+```
 
 ## 基础用法
 
-```vue
-<template>
-  <ColorPicker v-model="color" />
-</template>
+### ColorPicker（带弹出层）
 
+```vue
 <script setup>
 import { ref } from 'vue'
-import ColorPicker from '@/components/color-picker/ColorPicker.vue'
+import { ColorPicker } from '@/components/color-picker'
 
-const color = ref('#ff6b6b')
+const selectedColor = ref('#ff6b6b')
 </script>
+
+<template>
+  <ColorPicker v-model="selectedColor" />
+</template>
 ```
 
-## API
+### ColorPickerPanel（独立面板）
 
-### Props
+```vue
+<script setup>
+import { ref } from 'vue'
+import { ColorPickerPanel } from '@/components/color-picker'
+
+const selectedColor = ref('#ff6b6b')
+</script>
+
+<template>
+  <div class="w-80 p-4 border border-border rounded-lg">
+    <ColorPickerPanel v-model="selectedColor" />
+  </div>
+</template>
+```
+
+## API 文档
+
+### ColorPicker Props
 
 | 属性 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `modelValue` | `string` | `#000000` | 当前颜色值，支持 v-model |
-| `mode` | `'rgb' \| 'hex' \| 'hsl' \| 'hsv'` | `'hex'` | 颜色格式模式 |
+| `modelValue` | `string` | `'#ffffff'` | 当前颜色值 |
+| `mode` | `ColorFormat` | `'hex'` | 颜色格式模式 |
 | `showAlpha` | `boolean` | `true` | 是否显示透明度控制 |
-| `showPresets` | `boolean` | `true` | 是否显示预设颜色 |
-| `presets` | `string[]` | `DEFAULT_PRESETS` | 自定义预设颜色数组 |
 | `disabled` | `boolean` | `false` | 是否禁用 |
-| `size` | `'sm' \| 'md' \| 'lg'` | `'md'` | 触发器尺寸 |
-| `placement` | `'top' \| 'bottom' \| 'left' \| 'right'` | `'bottom'` | 弹出位置 |
-| `class` | `string` | - | 自定义 CSS 类名 |
+| `presets` | `string[]` | `[]` | 预设颜色 |
+| `showPresets` | `boolean` | `false` | 是否显示预设颜色 |
+| `showInput` | `boolean` | `true` | 是否显示颜色值输入框 |
+| `showFormatSwitch` | `boolean` | `true` | 是否显示格式切换 |
+| `showPreview` | `boolean` | `false` | 是否显示颜色预览 |
+| `triggerClass` | `string` | `''` | 触发器样式类 |
+| `popoverClass` | `string` | `''` | 弹出层样式类 |
+| `placement` | `PopoverPlacement` | `'bottom-start'` | 弹出层位置 |
 
-### Events
+### ColorPickerPanel Props
 
-| 事件名 | 参数 | 说明 |
-|--------|------|------|
-| `update:modelValue` | `(value: string)` | 颜色值变化时触发 |
-| `change` | `(value: string, mode: ColorMode)` | 颜色变化时触发，包含模式信息 |
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `modelValue` | `string` | `'#ffffff'` | 当前颜色值 |
+| `mode` | `ColorFormat` | `'hex'` | 颜色格式模式 |
+| `showAlpha` | `boolean` | `true` | 是否显示透明度控制 |
+| `disabled` | `boolean` | `false` | 是否禁用 |
+| `presets` | `string[]` | `[]` | 预设颜色 |
+| `showPresets` | `boolean` | `false` | 是否显示预设颜色 |
+| `showInput` | `boolean` | `true` | 是否显示颜色值输入框 |
+| `showFormatSwitch` | `boolean` | `true` | 是否显示格式切换 |
+| `showPreview` | `boolean` | `false` | 是否显示颜色预览 |
 
-### 颜色格式支持
+### Events（两个组件相同）
 
-组件支持以下颜色格式的输入和输出：
+| 事件 | 参数 | 说明 |
+|------|------|------|
+| `update:modelValue` | `(value: string)` | 颜色值更新事件 |
+| `change` | `(value: string, rgba: RGBA)` | 颜色变化事件 |
+| `format-change` | `(format: ColorFormat)` | 格式变化事件 |
 
-- **HEX**: `#ff6b6b`, `#ff6b6bff` (带透明度)
-- **RGB**: `rgb(255, 107, 107)`, `rgba(255, 107, 107, 0.8)`
-- **HSL**: `hsl(0, 100%, 71%)`, `hsla(0, 100%, 71%, 0.8)`
-- **HSV**: `hsv(0, 58%, 100%)`, `hsva(0, 58%, 100%, 0.8)`
+### 颜色格式类型
+
+```typescript
+type ColorFormat = 'hex' | 'rgb' | 'rgba' | 'hsv' | 'hsva' | 'hsl' | 'hsla'
+```
 
 ## 使用示例
 
-### 不同颜色模式
+### 不同颜色格式
 
 ```vue
 <template>
   <div class="space-y-4">
+    <!-- HEX 格式 -->
     <ColorPicker v-model="hexColor" mode="hex" />
+    
+    <!-- RGB 格式 -->
     <ColorPicker v-model="rgbColor" mode="rgb" />
+    
+    <!-- HSL 格式 -->
     <ColorPicker v-model="hslColor" mode="hsl" />
-    <ColorPicker v-model="hsvColor" mode="hsv" />
+    
+    <!-- 带透明度的 RGBA -->
+    <ColorPicker v-model="rgbaColor" mode="rgba" :show-alpha="true" />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import { ColorPicker } from '@/components/color-picker'
 
 const hexColor = ref('#ff6b6b')
 const rgbColor = ref('rgb(255, 107, 107)')
 const hslColor = ref('hsl(0, 100%, 71%)')
-const hsvColor = ref('hsv(0, 58%, 100%)')
+const rgbaColor = ref('rgba(255, 107, 107, 0.8)')
 </script>
 ```
 
-### 自定义预设颜色
+### 自定义配置
 
 ```vue
 <template>
   <ColorPicker 
-    v-model="color"
+    v-model="selectedColor"
+    mode="hex"
+    size="lg"
+    :show-alpha="false"
     :presets="customPresets"
+    :show-format-switch="false"
+    placement="top"
+    @change="handleColorChange"
+    @format-change="handleFormatChange"
   />
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import { ColorPicker, type RGBA, type ColorFormat } from '@/components/color-picker'
 
-const color = ref('#ff6b6b')
+const selectedColor = ref('#ff6b6b')
+
 const customPresets = [
-  '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4',
-  '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'
+  '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57',
+  '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3', '#ff9f43',
 ]
+
+const handleColorChange = (value: string, rgba: RGBA) => {
+  console.log('颜色变化:', { value, rgba })
+}
+
+const handleFormatChange = (format: ColorFormat) => {
+  console.log('格式变化:', format)
+}
 </script>
-```
-
-### 禁用透明度和预设
-
-```vue
-<template>
-  <ColorPicker 
-    v-model="color"
-    :show-alpha="false"
-    :show-presets="false"
-  />
-</template>
 ```
 
 ### 不同尺寸
@@ -129,101 +197,86 @@ const customPresets = [
 </template>
 ```
 
-### 监听颜色变化
+### 禁用状态
 
 ```vue
 <template>
-  <ColorPicker 
-    v-model="color"
-    @change="handleColorChange"
-  />
+  <ColorPicker v-model="color" disabled />
 </template>
-
-<script setup>
-import { ref } from 'vue'
-
-const color = ref('#ff6b6b')
-
-function handleColorChange(value, mode) {
-  console.log(`颜色变化: ${value}, 模式: ${mode}`)
-}
-</script>
-```
-
-## 样式自定义
-
-组件使用 Tailwind CSS 构建，支持通过以下方式自定义样式：
-
-### 1. 通过 class 属性
-
-```vue
-<ColorPicker
-  v-model="color"
-  class="rounded-lg shadow-lg"
-/>
-```
-
-### 2. 通过 CSS 变量
-
-```css
-:root {
-  --color-primary: #your-primary-color;
-  --color-border: #your-border-color;
-  --color-background: #your-background-color;
-}
 ```
 
 ## 工具函数
 
-组件提供了一系列颜色转换工具函数：
+组件还导出了一系列颜色处理工具函数：
 
 ```typescript
-import { 
+import {
   parseColor,
   formatColor,
-  rgbToHsl,
-  hslToRgb,
-  rgbToHsv,
-  hsvToRgb,
-  rgbToHex,
-  hexToRgb,
-  isValidColor
-} from '@/components/color-picker/utils'
+  rgbaToHex,
+  rgbaToHsv,
+  hsvToRgba,
+  rgbaToHsl,
+  hslToRgba,
+  isValidColor,
+  getContrastColor,
+  DEFAULT_PRESETS,
+} from '@/components/color-picker'
 
 // 解析颜色字符串
-const colorState = parseColor('#ff6b6b')
+const rgba = parseColor('#ff6b6b')
 
 // 格式化颜色输出
-const hexColor = formatColor(colorState, 'hex')
-const rgbColor = formatColor(colorState, 'rgb')
+const hexColor = formatColor(rgba, 'hex')
+const rgbColor = formatColor(rgba, 'rgb')
 
 // 颜色格式转换
-const hsl = rgbToHsl({ r: 255, g: 107, b: 107 })
-const rgb = hslToRgb({ h: 0, s: 100, l: 71 })
+const hsv = rgbaToHsv(rgba)
+const backToRgba = hsvToRgba(hsv)
 
 // 验证颜色格式
 const isValid = isValidColor('#ff6b6b') // true
+
+// 获取对比色
+const contrastColor = getContrastColor(rgba) // '#000000' 或 '#ffffff'
 ```
+
+## 键盘导航
+
+| 按键 | 功能 |
+|------|------|
+| `Tab` | 在控件间切换焦点 |
+| `Enter` / `Space` | 打开/关闭颜色选择器 |
+| `Escape` | 关闭颜色选择器 |
+| `←` / `→` | 调整滑块值 |
+| `↑` / `↓` | 调整滑块值 |
+| `Page Up` / `Page Down` | 大步长调整滑块值 |
+| `Home` / `End` | 跳转到滑块最小/最大值 |
 
 ## 注意事项
 
-1. 组件基于 Vue 3 Composition API 开发
-2. 使用 TypeScript 提供完整的类型支持
-3. 样式基于 Tailwind CSS 构建
-4. 使用 `cn` 工具函数合并类名
-5. 依赖 reka-ui 的 Popover 和原生 Slider 组件
-6. 色相和透明度滑块使用 reka-ui 的原生 Slider 组件
-7. 支持键盘导航和无障碍访问
-8. 自动处理颜色格式转换和验证
-9. 已修复透明度滑块导致颜色变黑的问题
-10. 优化了颜色状态更新逻辑，避免精度丢失
+1. **颜色格式**: 组件会自动处理不同格式间的转换，确保输出格式与 `mode` 属性一致
+2. **性能优化**: 使用了防抖处理，避免频繁的颜色变化事件
+3. **样式定制**: 组件使用项目的主题系统，可通过 CSS 变量进行样式定制
+4. **无障碍**: 组件内置了完整的 ARIA 属性和键盘导航支持
+5. **移动端**: 支持触摸操作，在移动设备上有良好的用户体验
+6. **错误处理**: 对无效颜色值有完善的错误处理机制
 
 ## 依赖要求
 
-确保项目中已安装以下依赖：
+确保项目中已安装并配置以下依赖：
 
-```bash
-npm install clsx tailwind-merge reka-ui
-```
+- `reka-ui`: 提供 Popover 和 Slider 组件
+- `seemly`: 提供颜色转换和处理功能
+- `lodash-es`: 提供 debounce 函数
+- `clsx` 和 `tailwind-merge`: 提供样式类合并功能
+- `tailwindcss`: 样式框架
 
-并且已配置 Tailwind CSS 和相应的组件依赖（Input、Button、Popover 等）。
+## 浏览器兼容性
+
+- Chrome 88+
+- Firefox 78+
+- Safari 14+
+- Edge 88+
+
+支持所有现代浏览器，依赖 Intersection Observer API 和 CSS Grid。
