@@ -86,6 +86,11 @@ export function parseColor(color: string): RGBA {
   }
 }
 
+export function isColor(color: string) {
+  const seemlyRgba = rgba(color)
+  return seemlyRgba !== null
+}
+
 /**
  * 将 RGBA 对象转换为 HEX 字符串
  * @param rgba RGBA 对象
