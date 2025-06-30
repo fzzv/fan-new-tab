@@ -7,7 +7,7 @@ import { Slider } from '@/components/slider'
 import { useSettings } from '@/composables/useSettings'
 import { Image } from '@/components/image'
 import { Button } from '@/components/button'
-import { downloadFileFromUrl } from '@/lib/utils'
+import { downloadFileFromUrl, isColor } from '@/lib'
 import { openWallpaperSelector } from '@/composables/useDialog.ts'
 
 // 组件属性
@@ -83,7 +83,13 @@ const handleDownload = () => {
         <!-- 背景图片设置 -->
         <div class="space-y-3">
           <div class="w-full flex items-center justify-between">
+            <div
+              v-if="isColor(backgroundConfig.background)"
+              class="w-full h-[200px] border-2 border-border rounded"
+              :style="{ backgroundColor: backgroundConfig.background }"
+            />
             <Image
+              v-else
               :src="backgroundConfig.background"
               :showMask="true"
               width="100%"
