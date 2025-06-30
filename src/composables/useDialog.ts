@@ -43,3 +43,14 @@ export const openWallpaperSelector = () => {
 export const closeWallpaperSelector = () => {
   isWallpaperSelector.value = false
 }
+
+// 颜色选择器
+export const isColorPickerDialog = ref(false)
+
+export const openColorPickerDialog = () => {
+  isColorPickerDialog.value = true
+}
+
+export const closeColorPickerDialog = () => {
+  isColorPickerDialog.value = false
+}

@@ -1,4 +1,5 @@
 import { computed } from 'vue'
+import { isColor } from '@/lib/colorUtils'
 import { useWebExtStorage } from '@/composables/useWebExtStorage'
 
 // 布局配置接口
@@ -57,6 +58,22 @@ const { data: favoritesConfig } = useWebExtStorage('favoritesConfig', {
 const { data: minimalConfig } = useWebExtStorage('minimalConfig', {
   // 极简模式下没有网格布局设置
 })
+
+// 默认颜色列表（初始值）
+const initialColors = [
+  '#cc7d24',
+  '#8d9614',
+  '#24a451',
+  '#00a99b',
+  '#00a6df',
+  '#0097fd',
+  '#a27be7',
+  '#e65da9',
+  '#ef6061',
+]
+
+// 颜色列表
+const { data: customColorList, dataReady: customColorListReady } = useWebExtStorage('wallpaperColors', initialColors)
 
 export function useSettings() {
   // 当前显示模式
@@ -232,19 +249,7 @@ export function useSettings() {
   const setWallpaper = (imageUrl: string) => {
     // 更新背景配置
     backgroundConfig.value.background = imageUrl
-
-    // 立即更新 CSS 变量以应用新背景
-    const isColor = (str: string) => {
-      // 简单判断是否为颜色值（以#开头或包含rgb/rgba等）
-      return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(str) ||
-             /^rgb|rgba|hsl|hsla/i.test(str) ||
-             /^(transparent|inherit|initial|unset)$/i.test(str)
-    }
-
-    document.documentElement.style.setProperty(
-      '--background-image',
-      isColor(imageUrl) ? imageUrl : `url(${imageUrl})`
-    )
+    document.documentElement.style.setProperty('--background-image', isColor(imageUrl) ? imageUrl : `url(${imageUrl})`)
   }
 
   return {
@@ -275,6 +280,10 @@ export function useSettings() {
     rowOptions,
     colOptions,
     gapOptions,
+
+    // 自定义颜色列表
+    customColorList,
+    customColorListReady,
 
     // 方法
     updateDisplayMode,
