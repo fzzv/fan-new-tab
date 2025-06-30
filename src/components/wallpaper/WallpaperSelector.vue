@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { closeWallpaperSelector } from '@/composables/useDialog.ts'
+import { closeWallpaperSelector, openColorPickerDialog } from '@/composables/useDialog.ts'
 import { ModalContent, ModalHeader } from '@/components/modal'
 import { Tabs } from '@/components/tabs'
 import { Image } from '@/components/image'
+import { Icon } from '@iconify/vue'
 import { $fetch } from 'ofetch'
 import { ScrollArea } from '@/components/scroll-area'
 import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
@@ -42,12 +43,19 @@ const source = ref('')
 
 // 响应式网格容器引用
 const gridContainerRef = ref<HTMLElement | null>(null)
+const colorGridContainerRef = ref<HTMLElement | null>(null)
 
 // 使用响应式网格
 const { cols, gridStyle } = useResponsiveGrid(gridContainerRef, responsivePresets.imageGrid)
+const { gridStyle: colorGridStyle } = useResponsiveGrid(colorGridContainerRef, responsivePresets.imageGrid)
 
 // 设置
-const { setWallpaper } = useSettings()
+const { setWallpaper, customColorList } = useSettings()
+
+// 处理颜色点击，设置为壁纸
+function handleColorClick(color: string) {
+  setWallpaper(color)
+}
 
 // 加载更多数据的函数
 async function loadMoreData() {
@@ -147,6 +155,32 @@ function handleAreaScroll(event: Event) {
             </div>
             <div v-if="isLoading" class="loading" :style="{ gridColumn: `1 / ${cols + 1}` }">加载中...</div>
             <div v-else-if="!hasMore" class="no-more" :style="{ gridColumn: `1 / ${cols + 1}` }">没有更多了</div>
+          </div>
+          <!-- 纯色壁纸 -->
+          <div
+            v-if="modelValue === 'color'"
+            ref="colorGridContainerRef"
+            class="responsive-grid"
+            :style="colorGridStyle"
+          >
+            <!-- 自定义颜色按钮 -->
+            <div class="grid-item">
+              <div
+                class="w-[200px] h-[150px] border-2 border-dashed border-muted-foreground rounded-lg cursor-pointer flex flex-col items-center justify-center gap-2"
+                @click="openColorPickerDialog"
+              >
+                <Icon icon="material-symbols:add-circle-outline" width="32" height="32" />
+                <span class="text-sm font-medium">自定义颜色</span>
+              </div>
+            </div>
+            <!-- 颜色列表 -->
+            <div v-for="color in customColorList" :key="color" class="grid-item">
+              <div
+                class="w-[200px] h-[150px] border-2 border-transparent rounded-lg cursor-pointer"
+                :style="{ backgroundColor: color }"
+                @click="() => handleColorClick(color)"
+              />
+            </div>
           </div>
         </ScrollArea>
       </template>
