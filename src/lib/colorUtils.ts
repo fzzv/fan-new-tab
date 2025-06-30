@@ -86,9 +86,31 @@ export function parseColor(color: string): RGBA {
   }
 }
 
-export function isColor(color: string) {
-  const seemlyRgba = rgba(color)
-  return seemlyRgba !== null
+/**
+ * 判断一个字符串是否是合法的颜色值
+ * 支持 hex, rgb(a), hsl(a), hsv(a)
+ */
+export function isColor(value: string): boolean {
+  const hexRegex = /^#(?:[0-9a-fA-F]{3,4}){1,2}$/
+
+  const rgbRegex = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/
+  const rgbaRegex = /^rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(0|1|0?\.\d+)\s*\)$/
+
+  const hslRegex = /^hsl\(\s*(\d{1,3})\s*,\s*(\d{1,3})%\s*,\s*(\d{1,3})%\s*\)$/
+  const hslaRegex = /^hsla\(\s*(\d{1,3})\s*,\s*(\d{1,3})%\s*,\s*(\d{1,3})%\s*,\s*(0|1|0?\.\d+)\s*\)$/
+
+  const hsvRegex = /^hsv\(\s*(\d{1,3})\s*,\s*(\d{1,3})%\s*,\s*(\d{1,3})%\s*\)$/
+  const hsvaRegex = /^hsva\(\s*(\d{1,3})\s*,\s*(\d{1,3})%\s*,\s*(\d{1,3})%\s*,\s*(0|1|0?\.\d+)\s*\)$/
+
+  return (
+    hexRegex.test(value) ||
+    rgbRegex.test(value) ||
+    rgbaRegex.test(value) ||
+    hslRegex.test(value) ||
+    hslaRegex.test(value) ||
+    hsvRegex.test(value) ||
+    hsvaRegex.test(value)
+  )
 }
 
 /**
