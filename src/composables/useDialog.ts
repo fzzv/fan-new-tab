@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import type { VNode } from 'vue'
 
 // 添加搜索引擎 弹窗
 export const isAddEngineDialog = ref(false)
@@ -53,4 +54,31 @@ export const openColorPickerDialog = () => {
 
 export const closeColorPickerDialog = () => {
   isColorPickerDialog.value = false
+}
+
+// 确认弹窗配置接口
+export interface ConfirmConfig {
+  title?: string | VNode
+  icon?: string | VNode
+  content?: string | VNode
+  okText?: string
+  cancelText?: string
+  onOk?: () => void | Promise<void>
+  onCancel?: () => void
+  class?: string
+  zIndex?: number
+}
+
+// 确认弹窗
+export const isConfirmDialog = ref(false)
+export const confirmConfig = ref<ConfirmConfig>({})
+
+export const openConfirmDialog = (config: ConfirmConfig) => {
+  confirmConfig.value = config
+  isConfirmDialog.value = true
+}
+
+export const closeConfirmDialog = () => {
+  isConfirmDialog.value = false
+  confirmConfig.value = {}
 }
