@@ -116,15 +116,6 @@ export async function getCurrentTabUrl() {
 }
 
 /**
- * 判断是否为颜色
- * @param val
- * @returns
- */
-export function isColor(val: string) {
-  return /^(#|rgb|hsl)/.test(val)
-}
-
-/**
  * 从URL下载文件
  * @param url
  * @param filename

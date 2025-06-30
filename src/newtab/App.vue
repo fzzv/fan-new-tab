@@ -9,7 +9,7 @@ import { openAddFavoriteDialog, openPageSettingDialog } from '@/composables/useD
 import { useSettings } from '@/composables/useSettings'
 import FavoritesMode from './components/FavoritesMode.vue'
 import StandardMode from './components/StandardMode.vue'
-import { cn, isColor } from '@/lib/utils'
+import { cn, isColor } from '@/lib'
 
 const { backgroundConfig, backgroundConfigReady, currentDisplayMode } = useSettings()
 const { theme, themeReady } = useTheme()
