@@ -4,6 +4,7 @@ import { storage } from 'webextension-polyfill'
 import type { Storage } from 'webextension-polyfill'
 import type { StorageOptions, StorageLikeAsync } from '@/types'
 import { StorageSerializers } from '@/types'
+import { toast } from '@/lib/toast'
 
 type MaybeRefOrGetter<T = any> = MaybeRef<T> | ComputedRef<T> | (() => T)
 
@@ -43,8 +44,8 @@ export function useWebExtStorage<T>(key: string, defaultValue: MaybeRefOrGetter<
     writeDefaults = true,
     mergeDefaults = false,
     listenToStorageChanges = true,
-    onError = (error: unknown) => {
-      console.log(error)
+    onError = () => {
+      toast.error('存储操作失败，请重试！', { richColors: true })
     },
   } = options
 
