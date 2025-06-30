@@ -3,6 +3,7 @@ import { computed, onMounted } from 'vue'
 import SearchBar from './components/SearchBar.vue'
 import ModalContainer from '@/components/modal/ModalContainer.vue'
 import Button from '@/components/button/Button.vue'
+import { Toast } from '@/components/toast'
 import { useTheme, Theme } from '@/composables/useTheme'
 import { Icon } from '@iconify/vue'
 import { openAddFavoriteDialog, openPageSettingDialog } from '@/composables/useDialog.ts'
@@ -59,5 +60,6 @@ async function toggleDark() {
       <StandardMode v-else />
     </div>
     <ModalContainer />
+    <Toast />
   </div>
 </template>
