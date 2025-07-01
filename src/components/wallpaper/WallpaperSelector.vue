@@ -10,6 +10,13 @@ import { ScrollArea } from '@/components/scroll-area'
 import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
 import { useResponsiveGrid, responsivePresets } from '@/composables/useResponsiveGrid'
 import { useSettings } from '@/composables/useSettings'
+import { useLocalWallpaper } from '@/composables/useLocalWallpaper'
+import { Modal } from '@/components/modal'
+import { useContextMenu } from '@/composables/useContextMenu'
+import { ContextMenu } from '@/components/context-menu'
+import { toast } from '@/lib/toast'
+import type { LocalWallpaper } from '@/types/wallpaper'
+import type { MenuItemType } from '@/components/context-menu'
 
 const classificationTabs = [
   {
@@ -44,17 +51,94 @@ const source = ref('')
 // 响应式网格容器引用
 const gridContainerRef = ref<HTMLElement | null>(null)
 const colorGridContainerRef = ref<HTMLElement | null>(null)
+const localGridContainerRef = ref<HTMLElement | null>(null)
 
 // 使用响应式网格
 const { cols, gridStyle } = useResponsiveGrid(gridContainerRef, responsivePresets.imageGrid)
 const { gridStyle: colorGridStyle } = useResponsiveGrid(colorGridContainerRef, responsivePresets.imageGrid)
+const { gridStyle: localGridStyle } = useResponsiveGrid(localGridContainerRef, responsivePresets.imageGrid)
 
 // 设置
 const { setWallpaper, customColorList } = useSettings()
 
+// 本地壁纸
+const {
+  wallpapers: localWallpapers,
+  isLoading: isLocalLoading,
+  loadWallpapers,
+  addWallpaper,
+  deleteWallpaper,
+} = useLocalWallpaper()
+
+// 右击菜单
+const { isOpen: isContextMenuOpen, virtualElement, currentItem, onContextMenu } = useContextMenu()
+
 // 处理颜色点击，设置为壁纸
 function handleColorClick(color: string) {
   setWallpaper(color)
+}
+
+// 处理本地壁纸点击，设置为壁纸
+function handleLocalWallpaperClick(wallpaper: LocalWallpaper) {
+  setWallpaper(wallpaper.base64)
+}
+
+// 处理文件上传
+const fileInputRef = ref<HTMLInputElement | null>(null)
+
+function handleUploadClick() {
+  fileInputRef.value?.click()
+}
+
+async function handleFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+
+  if (file) {
+    try {
+      await addWallpaper(file)
+      // 清空input值，允许重复选择同一文件
+      if (target) target.value = ''
+      toast.success('上传成功', { richColors: true })
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '上传失败，请重试')
+    }
+  }
+}
+
+// 右击菜单项
+const contextMenuItems: MenuItemType[] = [
+  {
+    label: '删除壁纸',
+    icon: 'material-symbols:delete-outline',
+    click: async (item) => {
+      if (item) {
+        Modal.confirm({
+          title: '确认删除',
+          icon: 'material-symbols:delete-outline',
+          content: '确定要删除这张壁纸吗？此操作不可撤销。',
+          okText: '删除',
+          cancelText: '取消',
+          onOk: async () => {
+            try {
+              if (item.id) {
+                await deleteWallpaper(item.id)
+                toast.success('删除成功', { richColors: true })
+              }
+            } catch (error) {
+              toast.error(`删除失败: ${error instanceof Error ? error.message : '未知错误'}`, { richColors: true })
+            }
+          },
+        })
+      }
+    },
+  },
+]
+
+// 处理右击菜单
+function handleContextMenu(event: MouseEvent, wallpaper: LocalWallpaper) {
+  event.preventDefault()
+  onContextMenu(wallpaper)
 }
 
 // 加载更多数据的函数
@@ -113,12 +197,17 @@ watch(modelValue, (newValue) => {
     images.value = []
     reset()
     getWallpaperList()
+  } else if (newValue === 'local') {
+    // 加载本地壁纸
+    loadWallpapers()
   }
 })
 
 onMounted(() => {
   if (modelValue.value === 'cloud') {
     getWallpaperList()
+  } else if (modelValue.value === 'local') {
+    loadWallpapers()
   }
 })
 
@@ -156,9 +245,52 @@ function handleAreaScroll(event: Event) {
             <div v-if="isLoading" class="loading" :style="{ gridColumn: `1 / ${cols + 1}` }">加载中...</div>
             <div v-else-if="!hasMore" class="no-more" :style="{ gridColumn: `1 / ${cols + 1}` }">没有更多了</div>
           </div>
+          <!-- 本地壁纸 -->
+          <div
+            v-else-if="modelValue === 'local'"
+            ref="localGridContainerRef"
+            class="responsive-grid"
+            :style="localGridStyle"
+          >
+            <!-- 上传按钮 -->
+            <div class="grid-item">
+              <div
+                class="w-[200px] h-[150px] border-2 border-dashed border-muted-foreground rounded-lg cursor-pointer flex flex-col items-center justify-center gap-2"
+                @click="handleUploadClick"
+              >
+                <Icon icon="material-symbols:upload-file-outline" width="32" height="32" />
+                <span class="text-sm font-medium">上传本地壁纸</span>
+              </div>
+              <!-- 隐藏的文件输入 -->
+              <input ref="fileInputRef" type="file" accept="image/*" class="hidden" @change="handleFileChange" />
+            </div>
+            <!-- 本地壁纸列表 -->
+            <div v-for="wallpaper in localWallpapers" :key="wallpaper.id" class="grid-item">
+              <Image
+                :src="wallpaper.base64"
+                :alt="wallpaper.name"
+                :width="200"
+                :height="150"
+                :preview="false"
+                imgClass="border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
+                @click="() => handleLocalWallpaperClick(wallpaper)"
+                @contextmenu="(e: MouseEvent) => handleContextMenu(e, wallpaper)"
+              />
+            </div>
+            <!-- 加载状态 -->
+            <div v-if="isLocalLoading" class="loading" :style="{ gridColumn: '1 / -1' }">加载中...</div>
+            <!-- 空状态 -->
+            <div v-else-if="localWallpapers.length === 0" class="no-wallpapers" :style="{ gridColumn: '1 / -1' }">
+              <div class="text-center text-muted-foreground py-8">
+                <Icon icon="material-symbols:image-outline" width="48" height="48" class="mx-auto mb-2" />
+                <p>还没有本地壁纸</p>
+                <p class="text-sm">点击上传按钮添加您的第一张壁纸</p>
+              </div>
+            </div>
+          </div>
           <!-- 纯色壁纸 -->
           <div
-            v-if="modelValue === 'color'"
+            v-else-if="modelValue === 'color'"
             ref="colorGridContainerRef"
             class="responsive-grid"
             :style="colorGridStyle"
@@ -185,6 +317,14 @@ function handleAreaScroll(event: Event) {
         </ScrollArea>
       </template>
     </Tabs>
+
+    <!-- 右击菜单 -->
+    <ContextMenu
+      v-model="isContextMenuOpen"
+      :virtual-element="virtualElement"
+      :items="contextMenuItems"
+      :current-item="currentItem"
+    />
   </ModalContent>
 </template>
 
@@ -214,6 +354,11 @@ function handleAreaScroll(event: Event) {
   color: #bbb;
   padding: 20px 0;
   font-size: 14px;
+}
+
+.no-wallpapers {
+  text-align: center;
+  padding: 20px 0;
 }
 
 /* 响应式调整 */
