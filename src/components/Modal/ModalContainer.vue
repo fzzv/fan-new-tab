@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { isAddEngineDialog, isAddFavoriteDialog, isWallpaperSelector, isColorPickerDialog, isConfirmDialog } from '@/composables/useDialog'
+import {
+  isAddEngineDialog,
+  isAddFavoriteDialog,
+  isWallpaperSelector,
+  isColorPickerDialog,
+  isConfirmDialog,
+} from '@/composables/useDialog'
 import ModalDialog from './ModalDialog.vue'
 import ConfirmModal from './ConfirmModal.vue'
 import AddEngine from '@/components/engine/AddEngine.vue'
