@@ -25,7 +25,12 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
 <template>
   <div class="w-[var(--search-width)] h-[var(--search-height)] my-5 mx-auto">
-    <Input v-model="searchQuery" placeholder="输入搜索内容" class="rounded-xl h-full" @keydown="handleKeyDown">
+    <Input
+      v-model="searchQuery"
+      placeholder="输入搜索内容"
+      class="rounded-xl h-full bg-background"
+      @keydown="handleKeyDown"
+    >
       <template #prefix>
         <Popover class="w-[var(--search-width)]" align="start" :alignOffset="-65" :sideOffset="45">
           <template #trigger>
