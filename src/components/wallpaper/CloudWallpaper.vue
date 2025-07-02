@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { Image } from '@/components/image'
 import { $fetch } from 'ofetch'
 import { ScrollArea } from '@/components/scroll-area'
+import { SelectRoot, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/select'
 import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
 import { useResponsiveGrid, responsivePresets } from '@/composables/useResponsiveGrid'
 import { useSettings } from '@/composables/useSettings'
@@ -16,6 +17,25 @@ const images = ref<any[]>([])
 const page = ref(1)
 const pageSize = ref(10)
 const source = ref('')
+
+// 来源筛选选项
+const sourceOptions = [
+  { label: 'All', value: 'all' },
+  { label: 'Bing', value: 'Bing' },
+  { label: 'Unsplash', value: 'Unsplash' },
+  { label: 'Life Of Pix', value: 'Life Of Pix' },
+  { label: 'MMT', value: 'MMT' },
+  { label: 'Realistic Shots', value: 'Realistic Shots' },
+  { label: 'Jay Mantri', value: 'Jay Mantri' },
+  { label: 'Free Nature Stock', value: 'Free Nature Stock' },
+  { label: 'Skitter Photo', value: 'Skitter Photo' },
+  { label: 'Startup Stock Photos', value: 'Startup Stock Photos' },
+  { label: 'Barn Images', value: 'Barn Images' },
+  { label: 'Picography', value: 'Picography' },
+]
+
+// 选中的来源
+const selectedSource = ref('all')
 
 // 响应式网格容器引用
 const gridContainerRef = ref<HTMLElement | null>(null)
@@ -108,6 +128,18 @@ function handleContextMenu(event: MouseEvent, wallpaper: any) {
   onContextMenu(wallpaper)
 }
 
+// 处理来源变化
+function handleSourceChange(newSource: string) {
+  selectedSource.value = newSource
+  // 如果选择的是"all"，则将source设置为空字符串
+  source.value = newSource === 'all' ? '' : newSource
+  // 重置分页并重新加载数据
+  page.value = 1
+  images.value = []
+  reset()
+  getWallpaperList()
+}
+
 // 窗口大小变化监听
 let resizeTimeout: number | null = null
 const handleWindowResize = () => {
@@ -123,6 +155,9 @@ const handleWindowResize = () => {
 }
 
 onMounted(() => {
+  // 初始化选中的来源为默认值（All）
+  selectedSource.value = 'all'
+
   // 重置状态并重新加载数据
   page.value = 1
   images.value = []
@@ -148,38 +183,60 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <ScrollArea :height="400" type="hover" @areaScroll="handleScroll">
-    <div ref="gridContainerRef" class="p-2" :style="gridStyle">
-      <div v-for="item in images" :key="item._id" class="flex items-center justify-center overflow-hidden rounded-lg">
-        <Image
-          :src="item.src.rawSrc"
-          :alt="`wallpaper-${item._id}`"
-          :width="200"
-          :height="150"
-          :preview="false"
-          imgClass="border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
-          @click="() => handleImageClick(item)"
-          @contextmenu="(e: MouseEvent) => handleContextMenu(e, item)"
-        />
-      </div>
-      <div v-if="isLoading" class="text-center text-gray-500 py-5 text-sm" :style="{ gridColumn: `1 / ${cols + 1}` }">
-        加载中...
-      </div>
-      <div
-        v-else-if="!hasMore"
-        class="text-center text-gray-400 py-5 text-sm"
-        :style="{ gridColumn: `1 / ${cols + 1}` }"
-      >
-        没有更多了
+  <div class="space-y-4">
+    <!-- 来源筛选 -->
+    <div class="px-2">
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-medium">来源:</span>
+        <SelectRoot v-model="selectedSource" @update:model-value="handleSourceChange">
+          <SelectTrigger class="w-48">
+            <SelectValue>
+              {{ sourceOptions.find((opt) => opt.value === selectedSource)?.label || 'All' }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent class="z-[2001] w-48">
+            <SelectItem v-for="option in sourceOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </SelectItem>
+          </SelectContent>
+        </SelectRoot>
       </div>
     </div>
 
-    <!-- 右击菜单 -->
-    <ContextMenu
-      v-model="isContextMenuOpen"
-      :virtual-element="virtualElement"
-      :items="contextMenuItems"
-      :current-item="currentItem"
-    />
-  </ScrollArea>
+    <!-- 壁纸列表 -->
+    <ScrollArea :height="400" type="hover" @areaScroll="handleScroll">
+      <div ref="gridContainerRef" class="p-2" :style="gridStyle">
+        <div v-for="item in images" :key="item._id" class="flex items-center justify-center overflow-hidden rounded-lg">
+          <Image
+            :src="item.src.rawSrc"
+            :alt="`wallpaper-${item._id}`"
+            :width="200"
+            :height="150"
+            :preview="false"
+            imgClass="border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
+            @click="() => handleImageClick(item)"
+            @contextmenu="(e: MouseEvent) => handleContextMenu(e, item)"
+          />
+        </div>
+        <div v-if="isLoading" class="text-center text-gray-500 py-5 text-sm" :style="{ gridColumn: `1 / ${cols + 1}` }">
+          加载中...
+        </div>
+        <div
+          v-else-if="!hasMore"
+          class="text-center text-gray-400 py-5 text-sm"
+          :style="{ gridColumn: `1 / ${cols + 1}` }"
+        >
+          没有更多了
+        </div>
+      </div>
+
+      <!-- 右击菜单 -->
+      <ContextMenu
+        v-model="isContextMenuOpen"
+        :virtual-element="virtualElement"
+        :items="contextMenuItems"
+        :current-item="currentItem"
+      />
+    </ScrollArea>
+  </div>
 </template>
