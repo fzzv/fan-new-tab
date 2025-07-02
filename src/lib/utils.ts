@@ -108,6 +108,102 @@ export async function urlToBase64(url: string): Promise<string> {
 }
 
 /**
+ * 将URL转为Blob
+ * @param url
+ */
+export async function urlToBlob(url: string): Promise<Blob> {
+  const response = await $fetch.raw(url, {
+    responseType: 'blob',
+  })
+  return new Blob([response?._data ?? ''], {
+    type: response.headers.get('content-type') || 'application/octet-stream',
+  })
+}
+
+/**
+ * 将File转为Blob
+ * @param file
+ */
+export function fileToBlob(file: File): Blob {
+  return new Blob([file], { type: file.type })
+}
+
+/**
+ * 将Blob转为Base64
+ * @param blob
+ */
+export function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result)
+      } else {
+        reject(new Error('Failed to convert blob to base64'))
+      }
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+/**
+ * 创建Blob URL
+ * @param blob
+ */
+export function createBlobUrl(blob: Blob): string {
+  return URL.createObjectURL(blob)
+}
+
+/**
+ * 释放Blob URL
+ * @param blobUrl
+ */
+export function revokeBlobUrl(blobUrl: string): void {
+  URL.revokeObjectURL(blobUrl)
+}
+
+/**
+ * 生成简单的字符串哈希
+ * @param str
+ */
+export function simpleHash(str: string): string {
+  let hash = 0
+  if (str.length === 0) return hash.toString()
+
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+    hash = hash & hash // 转换为32位整数
+  }
+
+  return Math.abs(hash).toString(36)
+}
+
+/**
+ * 为Blob生成哈希值
+ * @param blob
+ */
+export async function blobHash(blob: Blob): Promise<string> {
+  // 使用文件大小、类型和前1KB内容生成哈希
+  const sizeType = `${blob.size}-${blob.type}`
+
+  // 读取前1KB内容
+  const slice = blob.slice(0, 1024)
+  const arrayBuffer = await slice.arrayBuffer()
+  const uint8Array = new Uint8Array(arrayBuffer)
+
+  // 生成简单的内容哈希
+  let contentHash = 0
+  for (let i = 0; i < uint8Array.length; i++) {
+    contentHash = (contentHash << 5) - contentHash + uint8Array[i]
+    contentHash = contentHash & contentHash
+  }
+
+  return simpleHash(sizeType + Math.abs(contentHash).toString())
+}
+
+/**
  * 获取当前标签页的URL
  */
 export async function getCurrentTabUrl() {
