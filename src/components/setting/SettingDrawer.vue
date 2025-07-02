@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Drawer, DrawerContent, DrawerHeader } from '@/components/drawer'
+import { ScrollArea } from '@/components/scroll-area'
 import { isPageSettingDialog, closePageSettingDialog } from '@/composables/useDialog'
 import { useSettings, type DisplayMode } from '@/composables/useSettings.ts'
 import { TabsRoot, TabsList, TabsTrigger, TabsContent } from '@/components/tabs'
@@ -46,44 +47,46 @@ const modeDescriptionText = computed(() => {
     @close="closePageSettingDialog"
   >
     <DrawerHeader title="页面设置" @close="closePageSettingDialog" />
-    <DrawerContent padding="lg">
-      <div class="space-y-6">
-        <!-- 显示模式切换 -->
-        <div class="space-y-4">
-          <h3 class="text-lg font-semibold">显示模式</h3>
+    <DrawerContent padding="none">
+      <ScrollArea type="hover" class="h-full">
+        <div class="p-6 space-y-6">
+          <!-- 显示模式切换 -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-semibold">显示模式</h3>
 
-          <TabsRoot v-model="currentModeStr" class="w-full">
-            <TabsList class="grid w-full grid-cols-3">
-              <TabsTrigger
-                v-for="option in displayModeOptions"
-                :key="option.value"
-                :value="option.value"
-                class="flex items-center gap-2 text-sm"
-              >
-                <Icon :icon="option.icon" width="16" height="16" />
-                {{ option.label }}
-              </TabsTrigger>
-            </TabsList>
-            <!-- 公共的内容 -->
-            <div class="my-3 p-3 bg-muted/50 rounded-lg">
-              <p class="text-sm text-muted-foreground">{{ modeDescriptionText }}</p>
-            </div>
-            <!-- 添加对背景的设置-->
-            <SettingBackground class="mb-5" />
-            <TabsContent value="standard" class="p-0">
-              <!-- 布局设置 -->
-              <SettingGridLayout />
-            </TabsContent>
-            <TabsContent value="favorites" class="p-0">
-              <!-- 收藏夹模式布局设置 -->
-              <SettingGridLayout />
-            </TabsContent>
-            <TabsContent value="minimal" class="p-0">
-              <!-- 极简模式没有布局设置 -->
-            </TabsContent>
-          </TabsRoot>
+            <TabsRoot v-model="currentModeStr" class="w-full">
+              <TabsList class="grid w-full grid-cols-3">
+                <TabsTrigger
+                  v-for="option in displayModeOptions"
+                  :key="option.value"
+                  :value="option.value"
+                  class="flex items-center gap-2 text-sm"
+                >
+                  <Icon :icon="option.icon" width="16" height="16" />
+                  {{ option.label }}
+                </TabsTrigger>
+              </TabsList>
+              <!-- 公共的内容 -->
+              <div class="my-3 p-3 bg-muted/50 rounded-lg">
+                <p class="text-sm text-muted-foreground">{{ modeDescriptionText }}</p>
+              </div>
+              <!-- 添加对背景的设置-->
+              <SettingBackground class="mb-5" />
+              <TabsContent value="standard" class="p-0">
+                <!-- 布局设置 -->
+                <SettingGridLayout />
+              </TabsContent>
+              <TabsContent value="favorites" class="p-0">
+                <!-- 收藏夹模式布局设置 -->
+                <SettingGridLayout />
+              </TabsContent>
+              <TabsContent value="minimal" class="p-0">
+                <!-- 极简模式没有布局设置 -->
+              </TabsContent>
+            </TabsRoot>
+          </div>
         </div>
-      </div>
+      </ScrollArea>
     </DrawerContent>
   </Drawer>
 </template>
