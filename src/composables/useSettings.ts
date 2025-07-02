@@ -292,7 +292,7 @@ export function useSettings() {
     currentGridLayoutConfig, // 当前模式的网格布局配置
 
     // 背景设置
-    backgroundConfig: computed(() => backgroundConfig.value),
+    backgroundConfig,
     backgroundConfigReady,
 
     // 模式配置
