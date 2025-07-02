@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed, nextTick } from 'vue'
 import { closeWallpaperSelector, openColorPickerDialog } from '@/composables/useDialog.ts'
 import { ModalContent, ModalHeader } from '@/components/modal'
 import { Tabs } from '@/components/tabs'
@@ -56,10 +56,10 @@ const localGridContainerRef = ref<HTMLElement | null>(null)
 const recentGridContainerRef = ref<HTMLElement | null>(null)
 
 // 使用响应式网格
-const { cols, gridStyle } = useResponsiveGrid(gridContainerRef, responsivePresets.imageGrid)
-const { gridStyle: colorGridStyle } = useResponsiveGrid(colorGridContainerRef, responsivePresets.imageGrid)
-const { gridStyle: localGridStyle } = useResponsiveGrid(localGridContainerRef, responsivePresets.imageGrid)
-const { gridStyle: recentGridStyle } = useResponsiveGrid(recentGridContainerRef, responsivePresets.imageGrid)
+const { cols, gridStyle, reinitializeObserver: reinitializeCloudGrid } = useResponsiveGrid(gridContainerRef, responsivePresets.imageGrid)
+const { gridStyle: colorGridStyle, reinitializeObserver: reinitializeColorGrid } = useResponsiveGrid(colorGridContainerRef, responsivePresets.imageGrid)
+const { gridStyle: localGridStyle, reinitializeObserver: reinitializeLocalGrid } = useResponsiveGrid(localGridContainerRef, responsivePresets.imageGrid)
+const { gridStyle: recentGridStyle, reinitializeObserver: reinitializeRecentGrid } = useResponsiveGrid(recentGridContainerRef, responsivePresets.imageGrid)
 
 // 设置
 const { setWallpaper, customColorList } = useSettings()
@@ -262,14 +262,54 @@ watch(modelValue, (newValue) => {
     images.value = []
     reset()
     getWallpaperList()
+    // 延迟重新初始化网格，确保 DOM 已更新
+    nextTick(() => {
+      reinitializeCloudGrid()
+    })
   } else if (newValue === 'local') {
     // 加载本地壁纸
     loadWallpapers()
+    // 延迟重新初始化网格，确保 DOM 已更新
+    nextTick(() => {
+      reinitializeLocalGrid()
+    })
   } else if (newValue === 'recent') {
     // 加载最近使用壁纸
     loadRecentWallpapers()
+    // 延迟重新初始化网格，确保 DOM 已更新
+    nextTick(() => {
+      reinitializeRecentGrid()
+    })
+  } else if (newValue === 'color') {
+    // 延迟重新初始化网格，确保 DOM 已更新
+    nextTick(() => {
+      reinitializeColorGrid()
+    })
   }
 })
+
+// 窗口大小变化监听
+let resizeTimeout: number | null = null
+const handleWindowResize = () => {
+  // 防抖处理，避免频繁触发
+  if (resizeTimeout) {
+    clearTimeout(resizeTimeout)
+  }
+  resizeTimeout = window.setTimeout(() => {
+    // 根据当前标签页重新初始化对应的网格
+    nextTick(() => {
+      if (modelValue.value === 'cloud') {
+        reinitializeCloudGrid()
+      } else if (modelValue.value === 'local') {
+        reinitializeLocalGrid()
+      } else if (modelValue.value === 'recent') {
+        reinitializeRecentGrid()
+      } else if (modelValue.value === 'color') {
+        reinitializeColorGrid()
+      }
+    })
+  }, 150) // 150ms 防抖
+}
 
 onMounted(() => {
   if (modelValue.value === 'cloud') {
@@ -278,6 +318,17 @@ onMounted(() => {
     loadWallpapers()
   } else if (modelValue.value === 'recent') {
     loadRecentWallpapers()
+  }
+
+  // 添加窗口大小变化监听
+  window.addEventListener('resize', handleWindowResize)
+})
+
+// 组件卸载时清理监听器
+onUnmounted(() => {
+  window.removeEventListener('resize', handleWindowResize)
+  if (resizeTimeout) {
+    clearTimeout(resizeTimeout)
   }
 })
 

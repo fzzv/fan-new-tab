@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onUnmounted, type Ref } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, type Ref } from 'vue'
 
 export interface ResponsiveGridOptions {
   /**
@@ -46,6 +46,10 @@ export interface ResponsiveGridReturn {
    * 手动更新容器尺寸
    */
   updateSize: () => void
+  /**
+   * 重新初始化观察器
+   */
+  reinitializeObserver: () => void
 }
 
 /**
@@ -119,29 +123,62 @@ export function useResponsiveGrid(
   // ResizeObserver 实例
   let resizeObserver: ResizeObserver | null = null
 
+  // 创建 ResizeObserver 的函数
+  const createResizeObserver = () => {
+    if (resizeObserver) {
+      resizeObserver.disconnect()
+    }
+
+    resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width } = entry.contentRect
+        containerWidth.value = width
+        cols.value = calculateCols(width)
+      }
+    })
+  }
+
+  // 开始观察容器的函数
+  const startObserving = () => {
+    if (containerRef.value && resizeObserver) {
+      resizeObserver.observe(containerRef.value)
+    }
+  }
+
+  // 停止观察的函数
+  const stopObserving = () => {
+    if (resizeObserver) {
+      resizeObserver.disconnect()
+    }
+  }
+
+  // 重新初始化观察器
+  const reinitializeObserver = () => {
+    if (containerRef.value) {
+      stopObserving()
+      createResizeObserver()
+      updateSize()
+      startObserving()
+    }
+  }
+
+  // 监听 containerRef 的变化，当元素重新创建时重新初始化
+  watch(containerRef, (newContainer, oldContainer) => {
+    if (newContainer && newContainer !== oldContainer) {
+      reinitializeObserver()
+    }
+  }, { immediate: false })
+
   onMounted(() => {
     if (containerRef.value) {
-      // 初始化尺寸
+      createResizeObserver()
       updateSize()
-
-      // 创建 ResizeObserver
-      resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          const { width } = entry.contentRect
-          containerWidth.value = width
-          cols.value = calculateCols(width)
-        }
-      })
-
-      // 开始观察容器
-      resizeObserver.observe(containerRef.value)
+      startObserving()
     }
   })
 
   onUnmounted(() => {
-    if (resizeObserver) {
-      resizeObserver.disconnect()
-    }
+    stopObserving()
   })
 
   return {
@@ -149,6 +186,7 @@ export function useResponsiveGrid(
     containerWidth,
     gridStyle,
     updateSize,
+    reinitializeObserver,
   }
 }
 
