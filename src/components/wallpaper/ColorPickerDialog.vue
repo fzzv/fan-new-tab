@@ -13,7 +13,7 @@ const { setWallpaper, customColorList } = useSettings()
 const selectedColor = ref('#ff6b6b')
 
 // 确认选择颜色
-function handleConfirm() {
+async function handleConfirm() {
   // 添加颜色到列表（如果不存在的话）
   if (!customColorList.value.includes(selectedColor.value)) {
     // 将新颜色插入到列表前面
@@ -21,7 +21,7 @@ function handleConfirm() {
   }
 
   // 设置为壁纸
-  setWallpaper(selectedColor.value)
+  await setWallpaper(selectedColor.value)
   closeColorPickerDialog()
 }
 
