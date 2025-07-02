@@ -12,11 +12,12 @@ import { useResponsiveGrid, responsivePresets } from '@/composables/useResponsiv
 import { useSettings } from '@/composables/useSettings'
 import { useLocalWallpaper } from '@/composables/useLocalWallpaper'
 import { useRecentWallpaper } from '@/composables/useRecentWallpaper'
+import { useFavoriteWallpaper } from '@/composables/useFavoriteWallpaper'
 import { Modal } from '@/components/modal'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { ContextMenu } from '@/components/context-menu'
 import { toast } from '@/lib/toast'
-import type { LocalWallpaper, RecentWallpaper } from '@/types/wallpaper'
+import type { LocalWallpaper, RecentWallpaper, FavoriteWallpaper } from '@/types/wallpaper'
 import type { MenuItemType } from '@/components/context-menu'
 
 const classificationTabs = [
@@ -54,12 +55,30 @@ const gridContainerRef = ref<HTMLElement | null>(null)
 const colorGridContainerRef = ref<HTMLElement | null>(null)
 const localGridContainerRef = ref<HTMLElement | null>(null)
 const recentGridContainerRef = ref<HTMLElement | null>(null)
+const favoriteGridContainerRef = ref<HTMLElement | null>(null)
 
 // 使用响应式网格
-const { cols, gridStyle, reinitializeObserver: reinitializeCloudGrid } = useResponsiveGrid(gridContainerRef, responsivePresets.imageGrid)
-const { gridStyle: colorGridStyle, reinitializeObserver: reinitializeColorGrid } = useResponsiveGrid(colorGridContainerRef, responsivePresets.imageGrid)
-const { gridStyle: localGridStyle, reinitializeObserver: reinitializeLocalGrid } = useResponsiveGrid(localGridContainerRef, responsivePresets.imageGrid)
-const { gridStyle: recentGridStyle, reinitializeObserver: reinitializeRecentGrid } = useResponsiveGrid(recentGridContainerRef, responsivePresets.imageGrid)
+const {
+  cols,
+  gridStyle,
+  reinitializeObserver: reinitializeCloudGrid,
+} = useResponsiveGrid(gridContainerRef, responsivePresets.imageGrid)
+const { gridStyle: colorGridStyle, reinitializeObserver: reinitializeColorGrid } = useResponsiveGrid(
+  colorGridContainerRef,
+  responsivePresets.imageGrid,
+)
+const { gridStyle: localGridStyle, reinitializeObserver: reinitializeLocalGrid } = useResponsiveGrid(
+  localGridContainerRef,
+  responsivePresets.imageGrid,
+)
+const { gridStyle: recentGridStyle, reinitializeObserver: reinitializeRecentGrid } = useResponsiveGrid(
+  recentGridContainerRef,
+  responsivePresets.imageGrid,
+)
+const { gridStyle: favoriteGridStyle, reinitializeObserver: reinitializeFavoriteGrid } = useResponsiveGrid(
+  favoriteGridContainerRef,
+  responsivePresets.imageGrid,
+)
 
 // 设置
 const { setWallpaper, customColorList } = useSettings()
@@ -83,6 +102,16 @@ const {
   updateWallpaperUsedTime,
 } = useRecentWallpaper()
 
+// 收藏壁纸
+const {
+  favoriteWallpapers,
+  isLoading: isFavoriteLoading,
+  loadFavoriteWallpapers,
+  addFavoriteWallpaper,
+  deleteFavoriteWallpaper,
+  getFavoriteWallpaperDisplayName,
+} = useFavoriteWallpaper()
+
 // 右击菜单
 const { isOpen: isContextMenuOpen, virtualElement, currentItem, onContextMenu } = useContextMenu()
 
@@ -101,6 +130,11 @@ async function handleRecentWallpaperClick(wallpaper: RecentWallpaper) {
   // 设置壁纸时跳过添加到最近使用，而是更新使用时间
   await setWallpaper(wallpaper.data, true)
   await updateWallpaperUsedTime(wallpaper.id)
+}
+
+// 处理收藏壁纸点击，设置为壁纸
+async function handleFavoriteWallpaperClick(wallpaper: FavoriteWallpaper) {
+  await setWallpaper(wallpaper.data)
 }
 
 // 处理文件上传
@@ -128,6 +162,20 @@ async function handleFileChange(event: Event) {
 
 // 右击菜单项 - 本地壁纸
 const localContextMenuItems: MenuItemType[] = [
+  {
+    label: '收藏壁纸',
+    icon: 'material-symbols:favorite-outline',
+    click: async (item) => {
+      if (item?.blob) {
+        try {
+          await addFavoriteWallpaper(item.blob, 'local', undefined, item.name)
+          toast.success('收藏成功', { richColors: true })
+        } catch (error) {
+          toast.error(`收藏失败: ${error instanceof Error ? error.message : '未知错误'}`, { richColors: true })
+        }
+      }
+    },
+  },
   {
     label: '删除壁纸',
     icon: 'material-symbols:delete-outline',
@@ -184,6 +232,71 @@ const recentContextMenuItems: MenuItemType[] = [
   },
 ]
 
+// 右击菜单项 - 云端壁纸
+const cloudContextMenuItems: MenuItemType[] = [
+  {
+    label: '收藏壁纸',
+    icon: 'material-symbols:favorite-outline',
+    click: async (item) => {
+      if (item?.src?.rawSrc) {
+        try {
+          await addFavoriteWallpaper(item.src.rawSrc, 'cloud', item.src.rawSrc)
+          toast.success('收藏成功', { richColors: true })
+        } catch (error) {
+          toast.error(`收藏失败: ${error instanceof Error ? error.message : '未知错误'}`, { richColors: true })
+        }
+      }
+    },
+  },
+]
+
+// 右击菜单项 - 纯色壁纸
+const colorContextMenuItems: MenuItemType[] = [
+  {
+    label: '收藏颜色',
+    icon: 'material-symbols:favorite-outline',
+    click: async (item) => {
+      if (item?.color) {
+        try {
+          await addFavoriteWallpaper(item.color, 'color', undefined, `颜色 ${item.color}`)
+          toast.success('收藏成功', { richColors: true })
+        } catch (error) {
+          toast.error(`收藏失败: ${error instanceof Error ? error.message : '未知错误'}`, { richColors: true })
+        }
+      }
+    },
+  },
+]
+
+// 右击菜单项 - 收藏壁纸
+const favoriteContextMenuItems: MenuItemType[] = [
+  {
+    label: '取消收藏',
+    icon: 'material-symbols:heart-broken',
+    click: async (item) => {
+      if (item) {
+        Modal.confirm({
+          title: '确认取消收藏',
+          icon: 'material-symbols:heart-broken',
+          content: '确定要取消收藏这张壁纸吗？',
+          okText: '取消收藏',
+          cancelText: '保留',
+          onOk: async () => {
+            try {
+              if (item.id) {
+                await deleteFavoriteWallpaper(item.id)
+                toast.success('取消收藏成功', { richColors: true })
+              }
+            } catch (error) {
+              toast.error(`取消收藏失败: ${error instanceof Error ? error.message : '未知错误'}`, { richColors: true })
+            }
+          },
+        })
+      }
+    },
+  },
+]
+
 // 处理本地壁纸右击菜单
 function handleLocalContextMenu(event: MouseEvent, wallpaper: LocalWallpaper) {
   event.preventDefault()
@@ -196,12 +309,36 @@ function handleRecentContextMenu(event: MouseEvent, wallpaper: RecentWallpaper) 
   onContextMenu(wallpaper)
 }
 
+// 处理云端壁纸右击菜单
+function handleCloudContextMenu(event: MouseEvent, wallpaper: any) {
+  event.preventDefault()
+  onContextMenu(wallpaper)
+}
+
+// 处理纯色壁纸右击菜单
+function handleColorContextMenu(event: MouseEvent, color: string) {
+  event.preventDefault()
+  onContextMenu({ color, type: 'color' })
+}
+
+// 处理收藏壁纸右击菜单
+function handleFavoriteContextMenu(event: MouseEvent, wallpaper: FavoriteWallpaper) {
+  event.preventDefault()
+  onContextMenu(wallpaper)
+}
+
 // 根据当前标签页返回对应的菜单项
 const currentContextMenuItems = computed(() => {
-  if (modelValue.value === 'local') {
+  if (modelValue.value === 'cloud') {
+    return cloudContextMenuItems
+  } else if (modelValue.value === 'local') {
     return localContextMenuItems
+  } else if (modelValue.value === 'color') {
+    return colorContextMenuItems
   } else if (modelValue.value === 'recent') {
     return recentContextMenuItems
+  } else if (modelValue.value === 'favorite') {
+    return favoriteContextMenuItems
   }
   return []
 })
@@ -285,6 +422,13 @@ watch(modelValue, (newValue) => {
     nextTick(() => {
       reinitializeColorGrid()
     })
+  } else if (newValue === 'favorite') {
+    // 加载收藏壁纸
+    loadFavoriteWallpapers()
+    // 延迟重新初始化网格，确保 DOM 已更新
+    nextTick(() => {
+      reinitializeFavoriteGrid()
+    })
   }
 })
 
@@ -306,6 +450,8 @@ const handleWindowResize = () => {
         reinitializeRecentGrid()
       } else if (modelValue.value === 'color') {
         reinitializeColorGrid()
+      } else if (modelValue.value === 'favorite') {
+        reinitializeFavoriteGrid()
       }
     })
   }, 150) // 150ms 防抖
@@ -318,6 +464,8 @@ onMounted(() => {
     loadWallpapers()
   } else if (modelValue.value === 'recent') {
     loadRecentWallpapers()
+  } else if (modelValue.value === 'favorite') {
+    loadFavoriteWallpapers()
   }
 
   // 添加窗口大小变化监听
@@ -361,6 +509,7 @@ function handleAreaScroll(event: Event) {
                 :preview="false"
                 imgClass="border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
                 @click="() => handleImageClick(item)"
+                @contextmenu="(e: MouseEvent) => handleCloudContextMenu(e, item)"
               />
             </div>
             <div v-if="isLoading" class="loading" :style="{ gridColumn: `1 / ${cols + 1}` }">加载中...</div>
@@ -432,6 +581,7 @@ function handleAreaScroll(event: Event) {
                 class="w-[200px] h-[150px] border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
                 :style="{ backgroundColor: color }"
                 @click="() => handleColorClick(color)"
+                @contextmenu="(e: MouseEvent) => handleColorContextMenu(e, color)"
               />
             </div>
           </div>
@@ -473,6 +623,47 @@ function handleAreaScroll(event: Event) {
                 <Icon icon="material-symbols:history" width="48" height="48" class="mx-auto mb-2" />
                 <p>还没有最近使用的壁纸</p>
                 <p class="text-sm">设置壁纸后会自动记录到这里</p>
+              </div>
+            </div>
+          </div>
+          <!-- 我的收藏 -->
+          <div
+            v-else-if="modelValue === 'favorite'"
+            ref="favoriteGridContainerRef"
+            class="responsive-grid"
+            :style="favoriteGridStyle"
+          >
+            <!-- 收藏壁纸列表 -->
+            <div v-for="wallpaper in favoriteWallpapers" :key="wallpaper.id" class="grid-item">
+              <!-- 颜色壁纸 -->
+              <div
+                v-if="wallpaper.type === 'color'"
+                class="w-[200px] h-[150px] border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
+                :style="{ backgroundColor: wallpaper.data as string }"
+                @click="() => handleFavoriteWallpaperClick(wallpaper)"
+                @contextmenu="(e: MouseEvent) => handleFavoriteContextMenu(e, wallpaper)"
+              ></div>
+              <!-- 图片壁纸 -->
+              <Image
+                v-else
+                :src="wallpaper.blobUrl"
+                :alt="getFavoriteWallpaperDisplayName(wallpaper)"
+                :width="200"
+                :height="150"
+                :preview="false"
+                imgClass="border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
+                @click="() => handleFavoriteWallpaperClick(wallpaper)"
+                @contextmenu="(e: MouseEvent) => handleFavoriteContextMenu(e, wallpaper)"
+              />
+            </div>
+            <!-- 加载状态 -->
+            <div v-if="isFavoriteLoading" class="loading" :style="{ gridColumn: '1 / -1' }">加载中...</div>
+            <!-- 空状态 -->
+            <div v-else-if="favoriteWallpapers.length === 0" class="no-wallpapers" :style="{ gridColumn: '1 / -1' }">
+              <div class="text-center text-muted-foreground py-8">
+                <Icon icon="material-symbols:favorite-outline" width="48" height="48" class="mx-auto mb-2" />
+                <p>还没有收藏的壁纸</p>
+                <p class="text-sm">右击壁纸选择收藏即可添加到这里</p>
               </div>
             </div>
           </div>

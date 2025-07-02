@@ -32,3 +32,26 @@ export interface RecentWallpaper {
   /** 用于查重的哈希值 */
   dataHash?: string
 }
+
+// 收藏壁纸接口
+export interface FavoriteWallpaper {
+  id: string
+  /** 壁纸数据：颜色值(string) 或 图片blob(Blob) */
+  data: string | Blob
+  /** 壁纸类型：color、blob */
+  type: 'color' | 'blob'
+  /** 收藏时间戳 */
+  favoriteAt: number
+  /** 如果是URL转换的blob，这里存储原始URL */
+  originalUrl?: string
+  /** MIME类型，仅当type为blob时有效 */
+  mimeType?: string
+  /** 缓存的blob URL，用于显示 */
+  blobUrl?: string
+  /** 用于查重的哈希值 */
+  dataHash: string
+  /** 壁纸来源：cloud、local、color */
+  source: 'cloud' | 'local' | 'color'
+  /** 壁纸名称或描述 */
+  name?: string
+}
