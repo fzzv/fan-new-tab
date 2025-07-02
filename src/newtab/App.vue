@@ -23,10 +23,17 @@ onMounted(() => {
   // 设置背景
   backgroundConfigReady.then(() => {
     const { background, blur, opacity } = backgroundConfig.value
-    document.documentElement.style.setProperty(
-      '--background-image',
-      isColor(background) ? background : `url(${background})`,
-    )
+
+    // 设置背景图片
+    if (isColor(background)) {
+      // 如果是颜色值，直接设置
+      document.documentElement.style.setProperty('--background-image', background)
+    } else {
+      // 如果是图片URL或base64，使用url()包装
+      const backgroundValue = background.startsWith('data:') ? `url("${background}")` : `url(${background})`
+      document.documentElement.style.setProperty('--background-image', backgroundValue)
+    }
+
     document.documentElement.style.setProperty('--backdrop-filter-blur', `${blur[0]}px`)
     document.documentElement.style.setProperty('--background-mask-opacity', `${opacity[0] / 100}`)
   })

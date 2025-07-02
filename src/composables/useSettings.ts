@@ -1,6 +1,7 @@
 import { computed } from 'vue'
 import { isColor } from '@/lib/colorUtils'
 import { useWebExtStorage } from '@/composables/useWebExtStorage'
+import { useRecentWallpaper } from '@/composables/useRecentWallpaper'
 
 // 布局配置接口
 export interface GridLayoutConfig {
@@ -76,6 +77,9 @@ const initialColors = [
 const { data: customColorList, dataReady: customColorListReady } = useWebExtStorage('wallpaperColors', initialColors)
 
 export function useSettings() {
+  // 最近使用壁纸
+  const { addRecentWallpaper } = useRecentWallpaper()
+
   // 当前显示模式
   const currentDisplayMode = computed(() => displayMode.value)
 
@@ -246,10 +250,38 @@ export function useSettings() {
   }
 
   // 设置壁纸
-  const setWallpaper = (imageUrl: string) => {
+  const setWallpaper = async (imageData: string | Blob, skipRecentAdd = false) => {
+    let backgroundUrl: string
+
+    if (typeof imageData === 'string') {
+      // 字符串类型（URL、base64或颜色值）
+      backgroundUrl = imageData
+    } else {
+      // Blob类型，创建object URL
+      backgroundUrl = URL.createObjectURL(imageData)
+    }
+
     // 更新背景配置
-    backgroundConfig.value.background = imageUrl
-    document.documentElement.style.setProperty('--background-image', isColor(imageUrl) ? imageUrl : `url(${imageUrl})`)
+    backgroundConfig.value.background = backgroundUrl
+
+    // 设置CSS背景图片
+    if (isColor(backgroundUrl)) {
+      // 如果是颜色值，直接设置
+      document.documentElement.style.setProperty('--background-image', backgroundUrl)
+    } else {
+      // 如果是图片URL或base64，使用url()包装
+      const backgroundValue = backgroundUrl.startsWith('data:') ? `url("${backgroundUrl}")` : `url(${backgroundUrl})`
+      document.documentElement.style.setProperty('--background-image', backgroundValue)
+    }
+
+    // 添加到最近使用（除非明确跳过）
+    if (!skipRecentAdd) {
+      try {
+        await addRecentWallpaper(imageData)
+      } catch (error) {
+        console.error('添加到最近使用失败:', error)
+      }
+    }
   }
 
   return {

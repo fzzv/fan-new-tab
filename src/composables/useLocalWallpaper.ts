@@ -3,6 +3,7 @@ import Dexie, { type Table } from 'dexie'
 import { v4 as uuidV4 } from 'uuid'
 import type { LocalWallpaper } from '@/types/wallpaper'
 import { toast } from '@/lib/toast'
+import { fileToBlob, createBlobUrl, revokeBlobUrl } from '@/lib/utils'
 
 // 数据库类
 class LocalWallpaperDB extends Dexie {
@@ -11,7 +12,12 @@ class LocalWallpaperDB extends Dexie {
   constructor() {
     super('LocalWallpaperDB')
     this.version(1).stores({
-      wallpapers: 'id, name, base64, size, type, createdAt',
+      wallpapers: 'id, name, blob, size, type, createdAt',
+    })
+
+    // 数据库结构如果升级，则清空旧数据
+    this.version(1).upgrade(async (tx) => {
+      await tx.table('wallpapers').clear()
     })
   }
 }
@@ -29,7 +35,12 @@ export function useLocalWallpaper() {
     try {
       isLoading.value = true
       const data = await db.wallpapers.orderBy('createdAt').reverse().toArray()
-      wallpapers.value = data
+
+      // 为每个壁纸创建blob URL用于显示
+      wallpapers.value = data.map((wallpaper) => ({
+        ...wallpaper,
+        blobUrl: createBlobUrl(wallpaper.blob),
+      }))
     } catch (error) {
       console.error('加载本地壁纸失败:', error)
     } finally {
@@ -51,16 +62,17 @@ export function useLocalWallpaper() {
         throw new Error('图片文件大小不能超过10MB')
       }
 
-      // 转换为base64
-      const base64 = await fileToBase64(file)
+      // 转换为blob
+      const blob = fileToBlob(file)
 
       const wallpaper: LocalWallpaper = {
         id: uuidV4(),
         name: file.name,
-        base64,
+        blob,
         size: file.size,
         type: file.type,
         createdAt: Date.now(),
+        blobUrl: createBlobUrl(blob),
       }
 
       // 保存到数据库
@@ -79,6 +91,12 @@ export function useLocalWallpaper() {
   // 删除本地壁纸
   const deleteWallpaper = async (id: string) => {
     try {
+      // 找到要删除的壁纸，释放其blob URL
+      const wallpaper = wallpapers.value.find((w) => w.id === id)
+      if (wallpaper?.blobUrl) {
+        revokeBlobUrl(wallpaper.blobUrl)
+      }
+
       await db.wallpapers.delete(id)
       wallpapers.value = wallpapers.value.filter((w) => w.id !== id)
     } catch (error) {
@@ -90,28 +108,19 @@ export function useLocalWallpaper() {
   // 清空所有本地壁纸
   const clearAllWallpapers = async () => {
     try {
+      // 释放所有blob URL
+      wallpapers.value.forEach((wallpaper) => {
+        if (wallpaper.blobUrl) {
+          revokeBlobUrl(wallpaper.blobUrl)
+        }
+      })
+
       await db.wallpapers.clear()
       wallpapers.value = []
     } catch (error) {
       toast.error('清空本地壁纸失败')
       throw error
     }
-  }
-
-  // 文件转base64
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          resolve(reader.result)
-        } else {
-          reject(new Error('文件读取失败'))
-        }
-      }
-      reader.onerror = () => reject(new Error('文件读取失败'))
-      reader.readAsDataURL(file)
-    })
   }
 
   // 格式化文件大小

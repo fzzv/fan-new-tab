@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { closeWallpaperSelector, openColorPickerDialog } from '@/composables/useDialog.ts'
 import { ModalContent, ModalHeader } from '@/components/modal'
 import { Tabs } from '@/components/tabs'
@@ -11,11 +11,12 @@ import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
 import { useResponsiveGrid, responsivePresets } from '@/composables/useResponsiveGrid'
 import { useSettings } from '@/composables/useSettings'
 import { useLocalWallpaper } from '@/composables/useLocalWallpaper'
+import { useRecentWallpaper } from '@/composables/useRecentWallpaper'
 import { Modal } from '@/components/modal'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { ContextMenu } from '@/components/context-menu'
 import { toast } from '@/lib/toast'
-import type { LocalWallpaper } from '@/types/wallpaper'
+import type { LocalWallpaper, RecentWallpaper } from '@/types/wallpaper'
 import type { MenuItemType } from '@/components/context-menu'
 
 const classificationTabs = [
@@ -52,11 +53,13 @@ const source = ref('')
 const gridContainerRef = ref<HTMLElement | null>(null)
 const colorGridContainerRef = ref<HTMLElement | null>(null)
 const localGridContainerRef = ref<HTMLElement | null>(null)
+const recentGridContainerRef = ref<HTMLElement | null>(null)
 
 // 使用响应式网格
 const { cols, gridStyle } = useResponsiveGrid(gridContainerRef, responsivePresets.imageGrid)
 const { gridStyle: colorGridStyle } = useResponsiveGrid(colorGridContainerRef, responsivePresets.imageGrid)
 const { gridStyle: localGridStyle } = useResponsiveGrid(localGridContainerRef, responsivePresets.imageGrid)
+const { gridStyle: recentGridStyle } = useResponsiveGrid(recentGridContainerRef, responsivePresets.imageGrid)
 
 // 设置
 const { setWallpaper, customColorList } = useSettings()
@@ -70,17 +73,34 @@ const {
   deleteWallpaper,
 } = useLocalWallpaper()
 
+// 最近使用壁纸
+const {
+  recentWallpapers,
+  isLoading: isRecentLoading,
+  loadRecentWallpapers,
+  deleteRecentWallpaper,
+  getWallpaperDisplayName,
+  updateWallpaperUsedTime,
+} = useRecentWallpaper()
+
 // 右击菜单
 const { isOpen: isContextMenuOpen, virtualElement, currentItem, onContextMenu } = useContextMenu()
 
 // 处理颜色点击，设置为壁纸
-function handleColorClick(color: string) {
-  setWallpaper(color)
+async function handleColorClick(color: string) {
+  await setWallpaper(color)
 }
 
 // 处理本地壁纸点击，设置为壁纸
-function handleLocalWallpaperClick(wallpaper: LocalWallpaper) {
-  setWallpaper(wallpaper.base64)
+async function handleLocalWallpaperClick(wallpaper: LocalWallpaper) {
+  await setWallpaper(wallpaper.blob)
+}
+
+// 处理最近使用壁纸点击，设置为壁纸
+async function handleRecentWallpaperClick(wallpaper: RecentWallpaper) {
+  // 设置壁纸时跳过添加到最近使用，而是更新使用时间
+  await setWallpaper(wallpaper.data, true)
+  await updateWallpaperUsedTime(wallpaper.id)
 }
 
 // 处理文件上传
@@ -106,8 +126,8 @@ async function handleFileChange(event: Event) {
   }
 }
 
-// 右击菜单项
-const contextMenuItems: MenuItemType[] = [
+// 右击菜单项 - 本地壁纸
+const localContextMenuItems: MenuItemType[] = [
   {
     label: '删除壁纸',
     icon: 'material-symbols:delete-outline',
@@ -116,7 +136,7 @@ const contextMenuItems: MenuItemType[] = [
         Modal.confirm({
           title: '确认删除',
           icon: 'material-symbols:delete-outline',
-          content: '确定要删除这张壁纸吗？此操作不可撤销。',
+          content: '确定要删除这张本地壁纸吗？此操作不可撤销。',
           okText: '删除',
           cancelText: '取消',
           onOk: async () => {
@@ -135,11 +155,56 @@ const contextMenuItems: MenuItemType[] = [
   },
 ]
 
-// 处理右击菜单
-function handleContextMenu(event: MouseEvent, wallpaper: LocalWallpaper) {
+// 右击菜单项 - 最近使用壁纸
+const recentContextMenuItems: MenuItemType[] = [
+  {
+    label: '从最近使用中移除',
+    icon: 'material-symbols:delete-outline',
+    click: async (item) => {
+      if (item) {
+        Modal.confirm({
+          title: '确认移除',
+          icon: 'material-symbols:delete-outline',
+          content: '确定要从最近使用中移除这张壁纸吗？',
+          okText: '移除',
+          cancelText: '取消',
+          onOk: async () => {
+            try {
+              if (item.id) {
+                await deleteRecentWallpaper(item.id)
+                toast.success('移除成功', { richColors: true })
+              }
+            } catch (error) {
+              toast.error(`移除失败: ${error instanceof Error ? error.message : '未知错误'}`, { richColors: true })
+            }
+          },
+        })
+      }
+    },
+  },
+]
+
+// 处理本地壁纸右击菜单
+function handleLocalContextMenu(event: MouseEvent, wallpaper: LocalWallpaper) {
   event.preventDefault()
   onContextMenu(wallpaper)
 }
+
+// 处理最近使用壁纸右击菜单
+function handleRecentContextMenu(event: MouseEvent, wallpaper: RecentWallpaper) {
+  event.preventDefault()
+  onContextMenu(wallpaper)
+}
+
+// 根据当前标签页返回对应的菜单项
+const currentContextMenuItems = computed(() => {
+  if (modelValue.value === 'local') {
+    return localContextMenuItems
+  } else if (modelValue.value === 'recent') {
+    return recentContextMenuItems
+  }
+  return []
+})
 
 // 加载更多数据的函数
 async function loadMoreData() {
@@ -183,9 +248,9 @@ async function getWallpaperList(append = false) {
 }
 
 // 处理图片点击，设置为壁纸
-function handleImageClick(item: any) {
+async function handleImageClick(item: any) {
   if (item?.src?.rawSrc) {
-    setWallpaper(item.src.rawSrc)
+    await setWallpaper(item.src.rawSrc)
   }
 }
 
@@ -200,6 +265,9 @@ watch(modelValue, (newValue) => {
   } else if (newValue === 'local') {
     // 加载本地壁纸
     loadWallpapers()
+  } else if (newValue === 'recent') {
+    // 加载最近使用壁纸
+    loadRecentWallpapers()
   }
 })
 
@@ -208,6 +276,8 @@ onMounted(() => {
     getWallpaperList()
   } else if (modelValue.value === 'local') {
     loadWallpapers()
+  } else if (modelValue.value === 'recent') {
+    loadRecentWallpapers()
   }
 })
 
@@ -267,14 +337,14 @@ function handleAreaScroll(event: Event) {
             <!-- 本地壁纸列表 -->
             <div v-for="wallpaper in localWallpapers" :key="wallpaper.id" class="grid-item">
               <Image
-                :src="wallpaper.base64"
+                :src="wallpaper.blobUrl"
                 :alt="wallpaper.name"
                 :width="200"
                 :height="150"
                 :preview="false"
                 imgClass="border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
                 @click="() => handleLocalWallpaperClick(wallpaper)"
-                @contextmenu="(e: MouseEvent) => handleContextMenu(e, wallpaper)"
+                @contextmenu="(e: MouseEvent) => handleLocalContextMenu(e, wallpaper)"
               />
             </div>
             <!-- 加载状态 -->
@@ -308,10 +378,51 @@ function handleAreaScroll(event: Event) {
             <!-- 颜色列表 -->
             <div v-for="color in customColorList" :key="color" class="grid-item">
               <div
-                class="w-[200px] h-[150px] border-2 border-transparent rounded-lg cursor-pointer"
+                class="w-[200px] h-[150px] border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
                 :style="{ backgroundColor: color }"
                 @click="() => handleColorClick(color)"
               />
+            </div>
+          </div>
+          <!-- 最近使用 -->
+          <div
+            v-else-if="modelValue === 'recent'"
+            ref="recentGridContainerRef"
+            class="responsive-grid"
+            :style="recentGridStyle"
+          >
+            <!-- 最近使用壁纸列表 -->
+            <div v-for="wallpaper in recentWallpapers" :key="wallpaper.id" class="grid-item">
+              <!-- 颜色壁纸 -->
+              <div
+                v-if="wallpaper.type === 'color'"
+                class="w-[200px] h-[150px] border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
+                :style="{ backgroundColor: wallpaper.data as string }"
+                @click="() => handleRecentWallpaperClick(wallpaper)"
+                @contextmenu="(e: MouseEvent) => handleRecentContextMenu(e, wallpaper)"
+              ></div>
+              <!-- 图片壁纸 -->
+              <Image
+                v-else
+                :src="wallpaper.blobUrl"
+                :alt="getWallpaperDisplayName(wallpaper)"
+                :width="200"
+                :height="150"
+                :preview="false"
+                imgClass="border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
+                @click="() => handleRecentWallpaperClick(wallpaper)"
+                @contextmenu="(e: MouseEvent) => handleRecentContextMenu(e, wallpaper)"
+              />
+            </div>
+            <!-- 加载状态 -->
+            <div v-if="isRecentLoading" class="loading" :style="{ gridColumn: '1 / -1' }">加载中...</div>
+            <!-- 空状态 -->
+            <div v-else-if="recentWallpapers.length === 0" class="no-wallpapers" :style="{ gridColumn: '1 / -1' }">
+              <div class="text-center text-muted-foreground py-8">
+                <Icon icon="material-symbols:history" width="48" height="48" class="mx-auto mb-2" />
+                <p>还没有最近使用的壁纸</p>
+                <p class="text-sm">设置壁纸后会自动记录到这里</p>
+              </div>
             </div>
           </div>
         </ScrollArea>
@@ -322,7 +433,7 @@ function handleAreaScroll(event: Event) {
     <ContextMenu
       v-model="isContextMenuOpen"
       :virtual-element="virtualElement"
-      :items="contextMenuItems"
+      :items="currentContextMenuItems"
       :current-item="currentItem"
     />
   </ModalContent>
