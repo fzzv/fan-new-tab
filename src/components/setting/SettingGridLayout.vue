@@ -81,7 +81,7 @@ const layoutLimitText = computed(() => {
           <div class="flex-1 space-y-2">
             <div
               v-if="currentDisplayMode === 'favorites'"
-              class="w-[190px] px-4 py-2 border-2 border-black bg-muted/50 rounded text-muted-foreground font-head font-medium text-center shadow-md"
+              class="w-[190px] px-4 py-1 border-2 border-black bg-muted/50 rounded text-muted-foreground font-head font-medium text-center shadow-md"
             >
               自动调整（无限制）
             </div>
@@ -194,7 +194,7 @@ const layoutLimitText = computed(() => {
         <div class="flex-1 space-y-2">
           <div
             v-if="currentDisplayMode === 'favorites'"
-            class="px-4 py-2 border-2 border-black bg-muted/50 rounded text-muted-foreground font-head font-medium text-center shadow-md"
+            class="px-4 py-1 border-2 border-black bg-muted/50 rounded text-muted-foreground font-head font-medium text-center shadow-md"
           >
             自动调整（无限制）
           </div>
