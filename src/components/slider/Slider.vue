@@ -1,46 +1,55 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends number | number[]">
 import { computed } from 'vue'
 import { SliderRoot, SliderTrack, SliderRange, SliderThumb, useForwardPropsEmits } from 'reka-ui'
 import { cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import type { ClassValue } from 'clsx'
-import type { SliderRootProps, SliderRootEmits } from 'reka-ui'
-
-interface SliderProps extends SliderRootProps {
-  modelValue?: number[]
-  defaultValue?: number[]
-  min?: number
-  max?: number
-  step?: number
-  disabled?: boolean
-  orientation?: 'horizontal' | 'vertical'
-  inverted?: boolean
-  minStepsBetweenThumbs?: number
-  size?: 'sm' | 'md' | 'lg'
-  variant?: 'default' | 'secondary'
-}
+import type { SliderProps, SliderEmits } from './types'
 
 const props = withDefaults(defineProps<SliderProps>(), {
   min: 0,
   max: 100,
   step: 1,
-  disabled: false,
   orientation: 'horizontal',
-  inverted: false,
-  minStepsBetweenThumbs: 0,
-  size: 'md',
-  variant: 'default',
 })
+const emits = defineEmits<SliderEmits<T>>()
 
-interface SliderEmits extends SliderRootEmits {
-  change: [value: number[]]
-}
-
-const emits = defineEmits<SliderEmits>()
+const modelValue = defineModel<T>()
 
 const forward = useForwardPropsEmits(props, emits)
 
-// 样式变体
+const defaultSliderValue = computed(() => {
+  if (typeof props.defaultValue === 'number') {
+    return [props.defaultValue]
+  }
+  return props.defaultValue
+})
+
+const sliderValue = computed({
+  get() {
+    if (typeof modelValue.value === 'number') {
+      return [modelValue.value]
+    }
+    return (modelValue.value as number[]) ?? defaultSliderValue.value
+  },
+  set(value) {
+    modelValue.value = (value?.length !== 1 ? value : value[0]) as T
+  },
+})
+
+const thumbs = computed(() => sliderValue.value?.length ?? 1)
+
+function onUpdateModelValue(value: any) {
+  emits('update:modelValue', value)
+}
+
+function onChange(value: any) {
+  // @ts-expect-error - 'target' does not exist in type 'EventInit'
+  const event = new Event('change', { target: { value } })
+  emits('change', event)
+}
+
+// 样式
 const sliderRootVariants = cva('relative flex touch-none select-none items-center', {
   variants: {
     orientation: {
@@ -58,7 +67,6 @@ const sliderRootVariants = cva('relative flex touch-none select-none items-cente
     size: 'md',
   },
 })
-
 const sliderTrackVariants = cva('relative grow overflow-hidden bg-muted border-2 border-border', {
   variants: {
     orientation: {
@@ -113,7 +121,6 @@ const sliderTrackVariants = cva('relative grow overflow-hidden bg-muted border-2
     disabled: false,
   },
 })
-
 const sliderRangeVariants = cva('absolute', {
   variants: {
     orientation: {
@@ -130,7 +137,6 @@ const sliderRangeVariants = cva('absolute', {
     variant: 'default',
   },
 })
-
 const sliderThumbVariants = cva(
   'block border-2 border-black bg-primary shadow-sm transition cursor-pointer hover:translate-y-[1px] hover:bg-primary-hover hover:shadow-none data-disabled:pointer-events-none data-disabled:opacity-50 data-disabled:cursor-not-allowed focus:outline-none',
   {
@@ -151,60 +157,28 @@ const sliderThumbVariants = cva(
     },
   },
 )
-
-// 计算样式类
 const rootClasses = computed(() => cn(sliderRootVariants({ orientation: props.orientation, size: props.size })))
-
 const trackClasses = computed(() =>
   cn(sliderTrackVariants({ orientation: props.orientation, size: props.size, disabled: props.disabled })),
 )
-
 const rangeClasses = computed(() => cn(sliderRangeVariants({ orientation: props.orientation, variant: props.variant })))
-
 const thumbClasses = computed(() => cn(sliderThumbVariants({ size: props.size, variant: props.variant })))
-
-// 处理值更新
-const handleValueChange = (value?: number[]) => {
-  if (value) {
-    emits('change', value)
-    emits('update:modelValue', value)
-  }
-}
-
-const handleValueCommit = (value: number[]) => {
-  emits('valueCommit', value)
-}
-
-// 计算thumb数量
-const thumbCount = computed(() => {
-  if (props.modelValue) {
-    return props.modelValue.length
-  }
-  if (props.defaultValue) {
-    return props.defaultValue.length
-  }
-  return 1
-})
 </script>
 
 <template>
   <SliderRoot
+    v-bind="{ ...forward }"
+    v-model="sliderValue"
+    :name="name"
+    :disabled="disabled"
     :class="cn(rootClasses, $attrs.class as ClassValue)"
-    @update:model-value="handleValueChange"
-    @value-commit="handleValueCommit"
-    v-bind="forward"
+    :default-value="defaultSliderValue"
+    @update:model-value="onUpdateModelValue"
+    @value-commit="onChange"
   >
     <SliderTrack :class="trackClasses">
       <SliderRange :class="rangeClasses" />
     </SliderTrack>
-    <SliderThumb v-for="index in thumbCount" :key="index" :class="thumbClasses" :data-disabled="disabled" />
+    <SliderThumb v-for="thumb in thumbs" :key="thumb" :class="thumbClasses" />
   </SliderRoot>
 </template>
-
-<style scoped>
-/* 确保垂直滑块的正确显示 */
-.slider-vertical {
-  writing-mode: bt-lr; /* IE */
-  writing-mode: vertical-lr; /* Standard */
-}
-</style>
