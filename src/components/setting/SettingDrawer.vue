@@ -8,6 +8,7 @@ import { TabsRoot, TabsList, TabsTrigger, TabsContent } from '@/components/tabs'
 import { Icon } from '@iconify/vue'
 import SettingGridLayout from './SettingGridLayout.vue'
 import SettingBackground from './SettingBackground.vue'
+import SettingSearchBar from './SettingSearchBar.vue'
 
 const { currentDisplayMode, updateDisplayMode } = useSettings()
 
@@ -72,6 +73,9 @@ const modeDescriptionText = computed(() => {
               </div>
               <!-- 添加对背景的设置-->
               <SettingBackground class="mb-5" />
+              <!-- 对搜索框的设置 -->
+              <SettingSearchBar class="mb-5" />
+
               <TabsContent value="standard" class="p-0">
                 <!-- 布局设置 -->
                 <SettingGridLayout />

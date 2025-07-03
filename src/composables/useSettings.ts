@@ -33,6 +33,24 @@ const defaultBackgroundConfig: BackgroundConfig = {
   background: 'http://wallpaper.xyu.fan/image/findaphoto/bigLink/10492.jpg',
 }
 
+// 搜索框配置接口
+export interface SearchBarConfig {
+  visible: boolean
+  showSearchButton: boolean
+  size: number // 50-150 对应 40vw-80vw
+  radius: number // 0-2 对应 0rem-2rem
+  opacity: number // 0-100 对应 0-1
+}
+
+// 默认搜索框配置
+const defaultSearchBarConfig: SearchBarConfig = {
+  visible: true,
+  showSearchButton: true,
+  size: 100, // 100% 对应 60vw
+  radius: 1, // 1rem 对应 50% 显示值
+  opacity: 100, // 100% 不透明
+}
+
 // 显示模式类型
 export type DisplayMode = 'standard' | 'favorites' | 'minimal'
 
@@ -40,6 +58,15 @@ export type DisplayMode = 'standard' | 'favorites' | 'minimal'
 const { data: backgroundConfig, dataReady: backgroundConfigReady } = useWebExtStorage(
   'backgroundConfig',
   defaultBackgroundConfig as BackgroundConfig,
+  {
+    listenToStorageChanges: false,
+  },
+)
+
+// 搜索框设置
+const { data: searchBarConfig, dataReady: searchBarConfigReady } = useWebExtStorage(
+  'searchBarConfig',
+  defaultSearchBarConfig as SearchBarConfig,
   {
     listenToStorageChanges: false,
   },
@@ -297,6 +324,10 @@ export function useSettings() {
     // 背景设置
     backgroundConfig,
     backgroundConfigReady,
+
+    // 搜索框设置
+    searchBarConfig,
+    searchBarConfigReady,
 
     // 模式配置
     standardConfig,

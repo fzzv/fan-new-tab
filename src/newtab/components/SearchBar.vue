@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { openAddEngineDialog } from '@/composables/useDialog'
 import { useEngine } from '@/composables/useEngine'
+import { useSettings } from '@/composables/useSettings'
 import { Icon } from '@iconify/vue'
 import Input from '@/components/input/Input.vue'
 import Popover from '@/components/popover/Popover.vue'
@@ -9,6 +10,7 @@ import { cn } from '@/lib/utils.ts'
 
 const searchQuery = ref('')
 const { selectedEngine, searchEngines, removeSearchEngine, selectEngine } = useEngine()
+const { searchBarConfig, searchBarConfigReady } = useSettings()
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
@@ -21,14 +23,58 @@ const handleKeyDown = (e: KeyboardEvent) => {
     handleSearch()
   }
 }
+
+// 设置 CSS 变量值
+const setCssVar = (varName: string, value: number) => {
+  console.log(value, 'value')
+  if (varName === '--search-width') {
+    // 将 50-150 的值映射到 40vw-80vw
+    const vwValue = 20 + value * 0.4 // 50->40vw, 150->80vw
+    document.documentElement.style.setProperty(varName, `${vwValue}vw`)
+  } else if (varName === '--search-height') {
+    // 高度根据宽度自适应，基础高度60px，按比例调整
+    const heightValue = 60 * (value / 100)
+    document.documentElement.style.setProperty(varName, `${heightValue}px`)
+  } else if (varName === '--search-radius') {
+    document.documentElement.style.setProperty(varName, `${value}rem`)
+  } else if (varName === '--search-opacity') {
+    document.documentElement.style.setProperty(varName, (value / 100).toString())
+  }
+}
+
+// 初始化CSS变量
+const initializeCssVars = () => {
+  const { size, radius, opacity } = searchBarConfig.value
+  setCssVar('--search-width', size)
+  setCssVar('--search-height', size)
+  setCssVar('--search-radius', radius)
+  setCssVar('--search-opacity', opacity)
+}
+
+// 搜索框中图标的大小
+const iconSize = computed(() => {
+  return Math.min(40, Math.max(26, (searchBarConfig.value.size / 100) * 60 - 20))
+})
+
+// 组件挂载时初始化CSS变量
+onMounted(() => {
+  searchBarConfigReady.then(() => {
+    initializeCssVars()
+  })
+})
 </script>
 
 <template>
-  <div class="w-[var(--search-width)] h-[var(--search-height)] my-5 mx-auto">
+  <div
+    v-if="searchBarConfigReady && searchBarConfig.visible"
+    class="w-[var(--search-width)] h-[var(--search-height)] my-5 mx-auto"
+    :style="{ opacity: 'var(--search-opacity)' }"
+  >
     <Input
       v-model="searchQuery"
       placeholder="输入搜索内容"
-      class="rounded-xl h-full bg-background"
+      class="h-full bg-background"
+      :style="{ borderRadius: 'var(--search-radius)' }"
       @keydown="handleKeyDown"
     >
       <template #prefix>
@@ -36,8 +82,12 @@ const handleKeyDown = (e: KeyboardEvent) => {
           <template #trigger>
             <img
               :src="selectedEngine.icon"
-              class="w-10 h-10 px-1 py-1 rounded-full cursor-pointer border-2 border-border mr-2"
+              class="px-1 py-1 rounded-full cursor-pointer border-2 border-border mr-2"
               alt="搜索引擎"
+              :style="{
+                width: `${iconSize}px`,
+                height: `${iconSize}px`,
+              }"
             />
           </template>
           <div class="grid grid-cols-[repeat(auto-fill,minmax(60px,1fr))] gap-4 p-2">
@@ -88,8 +138,8 @@ const handleKeyDown = (e: KeyboardEvent) => {
         </Popover>
       </template>
       <template #suffix>
-        <button @click="handleSearch" class="cursor-pointer">
-          <Icon icon="material-symbols:search-rounded" width="28" height="28" class="text-secondary" />
+        <button v-if="searchBarConfig.showSearchButton" @click="handleSearch" class="cursor-pointer">
+          <Icon icon="material-symbols:search-rounded" :width="iconSize" :height="iconSize" class="text-secondary" />
         </button>
       </template>
     </Input>

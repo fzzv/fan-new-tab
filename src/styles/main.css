@@ -95,8 +95,10 @@
   --backdrop-filter-blur: 1px;
   --background-mask-opacity: 0.1;
 
-  --search-width: 800px;
+  --search-width: 60vw;
   --search-height: 60px;
+  --search-radius: 1rem;
+  --search-opacity: 1;
 
   --icon-box-width: 0px;
   --icon-box-height: 0px;
