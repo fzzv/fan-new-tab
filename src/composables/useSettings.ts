@@ -21,15 +21,15 @@ const defaultLayoutConfig: GridLayoutConfig = {
 
 // 背景配置接口
 export interface BackgroundConfig {
-  blur: number[]
-  opacity: number[]
+  blur: number
+  opacity: number
   background: string
 }
 
 // 默认背景配置
 const defaultBackgroundConfig: BackgroundConfig = {
-  blur: [0],
-  opacity: [0],
+  blur: 0,
+  opacity: 0,
   background: 'http://wallpaper.xyu.fan/image/findaphoto/bigLink/10492.jpg',
 }
 
@@ -40,6 +40,9 @@ export type DisplayMode = 'standard' | 'favorites' | 'minimal'
 const { data: backgroundConfig, dataReady: backgroundConfigReady } = useWebExtStorage(
   'backgroundConfig',
   defaultBackgroundConfig as BackgroundConfig,
+  {
+    listenToStorageChanges: false,
+  },
 )
 
 // 模式设置
