@@ -38,6 +38,12 @@ export default defineConfig(({ command }) => ({
       },
     },
   ],
+  optimizeDeps: {
+    include: [
+      'vue',
+      'webextension-polyfill',
+    ],
+  },
   base: command === 'serve' ? `http://localhost:${port}/` : '/dist/',
   server: {
     port,
@@ -58,9 +64,14 @@ export default defineConfig(({ command }) => ({
     outDir: r('extension/dist'),
     emptyOutDir: false,
     sourcemap: isDev ? 'inline' : false,
-  },
-  rollupOptions: {
-    popup: r('src/popup/index.html'),
-    newtab: r('src/newtab/index.html'),
-  },
+    terserOptions: {
+      mangle: false,
+    },
+    rollupOptions: {
+      input: {
+        popup: r('src/popup/index.html'),
+        newtab: r('src/newtab/index.html'),
+      }
+    }
+  }
 }))
