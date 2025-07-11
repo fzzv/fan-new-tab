@@ -11,16 +11,16 @@ export async function getManifest() {
     version: pkg.version,
     description: pkg.description,
     action: {
-      default_icon: './assets/logo-transparent.png',
+      default_icon: './assets/logo.png',
       default_popup: './dist/popup/index.html',
     },
     chrome_url_overrides: {
       newtab: './dist/newtab/index.html',
     },
     icons: {
-      16: './assets/logo-transparent.png',
-      48: './assets/logo-transparent.png',
-      128: './assets/logo-transparent.png',
+      16: './assets/logo.png',
+      48: './assets/logo.png',
+      128: './assets/logo.png',
     },
     permissions: ['tabs', 'storage', 'activeTab', 'sidePanel'],
     host_permissions: ['*://*/*'],
