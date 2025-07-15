@@ -6,7 +6,7 @@ export interface MenuItemType extends Partial<TabItem> {
   label: string
   icon?: string
   disabled?: boolean
-  click?: (item?: MenuItemType) => void
+  click?: (item?: any) => void
 }
 
 export { ContextMenu, ContextMenuItem }
