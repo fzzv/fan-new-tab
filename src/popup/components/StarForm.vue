@@ -15,7 +15,7 @@ import { useWebExtStorage } from '@/composables/useWebExtStorage.ts'
 // 网站名称
 const siteName = ref('')
 // 收藏夹 记录上次选择的收藏夹
-const { data: folder } = useWebExtStorage('folder', '')
+const { data: folder } = useWebExtStorage('folder', 'default')
 // 网站图标
 const favIcon = ref('')
 
