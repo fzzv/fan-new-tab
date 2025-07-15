@@ -10,6 +10,7 @@ import { useSettings } from '@/composables/useSettings'
 import { useFavoriteWallpaper } from '@/composables/useFavoriteWallpaper'
 import { useContextMenu } from '@/composables/useContextMenu'
 import { ContextMenu } from '@/components/context-menu'
+import { Skeleton } from '@/components/skeleton'
 import { toast } from '@/lib/toast'
 import type { MenuItemType } from '@/components/context-menu'
 
@@ -17,6 +18,9 @@ const images = ref<any[]>([])
 const page = ref(1)
 const pageSize = ref(10)
 const source = ref('')
+
+// 初始加载状态
+const isInitialLoading = ref(true)
 
 // 来源筛选选项
 const sourceOptions = [
@@ -90,6 +94,10 @@ const { handleScroll, isLoading, hasMore, reset } = useInfiniteScroll(loadMoreDa
 // 获取云端的壁纸列表
 async function getWallpaperList(append = false) {
   try {
+    if (!append) {
+      isInitialLoading.value = true
+    }
+
     const { data } = await $fetch(`http://localhost:3303/api/getWallpaperList`, {
       params: {
         page: page.value,
@@ -112,6 +120,8 @@ async function getWallpaperList(append = false) {
     console.log('加载壁纸列表失败:', err)
     // 发生错误时也要停止加载更多
     hasMore.value = false
+  } finally {
+    isInitialLoading.value = false
   }
 }
 
@@ -136,6 +146,7 @@ function handleSourceChange(newSource: string) {
   // 重置分页并重新加载数据
   page.value = 1
   images.value = []
+  isInitialLoading.value = true
   reset()
   getWallpaperList()
 }
@@ -161,6 +172,7 @@ onMounted(() => {
   // 重置状态并重新加载数据
   page.value = 1
   images.value = []
+  isInitialLoading.value = true
   reset()
   getWallpaperList()
 
@@ -206,30 +218,48 @@ onUnmounted(() => {
     <!-- 壁纸列表 -->
     <ScrollArea :height="400" type="hover" @areaScroll="handleScroll">
       <div ref="gridContainerRef" class="p-2" :style="gridStyle">
-        <div v-for="item in images" :key="item._id" class="flex items-center justify-center overflow-hidden rounded-lg">
-          <Image
-            :src="item.src.rawSrc"
-            :alt="`wallpaper-${item._id}`"
-            :width="200"
-            :height="150"
-            :preview="false"
-            imgClass="border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
-            @click="() => handleImageClick(item)"
-            @contextmenu="(e: MouseEvent) => handleContextMenu(e, item)"
-          />
-        </div>
+        <!-- 初始加载骨架屏 -->
+        <template v-if="isInitialLoading">
+          <div
+            v-for="i in pageSize"
+            :key="`skeleton-${i}`"
+            class="flex items-center justify-center overflow-hidden rounded-lg"
+          >
+            <Skeleton :width="200" :height="150" class="border-2 border-transparent rounded-lg" animation="pulse" />
+          </div>
+        </template>
+        <!-- 实际图片内容 -->
+        <template v-else>
+          <div
+            v-for="item in images"
+            :key="item._id"
+            class="flex items-center justify-center overflow-hidden rounded-lg"
+          >
+            <Image
+              :src="item.src.rawSrc"
+              :alt="`wallpaper-${item._id}`"
+              :width="200"
+              :height="150"
+              :preview="false"
+              imgClass="border-2 border-transparent hover:border-primary rounded-lg cursor-pointer"
+              @click="() => handleImageClick(item)"
+              @contextmenu="(e: MouseEvent) => handleContextMenu(e, item)"
+            />
+          </div>
+        </template>
+        <!-- 加载更多状态 -->
         <div v-if="isLoading" class="text-center text-gray-500 py-5 text-sm" :style="{ gridColumn: `1 / ${cols + 1}` }">
           加载中...
         </div>
+        <!-- 没有更多数据提示 -->
         <div
-          v-else-if="!hasMore"
+          v-else-if="!hasMore && !isInitialLoading"
           class="text-center text-gray-400 py-5 text-sm"
           :style="{ gridColumn: `1 / ${cols + 1}` }"
         >
           没有更多了
         </div>
       </div>
-
       <!-- 右击菜单 -->
       <ContextMenu
         v-model="isContextMenuOpen"
