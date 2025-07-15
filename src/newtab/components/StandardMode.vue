@@ -6,7 +6,6 @@ import { Pagination, Mousewheel } from 'swiper/modules'
 import { useStandardModeAuto } from '@/composables/useStandardModeAuto'
 import { useSettings } from '@/composables/useSettings'
 import SiteCardGrid from './SiteCardGrid.vue'
-import type { SiteData } from './SiteCardGrid.vue'
 
 // Swiper 样式
 import 'swiper/css'
@@ -57,13 +56,6 @@ const swiperOptions = computed(() => ({
   },
 }))
 
-// 处理网站点击
-const handleSiteClick = (site: SiteData) => {
-  if (site.url) {
-    window.open(site.url, '_blank')
-  }
-}
-
 // 计算当前面板信息
 const currentPanelInfo = computed(() => {
   const current = currentSlideIndex.value + 1
@@ -93,17 +85,11 @@ const containerStyle = computed(() => ({
 
 <template>
   <div class="flex items-center justify-center overflow-hidden" :style="containerStyle">
-    <div class="w-full h-full min-h-[500px] relative">
+    <div class="w-full h-full relative">
       <!-- Swiper 容器 -->
       <Swiper v-if="panels.length > 0" v-bind="swiperOptions" class="w-full h-full overflow-hidden">
         <SwiperSlide v-for="panel in panels" :key="panel.id" class="w-full h-full flex items-center justify-center">
-          <SiteCardGrid
-            :sites="panel.sites"
-            :rows="gridConfig.rows"
-            :cols="gridConfig.cols"
-            :gap="gridConfig.gap"
-            @site-click="handleSiteClick"
-          />
+          <SiteCardGrid :sites="panel.sites" :rows="gridConfig.rows" :cols="gridConfig.cols" :gap="gridConfig.gap" />
         </SwiperSlide>
         <!-- 分页指示器 (只在多面板时显示) -->
         <div v-if="currentPanelInfo.hasMultiplePanels" class="swiper-pagination"></div>
