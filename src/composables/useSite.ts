@@ -8,11 +8,11 @@ export function useSite() {
   }
 
   const removeSite = (site: SiteData) => {
-    sites.value = sites.value.filter((s) => s.id !== site.id)
+    sites.value = sites.value.filter((s: SiteData) => s.id !== site.id)
   }
 
   const updateSite = (site: SiteData) => {
-    sites.value = sites.value.map((s) => (s.id === site.id ? site : s))
+    sites.value = sites.value.map((s: SiteData) => (s.id === site.id ? site : s))
   }
 
   return {
