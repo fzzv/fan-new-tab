@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, nextTick, computed } from 'vue'
 import { cn } from '@/lib/utils'
+import { useZIndex } from '@/composables/useZIndex.ts'
 
 export interface Props {
   // 层级
@@ -21,7 +22,7 @@ defineOptions({
 })
 
 const props = withDefaults(defineProps<Props>(), {
-  zIndex: 100,
+  zIndex: 0,
   closeByMask: false,
   useVIf: true,
   keepAlive: false,
@@ -73,6 +74,9 @@ function trapFocusDialog() {
   // 手动激活焦点陷阱
   if (isVShow.value) nextTick().then(() => {})
 }
+
+// modal 层级处理
+const { zIndex: defaultZIndex } = useZIndex()
 </script>
 
 <template>
@@ -84,18 +88,21 @@ function trapFocusDialog() {
         ref="elDialogRoot"
         aria-modal="true"
         :aria-labelledby="dialogLabelledBy"
-        :style="{ 'z-index': zIndex }"
+        :style="{ 'z-index': (zIndex || defaultZIndex) - 1 }"
         class="fixed inset-0 of-y-auto scrollbar-hide overscroll-none font-sans"
       >
-        <div class="dialog-mask absolute inset-0 z-0 bg-transparent opacity-100 backdrop-filter touch-none">
+        <div class="dialog-mask absolute inset-0 bg-transparent opacity-100 backdrop-filter touch-none">
           <!-- 样式' scrollbar-hide overscroll-none overflow-y-scroll '和' h="[calc(100%+0.5px)]" '用于实现滚动锁定 -->
           <!-- 蒙层 -->
           <div
-            class="dialog-mask absolute inset-0 z-0 bg-black opacity-60 touch-none h=[calc(100%+0.5px)]"
+            class="dialog-mask absolute inset-0 bg-black opacity-60 touch-none h=[calc(100%+0.5px)]"
             @click="clickMask"
           />
           <!-- 弹窗内容 -->
-          <div class="absolute inset-0 z-1 pointer-events-none opacity-100 flex">
+          <div
+            class="absolute inset-0 pointer-events-none opacity-100 flex"
+            :style="{ 'z-index': zIndex || defaultZIndex }"
+          >
             <div class="flex flex-1 items-center justify-center p-4">
               <div
                 ref="elDialogMain"

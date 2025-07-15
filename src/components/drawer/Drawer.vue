@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<DrawerProps>(), {
   placement: 'right',
   width: 378,
   height: 256,
-  zIndex: 1000,
+  zIndex: 1,
   destroyOnClose: false,
   closeByMask: true,
   showMask: true,

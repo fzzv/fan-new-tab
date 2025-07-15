@@ -22,13 +22,13 @@ import ColorPickerDialog from '@/components/wallpaper/ColorPickerDialog.vue'
   <ModalDialog v-model="isAddFavoriteDialog">
     <AddFavorite />
   </ModalDialog>
-  <ModalDialog v-model="isWallpaperSelector" :z-index="2001">
+  <ModalDialog v-model="isWallpaperSelector">
     <WallpaperSelector />
   </ModalDialog>
-  <ModalDialog v-model="isColorPickerDialog" :z-index="2002">
+  <ModalDialog v-model="isColorPickerDialog">
     <ColorPickerDialog />
   </ModalDialog>
-  <ModalDialog v-model="isConfirmDialog" :z-index="2003">
+  <ModalDialog v-model="isConfirmDialog">
     <ConfirmModal />
   </ModalDialog>
   <SettingDrawer />
