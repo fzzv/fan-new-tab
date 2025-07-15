@@ -56,16 +56,32 @@ export const closeColorPickerDialog = () => {
   isColorPickerDialog.value = false
 }
 
-// 收藏自定义网站弹窗
-export const isAddSiteDialog = ref(false)
+// 网站弹窗（统一的添加/编辑弹窗）
+export const isSiteDialog = ref(false)
+export const siteDialogMode = ref<'add' | 'edit'>('add')
+export const siteDialogData = ref<any>(null)
 
 export const openAddSiteDialog = () => {
-  isAddSiteDialog.value = true
+  siteDialogMode.value = 'add'
+  siteDialogData.value = null
+  isSiteDialog.value = true
 }
 
-export const closeAddSiteDialog = () => {
-  isAddSiteDialog.value = false
+export const openEditSiteDialog = (siteData: any) => {
+  siteDialogMode.value = 'edit'
+  siteDialogData.value = siteData
+  isSiteDialog.value = true
 }
+
+export const closeSiteDialog = () => {
+  isSiteDialog.value = false
+  siteDialogMode.value = 'add'
+  siteDialogData.value = null
+}
+
+// 保持向后兼容性
+export const closeAddSiteDialog = closeSiteDialog
+export const closeEditSiteDialog = closeSiteDialog
 
 // 确认弹窗配置接口
 export interface ConfirmConfig {

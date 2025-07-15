@@ -4,7 +4,12 @@ import { cn } from '@/lib/utils'
 import SiteCard from './SiteCard.vue'
 import type { ClassValue } from 'clsx'
 import { Icon } from '@iconify/vue'
-import { openAddSiteDialog } from '@/composables/useDialog.ts'
+import { openAddSiteDialog, openEditSiteDialog } from '@/composables/useDialog.ts'
+import { useContextMenu } from '@/composables/useContextMenu.ts'
+import { ContextMenu, type MenuItemType } from '@/components/context-menu'
+import { useSite } from '@/composables/useSite.ts'
+import { Modal } from '@/components/modal'
+import { toast } from '@/lib/toast'
 
 // 网站数据接口
 export interface SiteData {
@@ -82,6 +87,47 @@ const gridStyle = computed(() => ({
   height: 'fit-content',
 }))
 
+// 右击菜单
+const { isOpen: isContextMenuOpen, virtualElement, currentItem, onContextMenu } = useContextMenu()
+const { removeSite } = useSite()
+
+// 右击菜单项
+const contextMenuItems: MenuItemType[] = [
+  {
+    label: '编辑',
+    icon: 'material-symbols:edit-outline',
+    click: (item: SiteData) => {
+      if (item) {
+        openEditSiteDialog(item)
+      }
+    },
+  },
+  {
+    label: '删除',
+    icon: 'material-symbols:delete-outline',
+    click: (item: SiteData) => {
+      if (item) {
+        Modal.confirm({
+          title: '确认删除',
+          icon: 'material-symbols:delete-outline',
+          content: `确定要删除网站 "${item.title}" 吗？`,
+          okText: '删除',
+          cancelText: '取消',
+          onOk: () => {
+            removeSite(item)
+            toast.success('删除成功', { richColors: true })
+          },
+        })
+      }
+    },
+  },
+]
+
+// 处理网站右击菜单
+function handleContextMenu(_event: MouseEvent, site: SiteData) {
+  onContextMenu(site)
+}
+
 // 处理网站点击
 const handleSiteClick = (site: SiteData) => {
   emit('site-click', site)
@@ -97,7 +143,14 @@ const handleSiteClick = (site: SiteData) => {
   <div :class="cn('site-card-grid', $attrs.class as ClassValue)" :style="gridStyle">
     <!-- 渲染网站卡片 -->
     <div v-for="site in displaySites" :key="site.id" class="site-card-slot">
-      <SiteCard :image-url="site.imageUrl" :title="site.title" :alt="site.alt" @click="handleSiteClick(site)" />
+      <SiteCard
+        :image-url="site.imageUrl"
+        :title="site.title"
+        :alt="site.alt"
+        :site="site"
+        @click="handleSiteClick(site)"
+        @context-menu="handleContextMenu"
+      />
     </div>
     <!-- 新增网站按钮 -->
     <div class="flex justify-center">
@@ -108,6 +161,14 @@ const handleSiteClick = (site: SiteData) => {
         <Icon icon="material-symbols:add" width="24" height="24" />
       </div>
     </div>
+
+    <!-- 右击菜单 -->
+    <ContextMenu
+      v-model="isContextMenuOpen"
+      :virtual-element="virtualElement"
+      :items="contextMenuItems"
+      :current-item="currentItem"
+    />
   </div>
 </template>
 

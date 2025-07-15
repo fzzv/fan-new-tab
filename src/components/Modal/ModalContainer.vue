@@ -2,7 +2,7 @@
 import {
   isAddEngineDialog,
   isAddFavoriteDialog,
-  isAddSiteDialog,
+  isSiteDialog,
   isWallpaperSelector,
   isColorPickerDialog,
   isConfirmDialog,
@@ -11,7 +11,7 @@ import ModalDialog from './ModalDialog.vue'
 import ConfirmModal from './ConfirmModal.vue'
 import AddEngine from '@/components/engine/AddEngine.vue'
 import AddFavorite from '@/components/favorite/AddFavorite.vue'
-import AddSite from '@/components/site/AddSite.vue'
+import SiteDialog from '@/components/site/SiteDialog.vue'
 import SettingDrawer from '@/components/setting/SettingDrawer.vue'
 import WallpaperSelector from '@/components/wallpaper/WallpaperSelector.vue'
 import ColorPickerDialog from '@/components/wallpaper/ColorPickerDialog.vue'
@@ -24,8 +24,8 @@ import ColorPickerDialog from '@/components/wallpaper/ColorPickerDialog.vue'
   <ModalDialog v-model="isAddFavoriteDialog">
     <AddFavorite />
   </ModalDialog>
-  <ModalDialog v-model="isAddSiteDialog">
-    <AddSite />
+  <ModalDialog v-model="isSiteDialog">
+    <SiteDialog />
   </ModalDialog>
   <ModalDialog v-model="isWallpaperSelector">
     <WallpaperSelector />

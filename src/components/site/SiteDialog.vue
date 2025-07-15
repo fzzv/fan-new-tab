@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { v4 as uuidV4 } from 'uuid'
 import Label from '@/components/label/Label.vue'
 import Input from '@/components/input/Input.vue'
@@ -9,7 +9,7 @@ import { SelectRoot, SelectTrigger, SelectPortal, SelectContent, SelectGroup, Se
 import { useFavorite } from '@/composables/useFavorite.ts'
 import { useSite } from '@/composables/useSite.ts'
 import { useWebExtStorage } from '@/composables/useWebExtStorage.ts'
-import { closeAddSiteDialog } from '@/composables/useDialog.ts'
+import { closeSiteDialog, siteDialogMode, siteDialogData } from '@/composables/useDialog.ts'
 import ModalHeader from '@/components/modal/ModalHeader.vue'
 import ModalContent from '@/components/modal/ModalContent.vue'
 import ModalFooter from '@/components/modal/ModalFooter.vue'
@@ -19,53 +19,96 @@ import { getFavicon } from '@/lib'
 const siteName = ref('')
 // 网站URL
 const siteUrl = ref('')
-// 收藏夹 记录上次选择的收藏夹
+// 收藏夹
 const { data: folder } = useWebExtStorage('folder', 'default')
 // 网站图标
 const favIcon = ref('')
 
-const { addSite } = useSite()
+const { addSite, updateSite } = useSite()
 const { favorites } = useFavorite()
+
+// 判断是否为编辑模式
+const isEditMode = computed(() => siteDialogMode.value === 'edit')
+
+// 对话框标题
+const dialogTitle = computed(() => (isEditMode.value ? '编辑网站' : '添加网站'))
+
+// 提交按钮文本
+const submitButtonText = computed(() => (isEditMode.value ? '保存' : '添加'))
+
+// 监听编辑数据变化，填充表单
+watch(
+  siteDialogData,
+  (newData) => {
+    if (newData) {
+      siteName.value = newData.title || ''
+      siteUrl.value = newData.url || ''
+      favIcon.value = newData.imageUrl || ''
+      folder.value = newData.favoriteId || 'default'
+    } else {
+      // 如果是添加模式且没有数据，则重置表单
+      if (siteDialogMode.value === 'add') {
+        resetForm()
+      }
+    }
+  },
+  { immediate: true },
+)
 
 // 处理图标URL输入变化
 const handleIconUrlChange = (url: string) => {
   favIcon.value = getFavicon(url)
 }
 
-// 添加网站
-function handleAddSite() {
+// 提交表单
+function handleSubmit() {
   if (!siteName.value.trim()) {
     return
   }
 
-  addSite({
-    id: uuidV4(),
-    title: siteName.value,
-    imageUrl: favIcon.value,
-    url: siteUrl.value,
-    favoriteId: folder.value,
-  })
+  if (isEditMode.value && siteDialogData.value) {
+    // 编辑模式：更新网站
+    updateSite({
+      ...siteDialogData.value,
+      title: siteName.value,
+      imageUrl: favIcon.value,
+      url: siteUrl.value,
+      favoriteId: folder.value,
+    })
+  } else {
+    // 添加模式：添加新网站
+    addSite({
+      id: uuidV4(),
+      title: siteName.value,
+      imageUrl: favIcon.value,
+      url: siteUrl.value,
+      favoriteId: folder.value,
+    })
+  }
 
   handleCancel()
 }
 
-// 取消添加
-function handleCancel() {
-  // 重置表单
+// 重置表单
+function resetForm() {
   siteName.value = ''
   siteUrl.value = ''
   favIcon.value = ''
+}
 
-  closeAddSiteDialog()
+// 取消操作
+function handleCancel() {
+  resetForm()
+  closeSiteDialog()
 }
 </script>
 
 <template>
   <ModalContent>
-    <ModalHeader @close="closeAddSiteDialog">
-      <div class="text-xl">添加网站</div>
+    <ModalHeader @close="closeSiteDialog">
+      <div class="text-xl">{{ dialogTitle }}</div>
     </ModalHeader>
-    <form class="flex flex-col gap-4" @submit.prevent="handleAddSite">
+    <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
       <div class="flex flex-col pt-6 pb-4 px-4 gap-4">
         <div class="flex items-center gap-[15px]">
           <Label for="siteName" class="flex-1 text-right font-bold text-sm">网站名称</Label>
@@ -118,12 +161,10 @@ function handleCancel() {
       </div>
       <ModalFooter>
         <div class="flex gap-2">
-          <Button @click="handleAddSite" class="text-sm">添加</Button>
+          <Button @click="handleSubmit" class="text-sm">{{ submitButtonText }}</Button>
           <Button @click="handleCancel" variant="outline" class="text-sm">取消</Button>
         </div>
       </ModalFooter>
     </form>
   </ModalContent>
 </template>
-
-<style scoped></style>

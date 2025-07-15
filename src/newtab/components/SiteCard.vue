@@ -2,15 +2,31 @@
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/avatar'
 import { cn } from '@/lib/utils'
 
-defineProps<{
+const props = defineProps<{
   imageUrl: string
   title: string
   alt?: string
+  site?: any
 }>()
+
+const emit = defineEmits<{
+  (e: 'context-menu', event: MouseEvent, site: any): void
+}>()
+
+// 处理右键点击
+function handleContextMenu(event: MouseEvent) {
+  if (props.site) {
+    event.preventDefault()
+    emit('context-menu', event, props.site)
+  }
+}
 </script>
 
 <template>
-  <div class="flex flex-col items-center gap-4 cursor-pointer group">
+  <div
+    class="flex flex-col items-center gap-4 cursor-pointer group"
+    @contextmenu="handleContextMenu"
+  >
     <!-- Avatar组件容器，添加hover效果 -->
     <div :class="cn('transition-all duration-200 ease-in-out active:scale-95 rounded-full')">
       <Avatar class="border-2 border-border">
