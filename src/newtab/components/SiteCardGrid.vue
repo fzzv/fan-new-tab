@@ -3,6 +3,8 @@ import { computed } from 'vue'
 import { cn } from '@/lib/utils'
 import SiteCard from './SiteCard.vue'
 import type { ClassValue } from 'clsx'
+import { Icon } from '@iconify/vue'
+import { openAddSiteDialog } from '@/composables/useDialog.ts'
 
 // 网站数据接口
 export interface SiteData {
@@ -96,6 +98,15 @@ const handleSiteClick = (site: SiteData) => {
     <!-- 渲染网站卡片 -->
     <div v-for="site in displaySites" :key="site.id" class="site-card-slot">
       <SiteCard :image-url="site.imageUrl" :title="site.title" :alt="site.alt" @click="handleSiteClick(site)" />
+    </div>
+    <!-- 新增网站按钮 -->
+    <div class="flex justify-center">
+      <div
+        class="w-14 h-14 border-2 border-border flex justify-center items-center rounded-full cursor-pointer"
+        @click="openAddSiteDialog"
+      >
+        <Icon icon="material-symbols:add" width="24" height="24" />
+      </div>
     </div>
   </div>
 </template>

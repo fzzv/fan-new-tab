@@ -56,6 +56,17 @@ export const closeColorPickerDialog = () => {
   isColorPickerDialog.value = false
 }
 
+// 收藏自定义网站弹窗
+export const isAddSiteDialog = ref(false)
+
+export const openAddSiteDialog = () => {
+  isAddSiteDialog.value = true
+}
+
+export const closeAddSiteDialog = () => {
+  isAddSiteDialog.value = false
+}
+
 // 确认弹窗配置接口
 export interface ConfirmConfig {
   title?: string | VNode
