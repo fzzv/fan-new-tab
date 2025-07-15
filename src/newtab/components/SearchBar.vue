@@ -67,7 +67,7 @@ onMounted(() => {
 <template>
   <div
     v-if="searchBarConfigReady && searchBarConfig.visible"
-    class="w-[var(--search-width)] h-[var(--search-height)] my-5 mx-auto"
+    class="w-[var(--search-width)] h-[var(--search-height)] my-5 mx-auto min-w-[400px] max-w-[1200px]"
     :style="{ opacity: 'var(--search-opacity)' }"
   >
     <Input
