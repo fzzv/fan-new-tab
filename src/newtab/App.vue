@@ -59,7 +59,7 @@ async function toggleDark() {
         <Icon v-else icon="material-symbols:moon-stars-outline-rounded" width="24" height="24" />
       </Button>
     </div>
-    <div :class="cn('max-w-[1200px] mx-auto pb-10 relative z-10', currentDisplayMode !== 'minimal' && 'mt-40')">
+    <div :class="cn('mx-auto pb-10 relative z-10', currentDisplayMode !== 'minimal' && 'mt-40')">
       <SearchBar />
     </div>
     <div v-if="currentDisplayMode !== 'minimal'" class="flex-1 mx-auto py-20 pt-0 relative z-10">
