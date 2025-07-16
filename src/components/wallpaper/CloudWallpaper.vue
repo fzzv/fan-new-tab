@@ -16,7 +16,7 @@ import type { MenuItemType } from '@/components/context-menu'
 
 const images = ref<any[]>([])
 const page = ref(1)
-const pageSize = ref(10)
+const pageSize = ref(20)
 const source = ref('')
 
 // 初始加载状态
@@ -128,7 +128,7 @@ async function getWallpaperList(append = false) {
 // 处理图片点击，设置为壁纸
 async function handleImageClick(item: any) {
   if (item?.src?.rawSrc) {
-    await setWallpaper(item.src.rawSrc)
+    await setWallpaper(item.src.rawSrc + '?isThumbnail=true&width=1920')
   }
 }
 
@@ -236,7 +236,7 @@ onUnmounted(() => {
             class="flex items-center justify-center overflow-hidden rounded-lg"
           >
             <Image
-              :src="item.src.rawSrc"
+              :src="`${item.src.rawSrc}?isThumbnail=true&width=203`"
               :alt="`wallpaper-${item._id}`"
               :width="200"
               :height="150"
