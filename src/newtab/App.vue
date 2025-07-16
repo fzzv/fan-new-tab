@@ -48,7 +48,7 @@ async function toggleDark() {
 </script>
 
 <template>
-  <div class="app-container w-full relative box-border bg-image text-base font-sans">
+  <div class="app-container w-full relative box-border bg-image text-base font-sans text-foreground">
     <div class="absolute top-5 right-5 z-20 flex items-center gap-2">
       <Button size="icon" @click="openAddFavoriteDialog">添加收藏夹</Button>
       <Button size="icon" @click="openPageSettingDialog">
