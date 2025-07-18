@@ -30,7 +30,7 @@ export interface BackgroundConfig {
 const defaultBackgroundConfig: BackgroundConfig = {
   blur: 0,
   opacity: 0,
-  background: 'http://wallpaper.xyu.fan/image/findaphoto/bigLink/10492.jpg',
+  background: 'http://wallpaper.xyu.fan/image/findaphoto/bigLink/10492.jpg?isThumbnail=true&width=1920',
 }
 
 // 搜索框配置接口
