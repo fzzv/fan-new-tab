@@ -18,6 +18,11 @@ const { data: searchEngines, dataReady: searchEnginesDataReady } = useWebExtStor
     icon: '../../assets/google.jpg'
   },
   {
+    name: 'Yandex',
+    url: 'https://yandex.com/search/?text=',
+    icon: '../../assets/yandex.png'
+  },
+  {
     name: 'Bing',
     url: 'https://www.bing.com/search?q=',
     icon: '../../assets/bing.png'
