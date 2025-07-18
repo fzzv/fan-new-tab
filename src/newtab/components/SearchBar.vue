@@ -98,7 +98,7 @@ onMounted(() => {
                 cn(
                   ' relative flex flex-col items-center justify-center aspect-square rounded-xl group',
                   'cursor-pointer transition-all duration-200 ease-in-out border-2 border-secondary',
-                  { 'border-2 border-primary': selectedEngine.name === engine.name },
+                  { 'bg-primary': selectedEngine.name === engine.name },
                 )
               "
               @click="selectEngine(engine)"
