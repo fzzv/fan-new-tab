@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { provide } from 'vue'
 import { TabsRoot, TabsList, TabsTrigger, TabsContent } from './index'
 import { Icon } from '@iconify/vue'
 import { cn } from '@/lib/utils'
@@ -27,6 +28,9 @@ const props = withDefaults(defineProps<TabsProps>(), {
 })
 
 const modelValue = defineModel<string>('modelValue', { required: true })
+
+// 提供当前tab值给子组件
+provide('currentTabValue', modelValue)
 
 // 右击菜单
 const { isOpen, virtualElement, currentItem, onContextMenu } = useContextMenu()
