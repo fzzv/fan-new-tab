@@ -56,7 +56,7 @@ const modeDescriptionText = computed(() => {
             <h3 class="text-lg font-semibold">显示模式</h3>
 
             <TabsRoot v-model="currentModeStr" class="w-full">
-              <TabsList class="grid w-full grid-cols-3">
+              <TabsList class="w-full">
                 <TabsTrigger
                   v-for="option in displayModeOptions"
                   :key="option.value"
