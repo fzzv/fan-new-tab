@@ -14,13 +14,16 @@ export const closeAddEngineDialog = () => {
 
 // 添加收藏夹 弹窗
 export const isAddFavoriteDialog = ref(false)
+export const addFavoritePosition = ref<number | null>(null)
 
-export const openAddFavoriteDialog = () => {
+export const openAddFavoriteDialog = (position?: number) => {
+  addFavoritePosition.value = position ?? null
   isAddFavoriteDialog.value = true
 }
 
 export const closeAddFavoriteDialog = () => {
   isAddFavoriteDialog.value = false
+  addFavoritePosition.value = null
 }
 
 // 设置功能 弹窗

@@ -6,7 +6,7 @@ import Button from '@/components/button/Button.vue'
 import { Toast } from '@/components/toast'
 import { useTheme, Theme } from '@/composables/useTheme'
 import { Icon } from '@iconify/vue'
-import { openAddFavoriteDialog, openPageSettingDialog } from '@/composables/useDialog.ts'
+import { openPageSettingDialog } from '@/composables/useDialog.ts'
 import { useSettings } from '@/composables/useSettings'
 import FavoritesMode from './components/FavoritesMode.vue'
 import StandardMode from './components/StandardMode.vue'
@@ -50,7 +50,6 @@ async function toggleDark() {
 <template>
   <div class="app-container w-full relative box-border bg-image text-base font-sans text-foreground">
     <div class="absolute top-5 right-5 z-20 flex items-center gap-2">
-      <Button size="icon" @click="openAddFavoriteDialog">添加收藏夹</Button>
       <Button size="icon" @click="openPageSettingDialog">
         <Icon icon="material-symbols:settings-outline-rounded" width="24" height="24" />
       </Button>

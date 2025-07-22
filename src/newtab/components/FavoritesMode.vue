@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { Tabs } from '@/components/tabs'
 import { useFavorite } from '@/composables/useFavorite.ts'
+import { openAddFavoriteDialog } from '@/composables/useDialog.ts'
 import { useSite } from '@/composables/useSite.ts'
 import { useSettings } from '@/composables/useSettings.ts'
 import SiteCardGrid from '@/newtab/components/SiteCardGrid.vue'
@@ -11,6 +12,30 @@ import type { TabItem } from '@/components/tabs'
 const { favorites, favoritesReady, removeFavorite } = useFavorite()
 
 const menuItems = [
+  {
+    label: '添加收藏夹到左侧',
+    icon: 'material-symbols:add-circle-outline',
+    click: (item: TabItem) => {
+      if (item) {
+        const currentIndex = favorites.value.findIndex(fav => fav.id === item.id)
+        if (currentIndex !== -1) {
+          openAddFavoriteDialog(currentIndex)
+        }
+      }
+    },
+  },
+  {
+    label: '添加收藏夹到右侧',
+    icon: 'material-symbols:add-circle-outline',
+    click: (item: TabItem) => {
+      if (item) {
+        const currentIndex = favorites.value.findIndex(fav => fav.id === item.id)
+        if (currentIndex !== -1) {
+          openAddFavoriteDialog(currentIndex + 1)
+        }
+      }
+    },
+  },
   {
     label: '编辑',
     icon: 'material-symbols:edit-square-outline',

@@ -5,13 +5,13 @@ import ModalContent from '@/components/modal/ModalContent.vue'
 import ModalFooter from '@/components/modal/ModalFooter.vue'
 import Button from '@/components/button/Button.vue'
 import Input from '@/components/input/Input.vue'
-import { closeAddFavoriteDialog } from '@/composables/useDialog'
+import { closeAddFavoriteDialog, addFavoritePosition } from '@/composables/useDialog'
 import { useFavorite } from '@/composables/useFavorite'
 
 const favoriteName = ref('')
 const isInvalid = ref(false)
 
-const { addFavorite } = useFavorite()
+const { addFavorite, addFavoriteAtPosition } = useFavorite()
 
 const validateInput = () => {
   isInvalid.value = !favoriteName.value.trim()
@@ -24,10 +24,18 @@ const handleInput = () => {
 const handleAddFavorite = () => {
   validateInput()
   if (!isInvalid.value) {
-    addFavorite({
+    const favoriteData = {
       label: favoriteName.value.trim(),
       value: '',
-    })
+    }
+
+    // 如果指定了位置，使用位置插入，否则添加到末尾
+    if (addFavoritePosition.value !== null) {
+      addFavoriteAtPosition(favoriteData, addFavoritePosition.value)
+    } else {
+      addFavorite(favoriteData)
+    }
+
     closeAddFavoriteDialog()
   }
 }

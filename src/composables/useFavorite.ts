@@ -26,6 +26,21 @@ export function useFavorite() {
     favorites.value = [...favorites.value, newFavorite]
   }
 
+  // 在指定位置添加收藏夹
+  const addFavoriteAtPosition = (favorite: TabItem, position: number) => {
+    const id = uuidV4()
+    const newFavorite: TabItem = {
+      id,
+      label: favorite.label,
+      value: id,
+      icon: favorite?.icon,
+      activeIcon: favorite?.activeIcon,
+    }
+    const newFavorites = [...favorites.value]
+    newFavorites.splice(position, 0, newFavorite)
+    favorites.value = newFavorites
+  }
+
   // 删除收藏夹
   const removeFavorite = (favorite: TabItem) => {
     favorites.value = favorites.value.filter((item) => item.id !== favorite.id)
@@ -35,6 +50,7 @@ export function useFavorite() {
     favorites,
     favoritesReady,
     addFavorite,
+    addFavoriteAtPosition,
     removeFavorite,
   }
 }
