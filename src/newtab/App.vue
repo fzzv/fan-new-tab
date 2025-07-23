@@ -12,7 +12,8 @@ import FavoritesMode from './components/FavoritesMode.vue'
 import StandardMode from './components/StandardMode.vue'
 import { cn, isColor } from '@/lib'
 
-const { backgroundConfig, backgroundConfigReady, currentDisplayMode } = useSettings()
+const { backgroundConfig, backgroundConfigReady, currentDisplayMode, themeColorConfigReady, applyThemeColors } =
+  useSettings()
 const { theme, themeReady } = useTheme()
 
 onMounted(() => {
@@ -36,6 +37,11 @@ onMounted(() => {
 
     document.documentElement.style.setProperty('--backdrop-filter-blur', `${blur[0]}px`)
     document.documentElement.style.setProperty('--background-mask-opacity', `${opacity[0] / 100}`)
+  })
+
+  // 设置主题颜色
+  themeColorConfigReady.then(() => {
+    applyThemeColors()
   })
 })
 

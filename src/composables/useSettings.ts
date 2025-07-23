@@ -51,6 +51,20 @@ const defaultSearchBarConfig: SearchBarConfig = {
   opacity: 100, // 100% 不透明
 }
 
+// 主题颜色配置接口
+export interface ThemeColorConfig {
+  primary: string
+  primaryHover: string
+  primaryForeground: string
+}
+
+// 默认主题颜色配置
+const defaultThemeColorConfig: ThemeColorConfig = {
+  primary: '#ffdb33',
+  primaryHover: '#ffcc00',
+  primaryForeground: '#000',
+}
+
 // 显示模式类型
 export type DisplayMode = 'standard' | 'favorites' | 'minimal'
 
@@ -67,6 +81,15 @@ const { data: backgroundConfig, dataReady: backgroundConfigReady } = useWebExtSt
 const { data: searchBarConfig, dataReady: searchBarConfigReady } = useWebExtStorage(
   'searchBarConfig',
   defaultSearchBarConfig as SearchBarConfig,
+  {
+    listenToStorageChanges: false,
+  },
+)
+
+// 主题颜色设置
+const { data: themeColorConfig, dataReady: themeColorConfigReady } = useWebExtStorage(
+  'themeColorConfig',
+  defaultThemeColorConfig as ThemeColorConfig,
   {
     listenToStorageChanges: false,
   },
@@ -314,6 +337,37 @@ export function useSettings() {
     }
   }
 
+  // 设置主题颜色
+  const setThemeColor = (colorType: keyof ThemeColorConfig, color: string) => {
+    themeColorConfig.value[colorType] = color
+
+    // 立即应用到 CSS 变量
+    const cssVarMap = {
+      primary: '--primary',
+      primaryHover: '--primary-hover',
+      primaryForeground: '--primary-foreground',
+    }
+
+    document.documentElement.style.setProperty(cssVarMap[colorType], color)
+  }
+
+  // 重置主题颜色为默认值
+  const resetThemeColors = () => {
+    themeColorConfig.value = { ...defaultThemeColorConfig }
+
+    // 应用默认颜色到 CSS 变量
+    document.documentElement.style.setProperty('--primary', defaultThemeColorConfig.primary)
+    document.documentElement.style.setProperty('--primary-hover', defaultThemeColorConfig.primaryHover)
+    document.documentElement.style.setProperty('--primary-foreground', defaultThemeColorConfig.primaryForeground)
+  }
+
+  // 应用当前主题颜色到 CSS 变量（用于初始化）
+  const applyThemeColors = () => {
+    document.documentElement.style.setProperty('--primary', themeColorConfig.value.primary)
+    document.documentElement.style.setProperty('--primary-hover', themeColorConfig.value.primaryHover)
+    document.documentElement.style.setProperty('--primary-foreground', themeColorConfig.value.primaryForeground)
+  }
+
   return {
     // 状态
     currentDisplayMode,
@@ -328,6 +382,10 @@ export function useSettings() {
     // 搜索框设置
     searchBarConfig,
     searchBarConfigReady,
+
+    // 主题颜色设置
+    themeColorConfig,
+    themeColorConfigReady,
 
     // 模式配置
     standardConfig,
@@ -358,5 +416,8 @@ export function useSettings() {
     updateGap,
     resetToDefault,
     setWallpaper,
+    setThemeColor,
+    resetThemeColors,
+    applyThemeColors,
   }
 }
