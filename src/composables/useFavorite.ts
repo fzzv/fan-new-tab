@@ -42,8 +42,31 @@ export function useFavorite() {
   }
 
   // 删除收藏夹
-  const removeFavorite = (favorite: TabItem) => {
-    favorites.value = favorites.value.filter((item) => item.id !== favorite.id)
+  const removeFavorite = (favoriteId: string) => {
+    favorites.value = favorites.value.filter((item) => item.id !== favoriteId)
+  }
+
+  // 更新收藏夹
+  const updateFavorite = (favorite: TabItem) => {
+    favorites.value = favorites.value.map((item) => (item.id === favorite.id ? favorite : item))
+  }
+
+  // 根据ID获取收藏夹
+  const getFavoriteById = (id: string) => {
+    return favorites.value.find((item) => item.id === id)
+  }
+
+  // 根据value获取收藏夹
+  const getFavoriteByValue = (value: string) => {
+    return favorites.value.find((item) => item.value === value)
+  }
+
+  // 更新收藏夹顺序
+  const updateFavoritesOrder = (oldIndex: number, newIndex: number) => {
+    const newFavorites = [...favorites.value]
+    const [movedItem] = newFavorites.splice(oldIndex, 1)
+    newFavorites.splice(newIndex, 0, movedItem)
+    favorites.value = newFavorites
   }
 
   return {
@@ -52,5 +75,9 @@ export function useFavorite() {
     addFavorite,
     addFavoriteAtPosition,
     removeFavorite,
+    updateFavorite,
+    getFavoriteById,
+    getFavoriteByValue,
+    updateFavoritesOrder,
   }
 }

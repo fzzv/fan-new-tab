@@ -22,7 +22,7 @@ export async function getManifest() {
       48: './assets/logo.png',
       128: './assets/logo.png',
     },
-    permissions: ['tabs', 'storage', 'activeTab', 'sidePanel'],
+    permissions: ['tabs', 'storage', 'activeTab', 'sidePanel', 'bookmarks'],
     host_permissions: ['*://*/*'],
     content_security_policy: {
       extension_pages: isDev

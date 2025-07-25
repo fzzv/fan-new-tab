@@ -17,7 +17,7 @@ const menuItems = [
     icon: 'material-symbols:add-circle-outline',
     click: (item: TabItem) => {
       if (item) {
-        const currentIndex = favorites.value.findIndex(fav => fav.id === item.id)
+        const currentIndex = favorites.value.findIndex((fav) => fav.id === item.id)
         if (currentIndex !== -1) {
           openAddFavoriteDialog(currentIndex)
         }
@@ -29,7 +29,7 @@ const menuItems = [
     icon: 'material-symbols:add-circle-outline',
     click: (item: TabItem) => {
       if (item) {
-        const currentIndex = favorites.value.findIndex(fav => fav.id === item.id)
+        const currentIndex = favorites.value.findIndex((fav) => fav.id === item.id)
         if (currentIndex !== -1) {
           openAddFavoriteDialog(currentIndex + 1)
         }
@@ -40,6 +40,7 @@ const menuItems = [
     label: '编辑',
     icon: 'material-symbols:edit-square-outline',
     click: () => {
+      // TODO: 编辑tab
       console.log(1)
     },
   },
@@ -47,8 +48,8 @@ const menuItems = [
     label: '删除',
     icon: 'material-symbols:delete-outline-rounded',
     click: (item: TabItem) => {
-      if (item) {
-        removeFavorite(item)
+      if (item?.id) {
+        removeFavorite(item.id)
       }
     },
   },

@@ -10,6 +10,7 @@ import SettingGridLayout from './SettingGridLayout.vue'
 import SettingBackground from './SettingBackground.vue'
 import SettingSearchBar from './SettingSearchBar.vue'
 import SettingTheme from './SettingTheme.vue'
+import SettingFavorites from './SettingFavorites.vue'
 
 const { currentDisplayMode, updateDisplayMode } = useSettings()
 
@@ -85,7 +86,9 @@ const modeDescriptionText = computed(() => {
               </TabsContent>
               <TabsContent value="favorites" class="p-0">
                 <!-- 收藏夹模式布局设置 -->
-                <SettingGridLayout />
+                <SettingGridLayout class="mb-5" />
+                <!-- 收藏夹管理设置 -->
+                <SettingFavorites />
               </TabsContent>
               <TabsContent value="minimal" class="p-0">
                 <!-- 极简模式没有布局设置 -->
