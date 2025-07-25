@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type UserConfig } from 'vite'
 import { dirname, relative } from 'node:path'
 import vue from '@vitejs/plugin-vue'
 import { r, isDev, port } from './scripts/utils'
@@ -6,17 +6,12 @@ import packageJson from './package.json'
 import AutoImport from 'unplugin-auto-import/vite'
 import tailwindcss from '@tailwindcss/vite'
 
-// https://vite.dev/config/
-export default defineConfig(({ command }) => ({
+export const commonConfig: UserConfig = {
   root: r('src'), // 开发服务器启动和构建时的基础目录
   resolve: {
     alias: {
       '@/': `${r('src')}/`,
     },
-  },
-  define: {
-    __DEV__: isDev,
-    __NAME__: JSON.stringify(packageJson.name),
   },
   plugins: [
     vue(),
@@ -39,10 +34,16 @@ export default defineConfig(({ command }) => ({
     },
   ],
   optimizeDeps: {
-    include: [
-      'vue',
-      'webextension-polyfill',
-    ],
+    include: ['vue', 'webextension-polyfill'],
+  },
+}
+
+// https://vite.dev/config/
+export default defineConfig(({ command }) => ({
+  ...commonConfig,
+  define: {
+    __DEV__: isDev,
+    __NAME__: JSON.stringify(packageJson.name),
   },
   base: command === 'serve' ? `http://localhost:${port}/` : '/dist/',
   server: {
@@ -71,7 +72,7 @@ export default defineConfig(({ command }) => ({
       input: {
         popup: r('src/popup/index.html'),
         newtab: r('src/newtab/index.html'),
-      }
-    }
-  }
+      },
+    },
+  },
 }))
