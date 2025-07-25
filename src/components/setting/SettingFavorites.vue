@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { CollapsibleRoot, CollapsibleTrigger, CollapsibleContent } from '@/components/collapsible'
 import { Icon } from '@iconify/vue'
 import Button from '@/components/button/Button.vue'
 import { useFavorite } from '@/composables/useFavorite'
 import { useBookmarkSync } from '@/composables/useBookmarkSync'
 import { useBookmarkImportExport } from '@/composables/useBookmarkImportExport'
-import ModalDialog from '@/components/modal/ModalDialog.vue'
+import { Modal } from '@/components/modal'
 import { toast } from '@/lib/toast'
 import { VueDraggableNext } from 'vue-draggable-next'
 
@@ -23,7 +23,31 @@ withDefaults(defineProps<SettingFavoritesProps>(), {
 const isFavoritesOpen = ref(true)
 
 // 获取收藏夹数据
-const { favorites, removeFavorite, updateFavoritesOrder } = useFavorite()
+const { favorites, favoritesReady, removeFavorite, updateFavoritesOrder } = useFavorite()
+
+// 创建可拖拽的收藏夹列表副本
+const draggableFavorites = computed({
+  get: () => [...favorites.value],
+  set: (newValue) => {
+    // 当拖拽改变顺序时，找出变化并更新原始数据
+    const oldOrder = favorites.value
+    const newOrder = newValue
+
+    // 找到被移动的项目
+    for (let i = 0; i < newOrder.length; i++) {
+      if (oldOrder[i]?.id !== newOrder[i]?.id) {
+        const movedItem = newOrder[i]
+        const oldIndex = oldOrder.findIndex((item) => item.id === movedItem.id)
+        const newIndex = i
+
+        if (oldIndex !== -1 && oldIndex !== newIndex) {
+          updateFavoritesOrder(oldIndex, newIndex)
+        }
+        break
+      }
+    }
+  },
+})
 
 // 书签同步功能
 const { syncBrowserBookmarks, isSyncing } = useBookmarkSync()
@@ -33,10 +57,6 @@ const { importBookmarks, exportBookmarks, isImporting, isExporting } = useBookma
 
 // 文件输入引用
 const fileInputRef = ref<HTMLInputElement>()
-
-// 确认删除对话框状态
-const showDeleteConfirm = ref(false)
-const favoriteToDelete = ref<any>(null)
 
 // 处理浏览器书签同步
 const handleSyncBookmarks = async () => {
@@ -81,37 +101,27 @@ const handleExportBookmarks = async () => {
 
 // 处理删除收藏夹
 const handleDeleteFavorite = (favorite: any) => {
-  favoriteToDelete.value = favorite
-  showDeleteConfirm.value = true
-}
-
-const confirmDelete = () => {
-  if (favoriteToDelete.value) {
-    removeFavorite(favoriteToDelete.value.id)
-    toast.success('收藏夹删除成功', { richColors: true })
-  }
-  showDeleteConfirm.value = false
-  favoriteToDelete.value = null
-}
-
-const cancelDelete = () => {
-  showDeleteConfirm.value = false
-  favoriteToDelete.value = null
+  Modal.confirm({
+    title: '确认删除',
+    icon: 'material-symbols:warning-outline',
+    content: `确定要删除收藏夹 "${favorite.label}" 吗？此操作不可撤销，该收藏夹下的所有网站也将被删除。`,
+    okText: '确认删除',
+    cancelText: '取消',
+    onOk: () => {
+      removeFavorite(favorite.id)
+      toast.success('收藏夹删除成功', { richColors: true })
+    },
+  })
 }
 
 // 处理拖拽排序
 const handleDragEnd = (event: any) => {
   const { oldIndex, newIndex } = event
-  if (oldIndex !== newIndex) {
+  if (oldIndex !== newIndex && oldIndex !== undefined && newIndex !== undefined) {
     updateFavoritesOrder(oldIndex, newIndex)
     toast.success('收藏夹顺序已更新', { richColors: true })
   }
 }
-
-// 计算可删除的收藏夹（排除默认收藏夹）
-// const deletableFavorites = computed(() => {
-//   return favorites.value.filter((fav) => fav.id !== 'default')
-// })
 </script>
 
 <template>
@@ -177,21 +187,31 @@ const handleDragEnd = (event: any) => {
           <p class="text-xs text-muted-foreground">拖拽收藏夹项目来重新排序，点击删除按钮移除收藏夹</p>
 
           <!-- 收藏夹列表 -->
-          <div class="space-y-2 max-h-60 overflow-y-auto">
+          <div v-if="favoritesReady" class="space-y-2 max-h-60 overflow-y-auto">
             <VueDraggableNext
-              v-model="favorites"
+              v-model="draggableFavorites"
               :animation="200"
-              ghost-class="opacity-50"
-              chosen-class="ring-2 ring-primary"
+              :delay="0"
+              :delayOnTouchStart="true"
+              :touchStartThreshold="5"
+              ghost-class="drag-ghost"
+              chosen-class="drag-chosen"
+              drag-class="drag-active"
+              handle=".drag-handle"
               @end="handleDragEnd"
             >
               <div
-                v-for="favorite in favorites"
+                v-for="favorite in draggableFavorites"
                 :key="favorite.id"
-                class="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border hover:bg-muted/70 transition-colors cursor-move"
+                class="flex items-center justify-between p-3 bg-card/50 rounded-lg border border-border hover:bg-card/70 transition-colors mb-2"
               >
                 <div class="flex items-center gap-3">
-                  <Icon icon="material-symbols:drag-indicator" class="w-4 h-4 text-muted-foreground" />
+                  <div class="drag-handle cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded">
+                    <Icon
+                      icon="material-symbols:drag-indicator"
+                      class="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors"
+                    />
+                  </div>
                   <Icon :icon="favorite.icon || 'material-symbols:folder-outline'" class="w-4 h-4" />
                   <span class="text-sm font-medium">{{ favorite.label }}</span>
                 </div>
@@ -208,46 +228,86 @@ const handleDragEnd = (event: any) => {
                 </Button>
 
                 <!-- 默认收藏夹标识 -->
-                <div v-else class="px-2 py-1 text-xs bg-primary/10 text-primary rounded">默认</div>
+                <div v-else class="px-2 py-1 text-xs bg-foreground text-primary rounded">默认</div>
               </div>
             </VueDraggableNext>
+          </div>
 
-            <!-- 空状态 -->
-            <div
-              v-if="favorites.length === 0"
-              class="flex flex-col items-center justify-center py-8 text-muted-foreground"
-            >
-              <Icon icon="material-symbols:folder-off-outline" class="w-8 h-8 mb-2" />
-              <p class="text-sm">暂无收藏夹</p>
-            </div>
+          <!-- 加载状态 -->
+          <div v-else class="flex items-center justify-center py-8">
+            <Icon icon="material-symbols:sync" class="w-6 h-6 animate-spin text-muted-foreground" />
+            <span class="ml-2 text-sm text-muted-foreground">加载中...</span>
+          </div>
+
+          <!-- 空状态 -->
+          <div
+            v-if="favorites.length === 0"
+            class="flex flex-col items-center justify-center py-8 text-muted-foreground"
+          >
+            <Icon icon="material-symbols:folder-off-outline" class="w-8 h-8 mb-2" />
+            <p class="text-sm">暂无收藏夹</p>
           </div>
         </div>
       </div>
     </CollapsibleContent>
   </CollapsibleRoot>
-
-  <!-- 删除确认对话框 -->
-  <ModalDialog v-model="showDeleteConfirm">
-    <div class="bg-background rounded-lg shadow-lg max-w-md w-full mx-4">
-      <div class="p-6">
-        <div class="flex items-center gap-3 mb-4">
-          <Icon icon="material-symbols:warning-outline" class="w-6 h-6 text-destructive" />
-          <h3 class="text-lg font-semibold">确认删除</h3>
-        </div>
-
-        <p class="text-muted-foreground mb-6">
-          确定要删除收藏夹 "{{ favoriteToDelete?.label }}" 吗？此操作不可撤销，该收藏夹下的所有网站也将被删除。
-        </p>
-
-        <div class="flex justify-end gap-3">
-          <Button @click="cancelDelete" variant="outline">取消</Button>
-          <Button @click="confirmDelete" variant="default" class="bg-destructive hover:bg-destructive/90">
-            确认删除
-          </Button>
-        </div>
-      </div>
-    </div>
-  </ModalDialog>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* 拖拽相关样式 */
+.drag-handle {
+  touch-action: none;
+}
+
+.drag-handle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* 拖拽时的视觉反馈 */
+:deep(.drag-ghost) {
+  opacity: 0.5 !important;
+  background-color: rgba(var(--primary), 0.2) !important;
+  z-index: 9999 !important;
+}
+
+:deep(.drag-chosen) {
+  ring-width: 2px !important;
+  ring-color: rgb(var(--primary)) !important;
+  background-color: rgba(var(--primary), 0.1) !important;
+  z-index: 9998 !important;
+}
+
+:deep(.drag-active) {
+  transform: rotate(1deg) scale(1.05) !important;
+  z-index: 9997 !important;
+}
+
+/* 确保拖拽元素在最上层 - 保留原有的类名作为备用 */
+:deep(.sortable-ghost) {
+  z-index: 9999 !important;
+}
+
+:deep(.sortable-chosen) {
+  z-index: 9998 !important;
+}
+
+:deep(.sortable-drag) {
+  z-index: 9997 !important;
+}
+
+/* 兼容性样式 - 如果库使用了原来的类名 */
+:deep(.opacity-50) {
+  opacity: 0.5 !important;
+  background-color: rgba(var(--primary), 0.2) !important;
+}
+
+:deep(.ring-2) {
+  ring-width: 2px !important;
+  ring-color: rgb(var(--primary)) !important;
+  background-color: rgba(var(--primary), 0.1) !important;
+}
+
+:deep(.rotate-1) {
+  transform: rotate(1deg) scale(1.05) !important;
+}
+</style>
