@@ -22,8 +22,28 @@ export async function getManifest() {
       48: './assets/logo.png',
       128: './assets/logo.png',
     },
-    permissions: ['tabs', 'storage', 'activeTab', 'sidePanel', 'bookmarks'],
+    commands: {
+      'open-command-palette': {
+        suggested_key: {
+          default: 'Ctrl+Shift+K',
+          mac: 'Command+Shift+K',
+        },
+        description: 'Open command palette',
+      },
+    },
+    background: {
+      service_worker: 'dist/background/index.js',
+    },
+    permissions: ['tabs', 'storage', 'activeTab', 'sidePanel', 'bookmarks', 'history', 'browsingData'],
     host_permissions: ['*://*/*'],
+    content_scripts: [
+      {
+        matches: ['<all_urls>'],
+        js: ['dist/content/index.global.js'],
+        css: ['dist/content/style.css'],
+        run_at: 'document_end',
+      },
+    ],
     content_security_policy: {
       extension_pages: isDev
         ? // 开发模式下，允许加载未经验证的内容脚本，以方便调试
@@ -32,7 +52,7 @@ export async function getManifest() {
     },
     web_accessible_resources: [
       {
-        resources: ['assets/*'],
+        resources: ['assets/*', 'dist/content/*'],
         matches: ['<all_urls>'],
       },
     ],

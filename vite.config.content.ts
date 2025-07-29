@@ -25,6 +25,12 @@ export default defineConfig({
     rollupOptions: {
       output: {
         entryFileNames: 'index.global.js',
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name?.endsWith('.css')) {
+            return 'style.css'
+          }
+          return assetInfo.name || 'assets/[name].[ext]'
+        },
         extend: true,
       },
     },
