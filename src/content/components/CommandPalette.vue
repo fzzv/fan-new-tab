@@ -44,9 +44,9 @@
 
           <!-- Main Content Container with Sidebar -->
           <div class="flex max-h-[65vh] min-h-[350px]">
-            <!-- Left Sidebar (only shown when no search query and on larger screens) -->
+            <!-- Left Sidebar (shown when no manual search or when category is selected) -->
             <CommandPaletteSidebar
-              v-if="!searchTerm && !currentPrefix"
+              v-if="shouldShowSidebar"
               :selected-category="selectedCategory"
               :tab-count="tabCount"
               :bookmark-count="bookmarkCount"
@@ -164,16 +164,66 @@ const isDocumentVisible = commandPalette.isDocumentVisible
 
 // Sidebar state
 const selectedCategory = ref('all')
+const isManualSearch = ref(false) // Track if user manually typed in search
+
+// Computed property to determine when to show sidebar
+const shouldShowSidebar = computed(() => {
+  // Always show sidebar when no search term
+  if (!searchTerm.value && !currentPrefix.value) {
+    return true
+  }
+
+  // Show sidebar when a category is selected (prefix search) and not manual search
+  if (currentPrefix.value && !isManualSearch.value) {
+    return true
+  }
+
+  // Hide sidebar for manual searches
+  return false
+})
 
 // Handle search input changes
 function handleSearchInput(event: Event) {
   const target = event.target as HTMLInputElement
-  commandPalette.setSearchQuery(target.value)
+  const newValue = target.value
+
+  // Detect if this is a manual search (not triggered by category selection)
+  const isPrefix =
+    newValue.startsWith('/tabs ') || newValue.startsWith('/bookmarks ') || newValue.startsWith('/history ')
+
+  // If user is typing and it's not just a prefix, mark as manual search
+  if (newValue && !isPrefix) {
+    isManualSearch.value = true
+    selectedCategory.value = 'all' // Reset category selection
+  } else if (!newValue) {
+    // If search is cleared, reset to category view
+    isManualSearch.value = false
+    selectedCategory.value = 'all'
+  } else if (isPrefix && !isManualSearch.value) {
+    // Update selected category based on prefix
+    updateSelectedCategoryFromPrefix(newValue)
+  }
+
+  commandPalette.setSearchQuery(newValue)
+}
+
+// Update selected category based on search prefix
+function updateSelectedCategoryFromPrefix(searchValue: string) {
+  if (searchValue.startsWith('/tabs ')) {
+    selectedCategory.value = 'tabs'
+  } else if (searchValue.startsWith('/bookmarks ')) {
+    selectedCategory.value = 'bookmarks'
+  } else if (searchValue.startsWith('/history ')) {
+    selectedCategory.value = 'history'
+  } else {
+    selectedCategory.value = 'all'
+  }
 }
 
 // Handle category selection
 function handleCategorySelect(categoryId: string) {
   selectedCategory.value = categoryId
+  isManualSearch.value = false // Reset manual search flag
 
   // Set appropriate prefix based on category
   switch (categoryId) {
@@ -208,9 +258,13 @@ const historyCount = computed(() => {
 
 const searchInput = ref<HTMLInputElement>()
 
-// Focus input when opened
+// Focus input when opened and reset state
 watch(isOpen, async (newValue) => {
   if (newValue) {
+    // Reset state when opening command palette
+    isManualSearch.value = false
+    selectedCategory.value = 'all'
+
     await nextTick()
     searchInput.value?.focus()
   }
