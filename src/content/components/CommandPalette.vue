@@ -11,9 +11,43 @@
           class="mt-[10vh] w-full max-w-4xl mx-4 bg-card border border-border rounded-lg shadow-2xl overflow-hidden"
           @click.stop
         >
-          <!-- Main Content Container -->
-          <div class="flex max-h-[70vh]">
-            <!-- Sidebar (only shown when no search query) -->
+          <!-- Search Input Section -->
+          <div class="p-4 border-b border-border">
+            <div class="relative">
+              <div class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                <Icon
+                  icon="material-symbols:search"
+                  class="w-4 h-4"
+                />
+              </div>
+              <input
+                ref="searchInput"
+                :value="searchQuery"
+                @input="handleSearchInput"
+                class="w-full pl-10 pr-4 py-3 bg-transparent text-foreground placeholder-muted-foreground border-0 outline-none text-sm"
+                placeholder="Type a command or search..."
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </div>
+
+            <!-- Command Prefixes Help -->
+            <div v-if="!searchQuery && !isLoading && (searchTerm || currentPrefix)" class="flex flex-wrap gap-2 mt-3">
+              <button
+                v-for="prefix in COMMAND_PREFIXES"
+                :key="prefix.prefix"
+                class="inline-flex items-center gap-2 px-3 py-1.5 text-xs bg-muted hover:bg-accent text-muted-foreground hover:text-accent-foreground rounded-md transition-colors"
+                @click="commandPalette.setSearchQuery(prefix.prefix + ' ')"
+              >
+                {{ prefix.prefix }}
+                <span class="text-xs opacity-75">{{ prefix.description }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Main Content Container with Sidebar -->
+          <div class="flex max-h-[65vh] min-h-[350px]">
+            <!-- Left Sidebar (only shown when no search query and on larger screens) -->
             <CommandPaletteSidebar
               v-if="!searchTerm && !currentPrefix"
               :selected-category="selectedCategory"
@@ -21,46 +55,13 @@
               :bookmark-count="bookmarkCount"
               :history-count="historyCount"
               @select-category="handleCategorySelect"
+              class="hidden sm:flex"
             />
 
-            <!-- Main Content -->
+            <!-- Right Content Area -->
             <div class="flex-1 min-w-0 flex flex-col">
-              <!-- Search Input -->
-              <div class="p-4 border-b border-border">
-                <div class="relative">
-                  <div class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    <Icon
-                      icon="material-symbols:search"
-                      class="w-4 h-4"
-                    />
-                  </div>
-                  <input
-                    ref="searchInput"
-                    :value="searchQuery"
-                    @input="handleSearchInput"
-                    class="w-full pl-10 pr-4 py-3 bg-transparent text-foreground placeholder-muted-foreground border-0 outline-none text-sm"
-                    placeholder="Type a command or search..."
-                    autocomplete="off"
-                    spellcheck="false"
-                  />
-                </div>
-
-                <!-- Command Prefixes Help -->
-                <div v-if="!searchQuery && !isLoading && (searchTerm || currentPrefix)" class="flex flex-wrap gap-2 mt-3">
-                  <button
-                    v-for="prefix in COMMAND_PREFIXES"
-                    :key="prefix.prefix"
-                    class="inline-flex items-center gap-2 px-3 py-1.5 text-xs bg-muted hover:bg-accent text-muted-foreground hover:text-accent-foreground rounded-md transition-colors"
-                    @click="commandPalette.setSearchQuery(prefix.prefix + ' ')"
-                  >
-                    {{ prefix.prefix }}
-                    <span class="text-xs opacity-75">{{ prefix.description }}</span>
-                  </button>
-                </div>
-              </div>
-
               <!-- Content Area -->
-              <div class="flex-1 min-h-0 overflow-hidden">
+              <div class="flex-1 min-h-0 overflow-hidden p-4">
                 <!-- Loading State -->
                 <div v-if="isLoading" class="flex flex-col items-center justify-center py-12 text-center">
                   <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
