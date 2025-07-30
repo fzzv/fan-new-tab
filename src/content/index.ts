@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import { setupApp } from '@/logic/common-setup.ts'
+import { useTheme, Theme } from '@/composables/useTheme'
 
 // 注入全局样式
 const globalStyles = `
@@ -29,8 +30,29 @@ const globalStyles = `
 const styleElement = document.createElement('style')
 styleElement.textContent = globalStyles
 document.head.appendChild(styleElement)
+
+// Initialize theme system for content script
+function initializeTheme() {
+  const { theme, themeReady } = useTheme()
+
+  // Apply theme class to document root
+  const applyTheme = () => {
+    document.documentElement.classList.toggle('dark', theme.value === Theme.Dark)
+  }
+
+  // Apply initial theme when ready
+  themeReady.then(applyTheme)
+
+  // Watch for theme changes
+  if (theme.value) {
+    applyTheme()
+  }
+}
 ;(() => {
   try {
+    // Initialize theme system
+    initializeTheme()
+
     const container = document.createElement('div')
     container.id = __NAME__
     const root = document.createElement('div')

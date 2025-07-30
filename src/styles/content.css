@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* Import main theme system */
+@import "./main.css";
+
+/* Content script specific styles */
+.fan-new-tab-command-palette {
+  /* Ensure proper font inheritance */
+  font-family: var(--font-sans);
+  
+  /* Ensure theme variables are available */
+  color: var(--color-foreground);
+  background: var(--color-background);
+}
+
+/* Override any conflicting styles from the host page */
+.fan-new-tab-command-palette * {
+  box-sizing: border-box;
+}
+
+/* Ensure proper z-index stacking */
+.fan-new-tab-command-palette .command-palette-overlay {
+  z-index: 9999;
+}
+
+/* Ensure proper backdrop blur support */
+.fan-new-tab-command-palette .backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+/* Custom scrollbar for command palette */
+.fan-new-tab-command-palette .command-palette-results::-webkit-scrollbar {
+  width: 6px;
+}
+
+.fan-new-tab-command-palette .command-palette-results::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fan-new-tab-command-palette .command-palette-results::-webkit-scrollbar-thumb {
+  background: var(--color-muted);
+  border-radius: 3px;
+}
+
+.fan-new-tab-command-palette .command-palette-results::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted-foreground);
+}
+
+/* Ensure proper focus styles */
+.fan-new-tab-command-palette .focus\:ring-2:focus {
+  ring-color: var(--color-primary);
+}
+
+/* Ensure proper transition support */
+.fan-new-tab-command-palette .transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
