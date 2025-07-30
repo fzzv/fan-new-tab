@@ -2,7 +2,7 @@
   <Teleport to="body">
     <Transition name="command-palette" @after-leave="onAfterLeave">
       <div
-        v-if="isOpen"
+        v-if="isOpen && isDocumentVisible"
         class="fixed inset-0 z-[9999] flex items-start justify-center bg-black/60 backdrop-blur-sm"
         @click="commandPalette.close"
         @keydown="commandPalette.handleKeydown"
@@ -15,10 +15,7 @@
           <div class="p-4 border-b border-border">
             <div class="relative">
               <div class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                <Icon
-                  icon="material-symbols:search"
-                  class="w-4 h-4"
-                />
+                <Icon icon="material-symbols:search" class="w-4 h-4" />
               </div>
               <input
                 ref="searchInput"
@@ -64,7 +61,9 @@
               <div class="flex-1 min-h-0 overflow-hidden p-4">
                 <!-- Loading State -->
                 <div v-if="isLoading" class="flex flex-col items-center justify-center py-12 text-center">
-                  <div class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"></div>
+                  <div
+                    class="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3"
+                  ></div>
                   <p class="text-sm text-muted-foreground">Loading actions...</p>
                 </div>
 
@@ -90,7 +89,12 @@
                     :search-query="searchTerm"
                     :is-remove-mode="currentPrefix === '/remove'"
                     :show-type-badge="!currentPrefix || currentPrefix === '/actions'"
-                    @click="commandPalette.selectIndex(index); commandPalette.executeSelected()"
+                    @click="
+                      () => {
+                        commandPalette.selectIndex(index)
+                        commandPalette.executeSelected()
+                      }
+                    "
                     @hover="commandPalette.selectIndex(index)"
                   />
                 </div>
@@ -98,9 +102,7 @@
                 <!-- No Results -->
                 <div v-else-if="searchQuery" class="flex flex-col items-center justify-center py-12 text-center">
                   <Icon icon="material-symbols:search-off" class="w-8 h-8 text-muted-foreground mb-3" />
-                  <p class="text-sm text-foreground mb-2">
-                    No results found for "{{ searchQuery }}"
-                  </p>
+                  <p class="text-sm text-foreground mb-2">No results found for "{{ searchQuery }}"</p>
                   <p class="text-xs text-muted-foreground">
                     Try using command prefixes like /tabs, /bookmarks, or /history
                   </p>
@@ -158,6 +160,7 @@ const isLoading = commandPalette.isLoading
 const error = commandPalette.error
 const currentPrefix = commandPalette.currentPrefix
 const searchTerm = commandPalette.searchTerm
+const isDocumentVisible = commandPalette.isDocumentVisible
 
 // Sidebar state
 const selectedCategory = ref('all')
@@ -192,15 +195,15 @@ function handleCategorySelect(categoryId: string) {
 
 // Computed counts for sidebar
 const tabCount = computed(() => {
-  return filteredActions.value.filter(action => action.type === 'tab').length
+  return filteredActions.value.filter((action) => action.type === 'tab').length
 })
 
 const bookmarkCount = computed(() => {
-  return filteredActions.value.filter(action => action.type === 'bookmark').length
+  return filteredActions.value.filter((action) => action.type === 'bookmark').length
 })
 
 const historyCount = computed(() => {
-  return filteredActions.value.filter(action => action.type === 'history').length
+  return filteredActions.value.filter((action) => action.type === 'history').length
 })
 
 const searchInput = ref<HTMLInputElement>()
@@ -227,9 +230,28 @@ function handleMessage(message: any) {
   }
 }
 
+// Handle document visibility changes to prevent flashing on tab switch
+function handleVisibilityChange() {
+  commandPalette.updateDocumentVisibility()
+}
+
+// Handle window blur events as additional safety measure
+function handleWindowBlur() {
+  if (isOpen.value) {
+    console.log('Command Palette: Window lost focus, closing command palette')
+    commandPalette.close()
+  }
+}
+
 onMounted(() => {
   // Listen for messages from background script
   browser.runtime.onMessage.addListener(handleMessage)
+
+  // Listen for document visibility changes to handle tab switching
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+
+  // Listen for window blur events as additional safety measure
+  window.addEventListener('blur', handleWindowBlur)
 
   // Load initial actions
   commandPalette.loadActions()
@@ -237,6 +259,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   browser.runtime.onMessage.removeListener(handleMessage)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+  window.removeEventListener('blur', handleWindowBlur)
 })
 </script>
 
@@ -260,4 +284,5 @@ onUnmounted(() => {
 .command-palette-enter-to .command-palette-container,
 .command-palette-leave-from .command-palette-container {
   transform: scale(1) translateY(0);
-}</style>
+}
+</style>
