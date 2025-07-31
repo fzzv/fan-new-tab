@@ -1,23 +1,8 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import { setupApp } from '@/logic/common-setup.ts'
-import { Theme, useTheme } from '@/composables/useTheme'
-
-// 给 content 初始化主题
-function initializeTheme() {
-  const { theme, themeReady } = useTheme()
-  // 在 html 中添加 data-fan-theme 属性
-  const applyTheme = () => {
-    document.documentElement.setAttribute('data-fan-theme', theme.value === Theme.Dark ? Theme.Dark : Theme.Light)
-  }
-  themeReady.then(applyTheme)
-}
-
 ;(() => {
   try {
-    // 初始化主题
-    initializeTheme()
-
     const container = document.createElement('div')
     container.id = __NAME__
     const root = document.createElement('div')

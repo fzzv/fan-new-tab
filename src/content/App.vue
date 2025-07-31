@@ -13,27 +13,20 @@ const { theme, themeReady } = useTheme()
 // 设置全局快捷键
 useGlobalShortcuts(commandPalette)
 
-// Apply theme class to document root
 const applyTheme = () => {
-  document.documentElement.classList.toggle('dark', theme.value === Theme.Dark)
+  // 在 html 中添加 data-fan-theme 属性
+  document.documentElement.setAttribute('data-fan-theme', theme.value === Theme.Dark ? Theme.Dark : Theme.Light)
 }
 
 onMounted(() => {
-  // Apply initial theme when ready
   themeReady.then(applyTheme)
-
-  // Apply theme if already available
-  if (theme.value) {
-    applyTheme()
-  }
 })
 
-// Watch for theme changes
 watch(theme, applyTheme)
 </script>
 
 <template>
-  <div class="fan-new-tab-command-palette" :class="{ 'command-palette-active': commandPalette.isOpen.value }">
+  <div class="fan-new-tab-command-palette">
     <CommandPalette />
   </div>
 </template>
@@ -46,11 +39,6 @@ watch(theme, applyTheme)
   left: 0;
   pointer-events: none;
   z-index: 9999;
-}
-
-/* 当命令面板打开时，允许与之进行交互操作 */
-.fan-new-tab-command-palette.command-palette-active {
-  pointer-events: auto;
 }
 
 /* 确保命令面板覆盖层可以交互 */
