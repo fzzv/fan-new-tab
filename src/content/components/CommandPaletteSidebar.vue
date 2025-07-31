@@ -54,7 +54,7 @@ const categories = computed<Category[]>(() => [
 <template>
   <div class="w-48 bg-card border-r border-border flex-shrink-0 flex flex-col">
     <!-- Sidebar Header -->
-    <div class="p-4 border-b border-border">
+    <div class="p-1 border-b border-border">
       <h3 class="text-sm font-medium text-foreground text-center">分类</h3>
     </div>
 
