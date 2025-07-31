@@ -1,12 +1,11 @@
 <template>
-  <Teleport to="body">
-    <Transition name="command-palette" @after-leave="onAfterLeave">
-      <div
-        v-if="isOpen && isDocumentVisible"
-        class="fixed inset-0 z-[9999] flex items-start justify-center bg-black/60 backdrop-blur-sm"
-        @click="commandPalette.close"
-        @keydown="commandPalette.handleKeydown"
-      >
+  <Transition name="command-palette" @after-leave="onAfterLeave">
+    <div
+      v-if="isOpen && isDocumentVisible"
+      class="fixed inset-0 z-[9999] flex items-start justify-center bg-black/60 backdrop-blur-sm command-palette-overlay"
+      @click="commandPalette.close"
+      @keydown="commandPalette.handleKeydown"
+    >
         <div
           class="mt-[10vh] w-full max-w-4xl mx-4 bg-card border border-border rounded-lg shadow-2xl overflow-hidden"
           @click.stop
@@ -137,7 +136,6 @@
         </div>
       </div>
     </Transition>
-  </Teleport>
 </template>
 
 <script setup lang="ts">

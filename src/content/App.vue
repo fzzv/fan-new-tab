@@ -33,7 +33,7 @@ watch(theme, applyTheme)
 </script>
 
 <template>
-  <div class="fan-new-tab-command-palette">
+  <div class="fan-new-tab-command-palette" :class="{ 'command-palette-active': commandPalette.isOpen.value }">
     <CommandPalette />
   </div>
 </template>
@@ -49,6 +49,11 @@ watch(theme, applyTheme)
 }
 
 /* 当命令面板打开时，允许与之进行交互操作 */
+.fan-new-tab-command-palette.command-palette-active {
+  pointer-events: auto;
+}
+
+/* 确保命令面板覆盖层可以交互 */
 .fan-new-tab-command-palette :deep(.command-palette-overlay) {
   pointer-events: auto;
 }
