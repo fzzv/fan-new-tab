@@ -1,7 +1,3 @@
-<template>
-  <span v-html="highlightedText"></span>
-</template>
-
 <script setup lang="ts">
 import { computed } from 'vue'
 
@@ -21,7 +17,7 @@ const highlightedText = computed(() => {
   const text = props.text
   const textLower = text.toLowerCase()
 
-  // Find all matches
+  // 找到所有匹配项
   const matches: Array<{ start: number; end: number }> = []
   let index = 0
 
@@ -31,7 +27,7 @@ const highlightedText = computed(() => {
 
     matches.push({
       start: matchIndex,
-      end: matchIndex + query.length
+      end: matchIndex + query.length,
     })
     index = matchIndex + 1
   }
@@ -40,26 +36,26 @@ const highlightedText = computed(() => {
     return escapeHtml(text)
   }
 
-  // Build highlighted text
+  // 实现文本高亮显示
   let result = ''
   let lastEnd = 0
 
   for (const match of matches) {
-    // Add text before match
+    // 拼接高亮词前面的文本
     result += escapeHtml(text.slice(lastEnd, match.start))
-    
-    // Add highlighted match
+    // 拼接高亮词文本
     result += `<mark class="bg-yellow-200 dark:bg-yellow-800 text-yellow-900 dark:text-yellow-100 px-0.5 rounded">${escapeHtml(text.slice(match.start, match.end))}</mark>`
-    
+
     lastEnd = match.end
   }
 
-  // Add remaining text
+  // 拼接剩余的文本
   result += escapeHtml(text.slice(lastEnd))
 
   return result
 })
 
+// 将字符串进行 HTML 转义
 function escapeHtml(text: string): string {
   const div = document.createElement('div')
   div.textContent = text
@@ -67,9 +63,6 @@ function escapeHtml(text: string): string {
 }
 </script>
 
-<style scoped>
-/* Ensure mark elements have proper styling */
-:deep(mark) {
-  font-weight: 500;
-}
-</style>
+<template>
+  <span v-html="highlightedText"></span>
+</template>

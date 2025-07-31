@@ -15,11 +15,8 @@ export function useCommandPalette() {
     error: null,
   })
 
-  // Track if the document is currently visible to prevent flashing
-  const isDocumentVisible = ref(!document.hidden)
-
   // Computed properties
-  const isOpen = computed(() => state.value.isOpen && isDocumentVisible.value)
+  const isOpen = computed(() => state.value.isOpen)
   const searchQuery = computed(() => state.value.searchQuery)
   const selectedIndex = computed(() => state.value.selectedIndex)
   const filteredActions = computed(() => state.value.filteredActions)
@@ -162,16 +159,6 @@ export function useCommandPalette() {
     state.value.searchQuery = ''
     state.value.selectedIndex = 0
     state.value.error = null
-  }
-
-  // Update document visibility state
-  function updateDocumentVisibility() {
-    isDocumentVisible.value = !document.hidden
-
-    // If document becomes hidden and command palette is open, close it
-    if (!isDocumentVisible.value && state.value.isOpen) {
-      close()
-    }
   }
 
   // Toggle command palette
@@ -325,7 +312,6 @@ export function useCommandPalette() {
     error,
     currentPrefix,
     searchTerm,
-    isDocumentVisible,
     // Actions
     open,
     close,
@@ -339,6 +325,5 @@ export function useCommandPalette() {
     handleKeydown,
     searchWithPrefix,
     loadActions,
-    updateDocumentVisibility,
   }
 }

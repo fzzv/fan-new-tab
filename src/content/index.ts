@@ -1,56 +1,21 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import { setupApp } from '@/logic/common-setup.ts'
-import { useTheme, Theme } from '@/composables/useTheme'
+import { Theme, useTheme } from '@/composables/useTheme'
 
-// 注入全局样式
-const globalStyles = `
-  /* Command palette global styles */
-  .command-palette-notification {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  }
-
-  /* Ensure command palette appears above all content */
-  .fan-new-tab-command-palette {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    pointer-events: none !important;
-    z-index: 2147483647 !important; /* Maximum z-index */
-  }
-
-  .fan-new-tab-command-palette .command-palette-overlay {
-    pointer-events: auto !important;
-  }
-`
-
-// Inject styles into page head
-const styleElement = document.createElement('style')
-styleElement.textContent = globalStyles
-document.head.appendChild(styleElement)
-
-// Initialize theme system for content script
+// 给 content 初始化主题
 function initializeTheme() {
   const { theme, themeReady } = useTheme()
-
-  // Apply theme class to document root
+  // 在 html 中添加 data-fan-theme 属性
   const applyTheme = () => {
-    document.documentElement.classList.toggle('dark', theme.value === Theme.Dark)
+    document.documentElement.setAttribute('data-fan-theme', theme.value === Theme.Dark ? Theme.Dark : Theme.Light)
   }
-
-  // Apply initial theme when ready
   themeReady.then(applyTheme)
-
-  // Watch for theme changes
-  if (theme.value) {
-    applyTheme()
-  }
 }
+
 ;(() => {
   try {
-    // Initialize theme system
+    // 初始化主题
     initializeTheme()
 
     const container = document.createElement('div')
