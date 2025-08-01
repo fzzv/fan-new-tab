@@ -64,5 +64,5 @@ function escapeHtml(text: string): string {
 </script>
 
 <template>
-  <span v-html="highlightedText"></span>
+  <span v-html="highlightedText" class="inline-block w-full truncate"></span>
 </template>

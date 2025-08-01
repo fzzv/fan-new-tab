@@ -135,16 +135,20 @@ function formatDate(timestamp: number): string {
       <div class="flex items-center justify-between">
         <div class="flex-1 min-w-0">
           <!-- Title with highlighting -->
-          <div class="flex items-center gap-2 text-sm font-medium text-foreground truncate">
-            <span v-if="isRemoveMode" class="text-destructive">
-              {{ getRemovePrefix(action.type) }}
-            </span>
-            <HighlightedText :text="action.title" :query="searchQuery" />
+          <div class="flex items-center gap-2 text-sm font-medium text-foreground">
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+              <span v-if="isRemoveMode" class="text-destructive flex-shrink-0">
+                {{ getRemovePrefix(action.type) }}
+              </span>
+              <div class="min-w-0 truncate">
+                <HighlightedText :text="action.title" :query="searchQuery" />
+              </div>
+            </div>
             <!-- Type Badge -->
             <span
               v-if="showTypeBadge"
               :class="[
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide flex-shrink-0 ml-auto',
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide flex-shrink-0',
                 getTypeBadgeClass(action.type),
               ]"
               :aria-label="`Source: ${getTypeBadgeText(action.type)}`"
