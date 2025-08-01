@@ -13,9 +13,9 @@ const highlightedText = computed(() => {
     return escapeHtml(props.text)
   }
 
-  const query = props.query.toLowerCase()
+  const query = props.query?.toLowerCase()
   const text = props.text
-  const textLower = text.toLowerCase()
+  const textLower = text?.toLowerCase()
 
   // 找到所有匹配项
   const matches: Array<{ start: number; end: number }> = []

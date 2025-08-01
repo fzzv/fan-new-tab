@@ -26,7 +26,7 @@ export function useCommandPalette() {
 
   // 检查输入是否有指令前缀
   const currentPrefix = computed(() => {
-    const query = state.value.searchQuery.toLowerCase()
+    const query = state.value.searchQuery?.toLowerCase()
     return INSTRUCTION_LIST.find((prefix) => query.startsWith(prefix))
   })
 
@@ -43,8 +43,8 @@ export function useCommandPalette() {
   function fuzzyMatch(text: string, query: string): boolean {
     if (!query) return true
 
-    const textLower = text.toLowerCase()
-    const queryLower = query.toLowerCase()
+    const textLower = text?.toLowerCase()
+    const queryLower = query?.toLowerCase()
 
     // 完全匹配的优先级最高
     if (textLower.includes(queryLower)) return true
@@ -92,9 +92,9 @@ export function useCommandPalette() {
 
     // 按相关性排序
     filtered.sort((a, b) => {
-      const aTitle = a.title.toLowerCase()
-      const bTitle = b.title.toLowerCase()
-      const queryLower = term.toLowerCase()
+      const aTitle = a.title?.toLowerCase()
+      const bTitle = b.title?.toLowerCase()
+      const queryLower = term?.toLowerCase()
 
       // 首先呈现完全匹配的结果
       const aExact = aTitle.includes(queryLower)
@@ -251,7 +251,7 @@ export function useCommandPalette() {
         event.preventDefault()
         // 如果有前缀，则自动补全
         const prefixes = INSTRUCTION_LIST
-        const query = state.value.searchQuery.toLowerCase()
+        const query = state.value.searchQuery?.toLowerCase()
         const matchingPrefix = prefixes.find((p) => p.startsWith(query) && p !== query)
         if (matchingPrefix) {
           setSearchQuery(matchingPrefix + ' ')
