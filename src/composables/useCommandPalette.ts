@@ -92,6 +92,30 @@ export function useCommandPalette() {
       const bTitle = b.title?.toLowerCase()
       const queryLower = term?.toLowerCase()
 
+      // 如果没有搜索词，按类型优先级排序：tabs > bookmarks > history > actions
+      if (!term) {
+        const getTypePriority = (type: string) => {
+          switch (type) {
+            case 'tab': return 1
+            case 'bookmark': return 2
+            case 'history': return 3
+            case 'action': return 4
+            default: return 5
+          }
+        }
+
+        const aPriority = getTypePriority(a.type)
+        const bPriority = getTypePriority(b.type)
+
+        if (aPriority !== bPriority) {
+          return aPriority - bPriority
+        }
+
+        // 同类型内按字母顺序排列
+        return aTitle.localeCompare(bTitle)
+      }
+
+      // 有搜索词时，按相关性排序
       // 首先呈现完全匹配的结果
       const aExact = aTitle.includes(queryLower)
       const bExact = bTitle.includes(queryLower)
