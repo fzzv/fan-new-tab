@@ -53,12 +53,10 @@ const categories = computed<Category[]>(() => [
 
 <template>
   <div class="w-48 bg-card border-r border-border flex-shrink-0 flex flex-col">
-    <!-- Sidebar Header -->
     <div class="p-1 border-b border-border">
       <h3 class="text-sm font-medium text-foreground text-center">分类</h3>
     </div>
 
-    <!-- Category List -->
     <div class="p-2">
       <button
         v-for="category in categories"
@@ -79,21 +77,21 @@ const categories = computed<Category[]>(() => [
       >
         <Icon :icon="category.icon" class="w-4 h-4 flex-shrink-0" />
         <span class="truncate">{{ category.label }}</span>
-        <span
-          v-if="category.count !== undefined"
-          :class="[
-            'ml-auto text-xs px-1.5 py-0.5 rounded-full transition-colors',
-            selectedCategory === category.id
-              ? 'bg-primary-foreground/20 text-primary-foreground font-medium'
-              : 'bg-muted text-muted-foreground',
-          ]"
-        >
-          {{ category.count }}
-        </span>
+        <!-- 不需要显示数量 -->
+        <!--<span-->
+        <!--  v-if="category.count !== undefined"-->
+        <!--  :class="[-->
+        <!--    'ml-auto text-xs px-1.5 py-0.5 rounded-full transition-colors',-->
+        <!--    selectedCategory === category.id-->
+        <!--      ? 'bg-primary-foreground/20 text-primary-foreground font-medium'-->
+        <!--      : 'bg-muted text-muted-foreground',-->
+        <!--  ]"-->
+        <!--&gt;-->
+        <!--  {{ category.count }}-->
+        <!--</span>-->
       </button>
     </div>
 
-    <!-- Sidebar Footer -->
     <div class="h-16 mt-auto p-4 border-t border-border bg-muted/30">
       <div class="text-xs text-muted-foreground space-y-1">
         <div class="flex items-center gap-1">
