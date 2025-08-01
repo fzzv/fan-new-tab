@@ -11,16 +11,16 @@ export interface CommandAction {
   url?: string
   keyboardShortcut?: string[]
   category?: string
-  // Tab specific properties
+  // Tab 特有的属性
   tabId?: number
   windowId?: number
   index?: number
   pinned?: boolean
   muted?: boolean
-  // Bookmark specific properties
+  // Bookmark 特有的属性
   bookmarkId?: string
   parentId?: string
-  // History specific properties
+  // History 特有的属性
   visitCount?: number
   lastVisitTime?: number
 }
@@ -46,12 +46,14 @@ export const COMMAND_PREFIXES: CommandPrefix[] = [
   { prefix: '/bookmarks', description: 'Search and manage bookmarks', category: 'Bookmark Management' },
   { prefix: '/history', description: 'Search browsing history', category: 'History' },
   { prefix: '/actions', description: 'Browse all available actions', category: 'Actions' },
-  { prefix: '/remove', description: 'Remove bookmarks or close tabs', category: 'Removal' },
+  { prefix: '/remove', description: 'Remove bookmarks', category: 'Removal' },
+  { prefix: '/close', description: 'Close open tabs', category: 'Removal' },
+  { prefix: '/delete', description: 'Delete browsing history', category: 'Removal' },
 ]
 
-export type CommandCategory = 
+export type CommandCategory =
   | 'Tab Management'
-  | 'Window Management' 
+  | 'Window Management'
   | 'Navigation'
   | 'Bookmark Management'
   | 'History'

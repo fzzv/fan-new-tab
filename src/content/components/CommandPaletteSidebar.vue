@@ -54,7 +54,7 @@ const categories = computed<Category[]>(() => [
 <template>
   <div class="w-48 bg-card border-r border-border flex-shrink-0 flex flex-col">
     <div class="p-1 border-b border-border">
-      <h3 class="text-sm font-medium text-foreground text-center">分类</h3>
+      <h3 class="text-sm font-medium text-foreground text-center">快捷指令</h3>
     </div>
 
     <div class="p-2">
@@ -96,7 +96,7 @@ const categories = computed<Category[]>(() => [
       <div class="text-xs text-muted-foreground space-y-1">
         <div class="flex items-center gap-1">
           <Icon icon="material-symbols:mouse" class="w-4 h-4" />
-          <span>点击分类进行过滤</span>
+          <span>点击快捷指令进行搜索</span>
         </div>
         <div class="flex items-center gap-1">
           <Icon icon="material-symbols:keyboard" class="w-5 h-4" />

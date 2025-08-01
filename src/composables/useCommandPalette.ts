@@ -66,18 +66,14 @@ export function useCommandPalette() {
     let filtered = [...state.value.actions]
 
     // 首先按前缀进行筛选
-    if (prefix === '/tabs') {
+    if (prefix === '/tabs' || prefix === '/close') {
       filtered = filtered.filter((action) => action.type === 'tab')
-    } else if (prefix === '/bookmarks') {
+    } else if (prefix === '/bookmarks' || prefix === '/remove') {
       filtered = filtered.filter((action) => action.type === 'bookmark')
-    } else if (prefix === '/history') {
+    } else if (prefix === '/history' || prefix === '/delete') {
       filtered = filtered.filter((action) => action.type === 'history')
     } else if (prefix === '/actions') {
       filtered = filtered.filter((action) => action.type === 'action')
-    } else if (prefix && ['/remove', '/close', '/delete'].includes(prefix)) {
-      filtered = filtered.filter(
-        (action) => action.type === 'bookmark' || action.type === 'tab' || action.type === 'history',
-      )
     }
 
     // 然后根据搜索关键词进行筛选
