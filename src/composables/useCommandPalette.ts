@@ -1,6 +1,8 @@
-import { ref, computed, watch, nextTick } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import type { CommandAction, CommandPaletteState } from '@/types/command'
 import { useBrowserActions } from './useBrowserActions'
+
+const INSTRUCTION_LIST = ['/tabs', '/bookmarks', '/history', '/actions', '/remove', '/close', '/delete']
 
 export function useCommandPalette() {
   const browserActions = useBrowserActions()
@@ -15,7 +17,6 @@ export function useCommandPalette() {
     error: null,
   })
 
-  // Computed properties
   const isOpen = computed(() => state.value.isOpen)
   const searchQuery = computed(() => state.value.searchQuery)
   const selectedIndex = computed(() => state.value.selectedIndex)
@@ -23,13 +24,13 @@ export function useCommandPalette() {
   const isLoading = computed(() => state.value.isLoading || browserActions.isLoading.value)
   const error = computed(() => state.value.error || browserActions.error.value)
 
-  // Check if query has a command prefix
+  // 检查输入是否有指令前缀
   const currentPrefix = computed(() => {
     const query = state.value.searchQuery.toLowerCase()
-    return ['/tabs', '/bookmarks', '/history', '/actions', '/remove'].find((prefix) => query.startsWith(prefix))
+    return INSTRUCTION_LIST.find((prefix) => query.startsWith(prefix))
   })
 
-  // Get search term without prefix
+  // 获取不含前缀的搜索词
   const searchTerm = computed(() => {
     const prefix = currentPrefix.value
     if (prefix) {
@@ -38,17 +39,17 @@ export function useCommandPalette() {
     return state.value.searchQuery.trim()
   })
 
-  // Fuzzy search function
+  // 模糊搜索
   function fuzzyMatch(text: string, query: string): boolean {
     if (!query) return true
 
     const textLower = text.toLowerCase()
     const queryLower = query.toLowerCase()
 
-    // Exact match gets highest priority
+    // 完全匹配的优先级最高
     if (textLower.includes(queryLower)) return true
 
-    // Fuzzy match - check if all characters in query appear in order
+    // 模糊匹配 - 检查查询中的所有字符是否按顺序出现
     let queryIndex = 0
     for (let i = 0; i < textLower.length && queryIndex < queryLower.length; i++) {
       if (textLower[i] === queryLower[queryIndex]) {
@@ -58,14 +59,13 @@ export function useCommandPalette() {
     return queryIndex === queryLower.length
   }
 
-  // Filter actions based on search query and prefix
+  // 根据搜索查询和前缀来筛选 action
   function filterActions() {
     const prefix = currentPrefix.value
     const term = searchTerm.value
-    console.log('Filtering actions with prefix:', prefix, 'term:', term, 'total actions:', state.value.actions.length)
     let filtered = [...state.value.actions]
 
-    // Filter by prefix first
+    // 首先按前缀进行筛选
     if (prefix === '/tabs') {
       filtered = filtered.filter((action) => action.type === 'tab')
     } else if (prefix === '/bookmarks') {
@@ -74,13 +74,13 @@ export function useCommandPalette() {
       filtered = filtered.filter((action) => action.type === 'history')
     } else if (prefix === '/actions') {
       filtered = filtered.filter((action) => action.type === 'action')
-    } else if (prefix === '/remove') {
+    } else if (prefix && ['/remove', '/close', '/delete'].includes(prefix)) {
       filtered = filtered.filter(
         (action) => action.type === 'bookmark' || action.type === 'tab' || action.type === 'history',
       )
     }
 
-    // Then filter by search term
+    // 然后根据搜索关键词进行筛选
     if (term) {
       filtered = filtered.filter(
         (action) =>
@@ -90,52 +90,44 @@ export function useCommandPalette() {
       )
     }
 
-    // Sort by relevance
+    // 按相关性排序
     filtered.sort((a, b) => {
       const aTitle = a.title.toLowerCase()
       const bTitle = b.title.toLowerCase()
       const queryLower = term.toLowerCase()
 
-      // Exact matches first
+      // 首先呈现完全匹配的结果
       const aExact = aTitle.includes(queryLower)
       const bExact = bTitle.includes(queryLower)
 
       if (aExact && !bExact) return -1
       if (!aExact && bExact) return 1
 
-      // Then by title length (shorter titles first for exact matches)
+      // 然后按照标题长度排序（对于完全匹配的情况，标题越短排在越前）
       if (aExact && bExact) {
         return aTitle.length - bTitle.length
       }
 
-      // Finally alphabetical
+      // 最后按字母顺序排列
       return aTitle.localeCompare(bTitle)
     })
 
     state.value.filteredActions = filtered
     state.value.selectedIndex = 0
-    console.log('Filtered actions result:', filtered.length, 'actions')
   }
 
-  // Watch for search query changes
+  // 监听搜索查询的变化
   watch(
     () => state.value.searchQuery,
-    (newQuery, oldQuery) => {
-      console.log('Search query changed from:', oldQuery, 'to:', newQuery)
+    () => {
       filterActions()
     },
   )
 
-  // Open command palette
+  // 打开搜索面板
   async function open() {
     if (state.value.isOpen) return
 
-    // Don't open if document is hidden (tab is not active)
-    if (document.hidden) {
-      return
-    }
-
-    // Opening command palette
     state.value.isOpen = true
     state.value.searchQuery = ''
     state.value.selectedIndex = 0
@@ -143,7 +135,7 @@ export function useCommandPalette() {
 
     await loadActions()
 
-    // Focus the input after opening
+    // 打开后聚焦输入框
     await nextTick()
     const input = document.querySelector('.command-palette-input') as HTMLInputElement
     if (input) {
@@ -151,7 +143,7 @@ export function useCommandPalette() {
     }
   }
 
-  // Close command palette
+  // 关闭搜索面板
   function close() {
     if (!state.value.isOpen) return
 
@@ -161,7 +153,6 @@ export function useCommandPalette() {
     state.value.error = null
   }
 
-  // Toggle command palette
   function toggle() {
     if (state.value.isOpen) {
       close()
@@ -170,14 +161,13 @@ export function useCommandPalette() {
     }
   }
 
-  // Load all available actions
+  // 加载所有 action
   async function loadActions() {
     try {
       state.value.isLoading = true
       state.value.error = null
 
-      const actions = await browserActions.getAllActions()
-      state.value.actions = actions
+      state.value.actions = await browserActions.getAllActions()
       filterActions()
     } catch (err) {
       state.value.error = err instanceof Error ? err.message : 'Failed to load actions'
@@ -186,13 +176,10 @@ export function useCommandPalette() {
     }
   }
 
-  // Set search query
   function setSearchQuery(query: string) {
-    console.log('Setting search query:', query)
     state.value.searchQuery = query
   }
 
-  // Navigate selection
   function selectNext() {
     if (state.value.filteredActions.length === 0) return
     state.value.selectedIndex = (state.value.selectedIndex + 1) % state.value.filteredActions.length
@@ -210,7 +197,7 @@ export function useCommandPalette() {
     }
   }
 
-  // Execute selected action
+  // 执行所选的 action
   async function executeSelected() {
     const selectedAction = state.value.filteredActions[state.value.selectedIndex]
     if (!selectedAction) return
@@ -223,12 +210,11 @@ export function useCommandPalette() {
     }
   }
 
-  // Execute specific action
+  // 执行指定的action
   async function executeAction(action: CommandAction) {
     const prefix = currentPrefix.value
 
-    // Handle remove prefix specially
-    if (prefix === '/remove') {
+    if (prefix && ['/remove', '/close', '/delete'].includes(prefix)) {
       if (action.type === 'tab') {
         await browserActions.closeTab(action.tabId!)
       } else if (action.type === 'bookmark') {
@@ -241,7 +227,6 @@ export function useCommandPalette() {
     }
   }
 
-  // Handle keyboard events
   function handleKeydown(event: KeyboardEvent) {
     if (!state.value.isOpen) return
 
@@ -264,8 +249,8 @@ export function useCommandPalette() {
         break
       case 'Tab': {
         event.preventDefault()
-        // Auto-complete prefix if available
-        const prefixes = ['/tabs', '/bookmarks', '/history', '/actions', '/remove']
+        // 如果有前缀，则自动补全
+        const prefixes = INSTRUCTION_LIST
         const query = state.value.searchQuery.toLowerCase()
         const matchingPrefix = prefixes.find((p) => p.startsWith(query) && p !== query)
         if (matchingPrefix) {
@@ -276,7 +261,7 @@ export function useCommandPalette() {
     }
   }
 
-  // Search specific data types
+  // 根据指令进行搜索
   async function searchWithPrefix(prefix: string, query: string = '') {
     setSearchQuery(prefix + (query ? ' ' + query : ''))
 

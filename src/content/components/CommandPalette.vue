@@ -233,7 +233,7 @@ onUnmounted(() => {
                   :action="action"
                   :is-selected="index === selectedIndex"
                   :search-query="searchTerm"
-                  :is-remove-mode="currentPrefix === '/remove'"
+                  :is-remove-mode="!!currentPrefix && ['/remove', '/close', '/delete'].includes(currentPrefix)"
                   :show-type-badge="!currentPrefix || currentPrefix === '/actions'"
                   @click="
                     () => {
