@@ -1,5 +1,6 @@
 import type { CommandAction } from '@/types/command'
 import browser from 'webextension-polyfill'
+import { getFavicon } from '@/lib'
 
 export class CommandActionHandler {
   // Get current active tab
@@ -508,10 +509,11 @@ export class CommandActionHandler {
             description: node.url,
             type: 'bookmark',
             action: 'open-bookmark',
+            favIconUrl: getFavicon(node.url),
             url: node.url,
             bookmarkId: node.id,
             parentId: node.parentId,
-            emoji: true,
+            emoji: false,
             emojiChar: '⭐',
             category: 'Bookmark Management',
           })
@@ -619,9 +621,10 @@ export class CommandActionHandler {
     const tabs = await this.getTabActions()
     if (!query) return tabs
 
-    const queryLower = query.toLowerCase()
+    const queryLower = query?.toLowerCase()
     return tabs.filter(
-      (tab) => tab.title.toLowerCase().includes(queryLower) || (tab.url && tab.url.toLowerCase().includes(queryLower)),
+      (tab) =>
+        tab.title?.toLowerCase().includes(queryLower) || (tab.url && tab.url?.toLowerCase().includes(queryLower)),
     )
   }
 
@@ -637,10 +640,11 @@ export class CommandActionHandler {
           description: bookmark.url!,
           type: 'bookmark' as const,
           action: 'open-bookmark',
+          favIconUrl: getFavicon(bookmark.url!),
           url: bookmark.url!,
           bookmarkId: bookmark.id,
           parentId: bookmark.parentId,
-          emoji: true,
+          emoji: false,
           emojiChar: '⭐',
           category: 'Bookmark Management',
         }))
