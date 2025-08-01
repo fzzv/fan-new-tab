@@ -17,6 +17,7 @@ export interface CommandAction {
   index?: number
   pinned?: boolean
   muted?: boolean
+  active?: boolean
   // Bookmark 特有的属性
   bookmarkId?: string
   parentId?: string

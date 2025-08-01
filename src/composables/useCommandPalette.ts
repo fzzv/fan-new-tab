@@ -111,6 +111,12 @@ export function useCommandPalette() {
           return aPriority - bPriority
         }
 
+        // 同类型内，优先显示当前活跃的标签页
+        if (a.type === 'tab' && b.type === 'tab') {
+          if (a.active && !b.active) return -1
+          if (!a.active && b.active) return 1
+        }
+
         // 同类型内按字母顺序排列
         return aTitle.localeCompare(bTitle)
       }

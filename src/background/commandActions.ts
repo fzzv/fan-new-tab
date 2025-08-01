@@ -479,6 +479,7 @@ export class CommandActionHandler {
   // Get all tabs as actions
   async getTabActions(): Promise<CommandAction[]> {
     const tabs = await this.getAllTabs()
+    const currentTab = await this.getCurrentTab()
     return tabs.map((tab) => ({
       id: `tab-${tab.id}`,
       title: tab.title || 'Untitled',
@@ -492,6 +493,7 @@ export class CommandActionHandler {
       index: tab.index,
       pinned: tab.pinned,
       muted: tab.mutedInfo?.muted,
+      active: tab.id === currentTab?.id,
       category: 'Tab Management',
     }))
   }
