@@ -1,6 +1,5 @@
 import type { CommandAction } from '@/types/command'
 import browser from 'webextension-polyfill'
-import { getFavicon } from '@/lib'
 
 export class CommandActionHandler {
   // Get current active tab
@@ -511,11 +510,10 @@ export class CommandActionHandler {
             description: node.url,
             type: 'bookmark',
             action: 'open-bookmark',
-            favIconUrl: getFavicon(node.url),
             url: node.url,
             bookmarkId: node.id,
             parentId: node.parentId,
-            emoji: false,
+            emoji: true,
             emojiChar: '⭐',
             category: 'Bookmark Management',
           })
@@ -555,7 +553,7 @@ export class CommandActionHandler {
         visitCount: item.visitCount,
         lastVisitTime: item.lastVisitTime,
         emoji: true,
-        emojiChar: '🏛️',
+        emojiChar: '🕘',
         category: 'History',
       }))
     } catch (error) {
@@ -642,11 +640,10 @@ export class CommandActionHandler {
           description: bookmark.url!,
           type: 'bookmark' as const,
           action: 'open-bookmark',
-          favIconUrl: getFavicon(bookmark.url!),
           url: bookmark.url!,
           bookmarkId: bookmark.id,
           parentId: bookmark.parentId,
-          emoji: false,
+          emoji: true,
           emojiChar: '⭐',
           category: 'Bookmark Management',
         }))
@@ -675,7 +672,7 @@ export class CommandActionHandler {
         visitCount: item.visitCount,
         lastVisitTime: item.lastVisitTime,
         emoji: true,
-        emojiChar: '🏛️',
+        emojiChar: '🕘',
         category: 'History',
       }))
     } catch (error) {
