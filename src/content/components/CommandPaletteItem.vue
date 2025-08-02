@@ -103,9 +103,8 @@ function formatDate(timestamp: number): string {
   <div
     :class="[
       'flex items-center px-4 py-3 cursor-pointer transition-all border-l-2 border-transparent',
-      'hover:bg-accent hover:text-accent-foreground',
       {
-        'bg-primary/10 border-l-primary text-primary-foreground': isSelected,
+        'bg-primary/20 border-l-primary text-primary-foreground': isSelected,
         'opacity-75': isRemoveMode,
       },
     ]"

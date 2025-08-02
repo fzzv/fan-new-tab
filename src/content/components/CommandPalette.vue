@@ -16,11 +16,14 @@ const {
   error,
   currentPrefix,
   searchTerm,
+  scrollContainerRef,
   setSearchQuery,
   toggle,
   close,
   loadActions,
   handleKeydown,
+  handleKeyup,
+  scrollToSelected,
   selectIndex,
   executeSelected,
 } = useCommandPalette()
@@ -28,6 +31,13 @@ const {
 const selectedCategory = ref('all')
 // 是否用户手动输入进行搜索
 const isManualSearch = ref(false)
+
+// Watch for selected index changes to update scroll
+watch(selectedIndex, () => {
+  nextTick(() => {
+    scrollToSelected()
+  })
+})
 
 function handleSearchInput(event: Event) {
   const target = event.target as HTMLInputElement
@@ -138,6 +148,10 @@ onMounted(() => {
   // 监听从 background 发送的 script
   browser.runtime.onMessage.addListener(handleMessage)
 
+  // 监听全局键盘事件
+  document.addEventListener('keydown', handleKeydown)
+  document.addEventListener('keyup', handleKeyup)
+
   window.addEventListener('blur', handleWindowBlur)
 
   // Load initial actions
@@ -146,6 +160,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   browser.runtime.onMessage.removeListener(handleMessage)
+
+  // 移除键盘事件监听
+  document.removeEventListener('keydown', handleKeydown)
+  document.removeEventListener('keyup', handleKeyup)
 
   window.removeEventListener('blur', handleWindowBlur)
 })
@@ -226,7 +244,11 @@ onUnmounted(() => {
               </div>
 
               <!-- Results -->
-              <div v-else-if="filteredActions.length > 0" class="overflow-y-auto max-h-full">
+              <div
+                v-else-if="filteredActions.length > 0"
+                :ref="(el) => (scrollContainerRef = el as HTMLElement)"
+                class="overflow-y-auto max-h-full"
+              >
                 <CommandPaletteItem
                   v-for="(action, index) in filteredActions"
                   :key="action.id"
@@ -237,11 +259,11 @@ onUnmounted(() => {
                   :show-type-badge="!currentPrefix || currentPrefix === '/actions'"
                   @click="
                     () => {
-                      selectIndex(index)
+                      selectIndex(index, true)
                       executeSelected()
                     }
                   "
-                  @hover="selectIndex(index)"
+                  @hover="selectIndex(index, true)"
                 />
               </div>
 

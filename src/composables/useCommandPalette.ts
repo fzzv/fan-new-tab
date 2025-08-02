@@ -17,6 +17,14 @@ export function useCommandPalette() {
     error: null,
   })
 
+  // Enhanced keyboard navigation state
+  const keyState = ref<Record<string, boolean>>({})
+  const isKeyboardNavigating = ref(false)
+  const navigationTimeout = ref<number | null>(null)
+
+  // Scroll management
+  const scrollContainerRef = ref<HTMLElement | null>(null)
+
   const isOpen = computed(() => state.value.isOpen)
   const searchQuery = computed(() => state.value.searchQuery)
   const selectedIndex = computed(() => state.value.selectedIndex)
@@ -96,11 +104,16 @@ export function useCommandPalette() {
       if (!term) {
         const getTypePriority = (type: string) => {
           switch (type) {
-            case 'tab': return 1
-            case 'bookmark': return 2
-            case 'history': return 3
-            case 'action': return 4
-            default: return 5
+            case 'tab':
+              return 1
+            case 'bookmark':
+              return 2
+            case 'history':
+              return 3
+            case 'action':
+              return 4
+            default:
+              return 5
           }
         }
 
@@ -206,20 +219,79 @@ export function useCommandPalette() {
     state.value.searchQuery = query
   }
 
+  // select的选项需滚动到可视范围内
+  function scrollToSelected(immediate = false) {
+    if (!scrollContainerRef.value || state.value.filteredActions.length === 0) return
+
+    const container = scrollContainerRef.value
+
+    // 根据所选项的索引位置找到该项
+    const items = container.children
+    const selectedElement = items[state.value.selectedIndex] as HTMLElement
+    if (!selectedElement) return
+
+    // 滚动到可视范围内
+    selectedElement.scrollIntoView({
+      block: 'nearest',
+      inline: 'nearest',
+      behavior: immediate || isKeyboardNavigating.value ? 'instant' : 'smooth',
+    })
+  }
+
   function selectNext() {
     if (state.value.filteredActions.length === 0) return
+
+    isKeyboardNavigating.value = true
     state.value.selectedIndex = (state.value.selectedIndex + 1) % state.value.filteredActions.length
+
+    // 进行滚动
+    nextTick(() => {
+      scrollToSelected()
+    })
+
+    // Reset keyboard navigation flag after a delay
+    if (navigationTimeout.value) {
+      clearTimeout(navigationTimeout.value)
+    }
+    navigationTimeout.value = window.setTimeout(() => {
+      isKeyboardNavigating.value = false
+    }, 500)
   }
 
   function selectPrevious() {
     if (state.value.filteredActions.length === 0) return
+
+    isKeyboardNavigating.value = true
     state.value.selectedIndex =
       state.value.selectedIndex === 0 ? state.value.filteredActions.length - 1 : state.value.selectedIndex - 1
+
+    // Auto-scroll to keep selection visible
+    nextTick(() => {
+      scrollToSelected()
+    })
+
+    // Reset keyboard navigation flag after a delay
+    if (navigationTimeout.value) {
+      clearTimeout(navigationTimeout.value)
+    }
+    navigationTimeout.value = window.setTimeout(() => {
+      isKeyboardNavigating.value = false
+    }, 500)
   }
 
-  function selectIndex(index: number) {
+  function selectIndex(index: number, fromMouse = false) {
     if (index >= 0 && index < state.value.filteredActions.length) {
+      // Ignore mouse selection when in keyboard navigation mode
+      if (fromMouse && isKeyboardNavigating.value) {
+        return
+      }
+
       state.value.selectedIndex = index
+
+      // Auto-scroll to keep selection visible (smooth for mouse, instant for keyboard)
+      nextTick(() => {
+        scrollToSelected(!fromMouse)
+      })
     }
   }
 
@@ -253,8 +325,14 @@ export function useCommandPalette() {
     }
   }
 
+  // Enhanced keyboard handling with continuous key press support
+  let continuousNavigationTimer: number | null = null
+
   function handleKeydown(event: KeyboardEvent) {
     if (!state.value.isOpen) return
+
+    const wasPressed = keyState.value[event.key]
+    keyState.value[event.key] = true
 
     switch (event.key) {
       case 'Escape':
@@ -263,11 +341,25 @@ export function useCommandPalette() {
         break
       case 'ArrowDown':
         event.preventDefault()
-        selectNext()
+        if (!wasPressed) {
+          selectNext()
+          // Start continuous navigation after initial delay
+          if (continuousNavigationTimer) clearTimeout(continuousNavigationTimer)
+          continuousNavigationTimer = window.setTimeout(() => {
+            startContinuousNavigation('down')
+          }, 300)
+        }
         break
       case 'ArrowUp':
         event.preventDefault()
-        selectPrevious()
+        if (!wasPressed) {
+          selectPrevious()
+          // Start continuous navigation after initial delay
+          if (continuousNavigationTimer) clearTimeout(continuousNavigationTimer)
+          continuousNavigationTimer = window.setTimeout(() => {
+            startContinuousNavigation('up')
+          }, 300)
+        }
         break
       case 'Enter':
         event.preventDefault()
@@ -285,6 +377,42 @@ export function useCommandPalette() {
         break
       }
     }
+  }
+
+  function handleKeyup(event: KeyboardEvent) {
+    if (!state.value.isOpen) return
+
+    // Clear key state when key is released
+    keyState.value[event.key] = false
+
+    // Stop continuous navigation when arrow keys are released
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      if (continuousNavigationTimer) {
+        clearTimeout(continuousNavigationTimer)
+        continuousNavigationTimer = null
+      }
+    }
+  }
+
+  // Continuous navigation support
+  function startContinuousNavigation(direction: 'up' | 'down') {
+    const navigate = () => {
+      if (!state.value.isOpen) return
+
+      const key = direction === 'down' ? 'ArrowDown' : 'ArrowUp'
+      if (keyState.value[key]) {
+        if (direction === 'down') {
+          selectNext()
+        } else {
+          selectPrevious()
+        }
+
+        // Continue navigation if key is still pressed
+        continuousNavigationTimer = window.setTimeout(navigate, 150) // 150ms interval for smooth continuous navigation
+      }
+    }
+
+    navigate()
   }
 
   // 根据指令进行搜索
@@ -323,6 +451,9 @@ export function useCommandPalette() {
     error,
     currentPrefix,
     searchTerm,
+    isKeyboardNavigating,
+    // Refs for scroll management
+    scrollContainerRef,
     // Actions
     open,
     close,
@@ -334,6 +465,8 @@ export function useCommandPalette() {
     executeSelected,
     executeAction,
     handleKeydown,
+    handleKeyup,
+    scrollToSelected,
     searchWithPrefix,
     loadActions,
   }
