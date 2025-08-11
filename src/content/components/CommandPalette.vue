@@ -26,6 +26,9 @@ const {
   scrollToSelected,
   selectIndex,
   executeSelected,
+  handleAutoComplete,
+  handleSmartBackspace,
+  isAutoCompleting,
 } = useCommandPalette()
 
 const selectedCategory = ref('all')
@@ -39,9 +42,30 @@ watch(selectedIndex, () => {
   })
 })
 
+// 检查上一次输入的事件是否为删除键操作，以防止自动补全功能的启动
+const lastInputWasBackspace = ref(false)
+
 function handleSearchInput(event: Event) {
   const target = event.target as HTMLInputElement
-  const newValue = target.value
+  let newValue = target.value
+
+  // 如果尚未开启自动补全功能且上一次输入的不是删除键操作，则启用自动补全功能
+  if (!isAutoCompleting.value && !lastInputWasBackspace.value) {
+    const autoCompletedValue = handleAutoComplete(newValue)
+    if (autoCompletedValue !== newValue) {
+      newValue = autoCompletedValue
+      // 将输入框中的内容更新为自动补全后的值
+      target.value = newValue
+      // 命令末尾增加空格
+      const spaceIndex = newValue.indexOf(' ')
+      if (spaceIndex !== -1) {
+        target.setSelectionRange(spaceIndex + 1, spaceIndex + 1)
+      }
+    }
+  }
+
+  // 在处理完成后重置删除键标志
+  lastInputWasBackspace.value = false
 
   // 检测这是否是手动搜索（不是由类别选择触发的）
   const isPrefix =
@@ -61,7 +85,35 @@ function handleSearchInput(event: Event) {
     updateSelectedCategoryFromPrefix(newValue)
   }
 
-  setSearchQuery(newValue)
+  setSearchQuery(newValue, isAutoCompleting.value)
+}
+
+// 如果删除的是命令的最后一个字母，则删除整个命令
+function handleInputKeydown(event: KeyboardEvent) {
+  if (event.key === 'Backspace') {
+    lastInputWasBackspace.value = true
+    const target = event.target as HTMLInputElement
+    const currentValue = target.value
+    const cursorPosition = target.selectionStart || 0
+
+    if (cursorPosition === currentValue.length) {
+      const smartValue = handleSmartBackspace(currentValue)
+      if (smartValue !== currentValue.slice(0, -1)) {
+        event.preventDefault()
+        target.value = smartValue
+        setSearchQuery(smartValue)
+
+        if (!smartValue) {
+          isManualSearch.value = false
+          selectedCategory.value = 'all'
+        }
+        return
+      }
+    }
+  }
+
+  // Let the global keydown handler process other keys
+  handleKeydown(event)
 }
 
 // 根据搜索前缀更新所选类别
@@ -188,6 +240,7 @@ onUnmounted(() => {
               ref="searchInput"
               :value="searchQuery"
               @input="handleSearchInput"
+              @keydown="handleInputKeydown"
               class="w-full pl-10 pr-4 py-3 bg-transparent text-foreground placeholder-muted-foreground border-0 outline-none text-sm"
               placeholder="请输入指令或者想要搜索的内容..."
               autocomplete="off"

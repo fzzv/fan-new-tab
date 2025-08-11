@@ -22,6 +22,10 @@ export function useCommandPalette() {
   const isKeyboardNavigating = ref(false)
   const navigationTimeout = ref<number | null>(null)
 
+  // Auto-completion state
+  const isAutoCompleting = ref(false)
+  const lastUserInput = ref('')
+
   // Scroll management
   const scrollContainerRef = ref<HTMLElement | null>(null)
 
@@ -215,8 +219,81 @@ export function useCommandPalette() {
     }
   }
 
-  function setSearchQuery(query: string) {
+  function setSearchQuery(query: string, skipAutoComplete = false) {
     state.value.searchQuery = query
+    if (!skipAutoComplete) {
+      lastUserInput.value = query
+    }
+  }
+
+  // Find matching command for auto-completion
+  function findMatchingCommand(input: string): string | null {
+    if (!input || input.includes(' ') || input.length < 2) return null
+
+    const lowerInput = input.toLowerCase()
+    // Only auto-complete if input is at least 2 characters and uniquely identifies a command
+    const matches = INSTRUCTION_LIST.filter((cmd) => cmd.toLowerCase().startsWith(lowerInput) && cmd !== lowerInput)
+
+    // Only return a match if there's exactly one matching command
+    return matches.length === 1 ? matches[0] : null
+  }
+
+  // Handle auto-completion on typing
+  function handleAutoComplete(input: string): string {
+    if (isAutoCompleting.value) return input
+
+    const matchingCommand = findMatchingCommand(input)
+    if (matchingCommand) {
+      isAutoCompleting.value = true
+      const completedCommand = matchingCommand + ' '
+
+      // Use nextTick to ensure the completion happens after the current input event
+      nextTick(() => {
+        isAutoCompleting.value = false
+      })
+
+      return completedCommand
+    }
+
+    return input
+  }
+
+  // Handle smart backspace behavior
+  function handleSmartBackspace(currentInput: string): string {
+    const wouldBeInput = currentInput.slice(0, -1)
+
+    // If we're deleting from a complete command with content after it, allow normal deletion
+    const isCompleteCommandWithContent = INSTRUCTION_LIST.some(
+      (cmd) => currentInput.startsWith(cmd + ' ') && currentInput.length > cmd.length + 1,
+    )
+
+    if (isCompleteCommandWithContent) {
+      return wouldBeInput
+    }
+
+    // If we're deleting from a complete command followed by just a space (e.g., "/tabs " -> "/tabs"), allow normal deletion
+    const isCompleteCommandWithSpace = INSTRUCTION_LIST.some((cmd) => currentInput === cmd + ' ')
+
+    if (isCompleteCommandWithSpace) {
+      return wouldBeInput
+    }
+
+    // Check if current input is a complete valid command
+    const isCurrentInputValidCommand = INSTRUCTION_LIST.includes(currentInput)
+
+    // If we're deleting from a complete valid command, and the result would be an incomplete command,
+    // clear the entire input to avoid partial command states
+    if (isCurrentInputValidCommand && wouldBeInput.startsWith('/') && wouldBeInput.length > 1) {
+      const isValidCompleteCommand = INSTRUCTION_LIST.includes(wouldBeInput)
+
+      // If the result is not a valid complete command, clear everything
+      if (!isValidCompleteCommand) {
+        return ''
+      }
+    }
+
+    // For other cases (like partial commands that are already invalid), allow normal deletion
+    return wouldBeInput
   }
 
   // select的选项需滚动到可视范围内
@@ -365,6 +442,10 @@ export function useCommandPalette() {
         event.preventDefault()
         executeSelected()
         break
+      case 'Backspace': {
+        // 删除键的一些默认处理操作可以放在这里
+        break
+      }
       case 'Tab': {
         event.preventDefault()
         // 如果有前缀，则自动补全
@@ -452,6 +533,7 @@ export function useCommandPalette() {
     currentPrefix,
     searchTerm,
     isKeyboardNavigating,
+    isAutoCompleting,
     // Refs for scroll management
     scrollContainerRef,
     // Actions
@@ -469,5 +551,8 @@ export function useCommandPalette() {
     scrollToSelected,
     searchWithPrefix,
     loadActions,
+    // 自动补全
+    handleAutoComplete,
+    handleSmartBackspace,
   }
 }
