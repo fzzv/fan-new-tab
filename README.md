@@ -1,8 +1,7 @@
 # Fan New Tab 新标签页
 
 <div align="center">
-
-![Fan New Tab Logo](src/assets/logo.png)
+<img title="Fan New Tab Logo" src="src/assets/logo.png" width="150" height="150" />
 
 **A beautiful, customizable new tab extension for modern browsers**
 
@@ -324,7 +323,7 @@ Fan New Tab 是一个现代化的浏览器新标签页扩展，使用 Vue 3 和 
 安装前请确保您有：
 
 - **Node.js** (版本 16 或更高)
-- **npm** 或 **yarn** **pnpm** 包管理器
+- **npm** 或 **yarn** 或 **pnpm** 包管理器
 - 现代浏览器 (Chrome、Firefox、Edge 等)
 
 ### 💻 安装说明
@@ -512,6 +511,6 @@ fan-new-tab/
 
 **Star this project if you find it helpful!**
 
-Made with ❤️ by [Your Name](https://github.com/fzzv)
+Made with ❤️ by [fzzv](https://github.com/fzzv)
 
 </div>
