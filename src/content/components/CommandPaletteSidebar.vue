@@ -64,7 +64,7 @@ const categories = computed<Category[]>(() => [
         :class="
           cn(
             'w-full flex items-center gap-3 px-3 py-2 text-sm rounded-md my-2',
-            'hover:bg-accent hover:text-accent-foreground cursor-pointer',
+            'bg-transparent hover:bg-accent hover:text-accent-foreground cursor-pointer',
             'focus:outline-none ring-2 ring-transparent ring-offset-2',
             selectedCategory === category.id
               ? 'bg-primary text-primary-foreground font-semibold border border-primary/20 ring-2 ring-primary ring-offset-2'
