@@ -17,3 +17,16 @@ export function isForbiddenUrl(url: string): boolean {
 
 // 是否为 firefox 浏览器
 export const isFirefox = navigator.userAgent.includes('Firefox')
+
+export const isDev = import.meta.env.MODE !== 'production'
+
+export const envVariables = () => {
+  if (isDev) {
+    return {
+      baseUrl: 'http://localhost:3303',
+    }
+  }
+  return {
+    baseUrl: 'http://wallpaper.xyu.fan',
+  }
+}

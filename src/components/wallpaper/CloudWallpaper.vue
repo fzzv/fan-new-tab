@@ -12,6 +12,7 @@ import { useContextMenu } from '@/composables/useContextMenu'
 import { ContextMenu } from '@/components/context-menu'
 import { Skeleton } from '@/components/skeleton'
 import { toast } from '@/lib/toast'
+import { envVariables } from '@/env'
 import type { MenuItemType } from '@/components/context-menu'
 
 const images = ref<any[]>([])
@@ -98,7 +99,8 @@ async function getWallpaperList(append = false) {
       isInitialLoading.value = true
     }
 
-    const { data } = await $fetch(`http://localhost:3303/api/getWallpaperList`, {
+    const { baseUrl } = envVariables()
+    const { data } = await $fetch(`${baseUrl}/api/v1/getWallpaperList`, {
       params: {
         page: page.value,
         pageSize: pageSize.value,

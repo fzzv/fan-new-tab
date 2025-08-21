@@ -54,7 +54,7 @@ export default defineConfig(({ command }) => ({
     origin: `http://localhost:${port}`,
     proxy: {
       '/api': {
-        target: 'http://wallpaper.xyu.fan/api/v1',
+        target: 'http://wallpaper.xyu.fan/api',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
