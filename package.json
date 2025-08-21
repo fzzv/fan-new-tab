@@ -47,6 +47,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",
+    "@ffflorian/jszip-cli": "^3.8.6",
     "@iconify/vue": "^5.0.0",
     "@types/file-saver": "^2.0.7",
     "@types/fs-extra": "^11.0.4",
@@ -76,9 +77,6 @@
     "vue-tsc": "^2.2.8",
     "web-ext": "^8.8.0",
     "webextension-polyfill": "^0.12.0"
-  },
-  "simple-git-hooks": {
-    "pre-commit": "npx lint-staged"
   },
   "lint-staged": {
     "*": "eslint --fix"
