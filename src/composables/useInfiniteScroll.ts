@@ -12,10 +12,6 @@ export interface UseInfiniteScrollOptions {
    * 默认 100ms
    */
   debounceDelay?: number
-  /**
-   * 是否启用调试日志
-   */
-  debug?: boolean
 }
 
 export interface UseInfiniteScrollReturn {
@@ -46,7 +42,7 @@ export function useInfiniteScroll(
   loadMore: () => Promise<void> | void,
   options: UseInfiniteScrollOptions = {},
 ): UseInfiniteScrollReturn {
-  const { threshold = 0.9, debounceDelay = 100, debug = false } = options
+  const { threshold = 0.9, debounceDelay = 100 } = options
 
   const isLoading = ref(false)
   const hasMore = ref(true)
@@ -55,17 +51,11 @@ export function useInfiniteScroll(
   function _handleScroll(event?: Event) {
     // 如果正在加载或没有更多数据，直接返回
     if (isLoading.value || !hasMore.value) {
-      if (debug) {
-        console.log('跳过加载：', { isLoading: isLoading.value, hasMore: hasMore.value })
-      }
       return
     }
 
     // 如果没有事件对象，直接返回
     if (!event || !event.target) {
-      if (debug) {
-        console.log('无效的事件对象')
-      }
       return
     }
 
@@ -80,21 +70,8 @@ export function useInfiniteScroll(
     // 计算滚动百分比
     const scrollPercentage = (scrollTop + clientHeight) / scrollHeight
 
-    if (debug) {
-      console.log('滚动信息：', {
-        scrollTop,
-        clientHeight,
-        scrollHeight,
-        scrollPercentage: Math.round(scrollPercentage * 100) + '%',
-        threshold: Math.round(threshold * 100) + '%',
-      })
-    }
-
     // 当滚动百分比达到阈值时触发加载
     if (scrollPercentage >= threshold) {
-      if (debug) {
-        console.log('触发加载更多，滚动百分比:', Math.round(scrollPercentage * 100) + '%')
-      }
 
       isLoading.value = true
 

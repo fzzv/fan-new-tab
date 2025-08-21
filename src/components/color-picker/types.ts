@@ -1,4 +1,4 @@
-import type { ColorFormat, RGBA } from '@/lib/colorUtils.ts'
+import type { ColorFormat, RGBA } from '@/lib/colorUtils'
 
 /**
  * 颜色选择器组件属性

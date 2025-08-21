@@ -23,7 +23,6 @@ const { searchBarConfig } = useSettings()
 
 // 设置 CSS 变量值
 const setCssVar = (varName: string, value: number) => {
-  console.log(value, 'value')
   if (varName === '--search-width') {
     // 将 50-150 的值映射到 40vw-80vw
     const vwValue = 20 + value * 0.4 // 50->40vw, 150->80vw

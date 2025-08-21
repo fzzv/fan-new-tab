@@ -184,7 +184,6 @@ function onAfterLeave() {
 
 function handleMessage(message: any) {
   if (message.action === 'toggle-command-palette') {
-    console.log('Command Palette: Toggling command palette')
     toggle()
   }
 }

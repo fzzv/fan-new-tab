@@ -89,7 +89,6 @@ async function loadMoreData() {
 const { handleScroll, isLoading, hasMore, reset } = useInfiniteScroll(loadMoreData, {
   threshold: 0.9, // 滚动到90%时触发
   debounceDelay: 150, // 防抖延迟150ms
-  debug: true, // 开启调试日志
 })
 
 // 获取云端的壁纸列表

@@ -41,7 +41,6 @@ const menuItems = [
     icon: 'material-symbols:edit-square-outline',
     click: () => {
       // TODO: 编辑tab
-      console.log(1)
     },
   },
   {
