@@ -130,6 +130,7 @@ This will create `extension.zip`, `extension.crx`, and `extension.xpi` files for
 - Go to `chrome://extensions/` or `edge://extensions/`
 - Enable Developer mode
 - Click "Load unpacked" and select the `extension` folder
+- Or drag the zip file into the extension management interface
 
 **Firefox:**
 - Go to `about:debugging#/runtime/this-firefox`
@@ -372,6 +373,7 @@ Fan New Tab 是一个现代化的浏览器新标签页扩展，使用 Vue 3 和 
 - 访问 `chrome://extensions/` 或 `edge://extensions/`
 - 启用开发者模式
 - 点击"加载已解压的扩展程序"，选择 `extension` 文件夹
+- 或者直接将打包后 zip 格式的文件拖进扩展管理界面
 
 **Firefox:**
 - 访问 `about:debugging#/runtime/this-firefox`
