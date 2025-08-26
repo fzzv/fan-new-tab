@@ -39,7 +39,11 @@ const { isOpen: isContextMenuOpen, virtualElement, currentItem, onContextMenu } 
 
 // 处理收藏壁纸点击，设置为壁纸
 async function handleFavoriteWallpaperClick(wallpaper: FavoriteWallpaperType) {
-  await setWallpaper(wallpaper.data)
+  await setWallpaper(wallpaper.data, false, {
+    source: 'favorite',
+    dataHash: wallpaper.dataHash,
+    id: wallpaper.id
+  })
 }
 
 // 右击菜单项 - 收藏壁纸

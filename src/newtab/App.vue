@@ -12,7 +12,7 @@ import FavoritesMode from './components/FavoritesMode.vue'
 import StandardMode from './components/StandardMode.vue'
 import { cn, isColor } from '@/lib'
 
-const { backgroundConfig, backgroundConfigReady, currentDisplayMode, themeColorConfigReady, applyThemeColors } =
+const { backgroundConfig, backgroundConfigReady, currentDisplayMode, themeColorConfigReady, applyThemeColors, reconstructBlobUrl } =
   useSettings()
 const { theme, themeReady } = useTheme()
 
@@ -22,9 +22,11 @@ onMounted(() => {
     document.documentElement.classList.toggle('dark', theme.value === Theme.Dark)
   })
   // 设置背景
-  backgroundConfigReady.then(() => {
+  backgroundConfigReady.then(async () => {
+    // 先尝试重建可能失效的 blob URL
+    await reconstructBlobUrl()
+    
     const { background, blur, opacity } = backgroundConfig.value
-
     // 设置背景图片
     if (isColor(background)) {
       // 如果是颜色值，直接设置
@@ -35,8 +37,10 @@ onMounted(() => {
       document.documentElement.style.setProperty('--background-image', backgroundValue)
     }
 
-    document.documentElement.style.setProperty('--backdrop-filter-blur', `${blur[0]}px`)
-    document.documentElement.style.setProperty('--background-mask-opacity', `${opacity[0] / 100}`)
+    if (Array.isArray(blur) && blur.length && Array.isArray(opacity) && opacity.length) {
+      document.documentElement.style.setProperty('--backdrop-filter-blur', `${blur[0]}px`)
+      document.documentElement.style.setProperty('--background-mask-opacity', `${opacity[0] / 100}`)
+    }
   })
 
   // 设置主题颜色

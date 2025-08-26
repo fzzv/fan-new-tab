@@ -2,6 +2,9 @@ import { computed } from 'vue'
 import { isColor } from '@/lib/colorUtils'
 import { useWebExtStorage } from '@/composables/useWebExtStorage'
 import { useRecentWallpaper } from '@/composables/useRecentWallpaper'
+import { useFavoriteWallpaper } from '@/composables/useFavoriteWallpaper'
+import { useLocalWallpaper } from '@/composables/useLocalWallpaper'
+import { createBlobUrl } from '@/lib/utils'
 
 // 布局配置接口
 export interface GridLayoutConfig {
@@ -21,9 +24,14 @@ const defaultLayoutConfig: GridLayoutConfig = {
 
 // 背景配置接口
 export interface BackgroundConfig {
-  blur: number
-  opacity: number
+  blur: number | number[]
+  opacity: number | number[]
   background: string
+  // 新增字段用于处理 blob URL 持久化
+  wallpaperType?: 'url' | 'blob' | 'color'
+  wallpaperSource?: 'cloud' | 'local' | 'favorite'
+  wallpaperDataHash?: string // 用于从数据库重新获取 blob 数据
+  wallpaperId?: string // 收藏壁纸或本地壁纸的 ID
 }
 
 // 默认背景配置
@@ -132,6 +140,10 @@ const { data: customColorList, dataReady: customColorListReady } = useWebExtStor
 export function useSettings() {
   // 最近使用壁纸
   const { addRecentWallpaper } = useRecentWallpaper()
+  
+  // 用于重建 blob URL 的 composables
+  const { favoriteWallpapers, loadFavoriteWallpapers } = useFavoriteWallpaper()
+  const { wallpapers: localWallpapers, loadWallpapers: loadLocalWallpapers } = useLocalWallpaper()
 
   // 当前显示模式
   const currentDisplayMode = computed(() => displayMode.value)
@@ -303,19 +315,40 @@ export function useSettings() {
   }
 
   // 设置壁纸
-  const setWallpaper = async (imageData: string | Blob, skipRecentAdd = false) => {
+  const setWallpaper = async (imageData: string | Blob, skipRecentAdd = false, metadata?: {
+    source?: 'cloud' | 'local' | 'favorite'
+    dataHash?: string
+    id?: string
+  }) => {
     let backgroundUrl: string
+    let wallpaperType: 'url' | 'blob' | 'color'
 
+    console.log(imageData, typeof imageData, 'data')
     if (typeof imageData === 'string') {
-      // 字符串类型（URL、base64或颜色值）
-      backgroundUrl = imageData
+      if (isColor(imageData)) {
+        // 颜色值
+        wallpaperType = 'color'
+        backgroundUrl = imageData
+      } else {
+        // 字符串类型（URL或base64）
+        wallpaperType = 'url'
+        backgroundUrl = imageData
+      }
     } else {
       // Blob类型，创建object URL
+      wallpaperType = 'blob'
       backgroundUrl = URL.createObjectURL(imageData)
     }
 
-    // 更新背景配置
-    backgroundConfig.value.background = backgroundUrl
+    // 更新背景配置，包含元数据用于重建
+    backgroundConfig.value = {
+      ...backgroundConfig.value,
+      background: backgroundUrl,
+      wallpaperType,
+      wallpaperSource: metadata?.source,
+      wallpaperDataHash: metadata?.dataHash,
+      wallpaperId: metadata?.id
+    }
 
     // 设置CSS背景图片
     if (isColor(backgroundUrl)) {
@@ -366,6 +399,88 @@ export function useSettings() {
     document.documentElement.style.setProperty('--primary', themeColorConfig.value.primary)
     document.documentElement.style.setProperty('--primary-hover', themeColorConfig.value.primaryHover)
     document.documentElement.style.setProperty('--primary-foreground', themeColorConfig.value.primaryForeground)
+  }
+
+  // 检查并重建失效的 blob URL
+  const reconstructBlobUrl = async () => {
+    const config = backgroundConfig.value
+    
+    // 只处理 blob 类型且有元数据的壁纸
+    if (config.wallpaperType !== 'blob' || !config.wallpaperSource || !config.wallpaperDataHash) {
+      return
+    }
+
+    // 检查当前 blob URL 是否有效（尝试创建 Image 对象测试）
+    const isValidBlobUrl = await new Promise<boolean>((resolve) => {
+      if (!config.background.startsWith('blob:')) {
+        resolve(true) // 不是 blob URL，无需处理
+        return
+      }
+
+      const img = new Image()
+      img.onload = () => resolve(true)
+      img.onerror = () => resolve(false)
+      img.src = config.background
+      
+      // 设置超时，避免长时间等待
+      setTimeout(() => resolve(false), 1000)
+    })
+
+    if (isValidBlobUrl) {
+      return // blob URL 仍然有效
+    }
+
+    try {
+      let wallpaperBlob: Blob | null = null
+
+      if (config.wallpaperSource === 'favorite') {
+        // 确保收藏壁纸已加载
+        if (favoriteWallpapers.value.length === 0) {
+          await loadFavoriteWallpapers()
+        }
+        
+        // 通过 dataHash 查找收藏壁纸
+        const favoriteWallpaper = favoriteWallpapers.value.find(
+          w => w.dataHash === config.wallpaperDataHash && w.type === 'blob'
+        )
+        
+        if (favoriteWallpaper && favoriteWallpaper.data instanceof Blob) {
+          wallpaperBlob = favoriteWallpaper.data
+        }
+      } else if (config.wallpaperSource === 'local' && config.wallpaperId) {
+        // 确保本地壁纸已加载
+        if (localWallpapers.value.length === 0) {
+          await loadLocalWallpapers()
+        }
+        
+        // 通过 ID 查找本地壁纸
+        const localWallpaper = localWallpapers.value.find(w => w.id === config.wallpaperId)
+        
+        if (localWallpaper && localWallpaper.blob) {
+          wallpaperBlob = localWallpaper.blob
+        }
+      }
+
+      if (wallpaperBlob) {
+        // 创建新的 blob URL
+        const newBlobUrl = createBlobUrl(wallpaperBlob)
+        
+        // 更新配置
+        backgroundConfig.value.background = newBlobUrl
+        
+        // 重新应用CSS
+        const backgroundValue = `url(${newBlobUrl})`
+        document.documentElement.style.setProperty('--background-image', backgroundValue)
+      } else {
+        console.warn('无法找到原始 blob 数据，使用默认壁纸')
+        // 回退到默认壁纸
+        await setWallpaper(defaultBackgroundConfig.background, true)
+      }
+    } catch (error) {
+      console.error('重建 blob URL 失败:', error)
+      // 回退到默认壁纸
+      await setWallpaper(defaultBackgroundConfig.background, true)
+    }
   }
 
   return {
@@ -419,5 +534,6 @@ export function useSettings() {
     setThemeColor,
     resetThemeColors,
     applyThemeColors,
+    reconstructBlobUrl,
   }
 }

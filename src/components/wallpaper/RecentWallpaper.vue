@@ -41,7 +41,11 @@ const { isOpen: isContextMenuOpen, virtualElement, currentItem, onContextMenu } 
 // 处理最近使用壁纸点击，设置为壁纸
 async function handleRecentWallpaperClick(wallpaper: RecentWallpaperType) {
   // 设置壁纸时跳过添加到最近使用，而是更新使用时间
-  await setWallpaper(wallpaper.data, true)
+  await setWallpaper(wallpaper.data, true, {
+    source: wallpaper.type === 'blob' ? 'favorite' : undefined, // 假设 blob 类型来自收藏
+    dataHash: wallpaper.dataHash,
+    id: wallpaper.id
+  })
   await updateWallpaperUsedTime(wallpaper.id)
 }
 

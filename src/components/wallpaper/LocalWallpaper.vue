@@ -43,7 +43,10 @@ const { isOpen: isContextMenuOpen, virtualElement, currentItem, onContextMenu } 
 
 // 处理本地壁纸点击，设置为壁纸
 async function handleLocalWallpaperClick(wallpaper: LocalWallpaperType) {
-  await setWallpaper(wallpaper.blob)
+  await setWallpaper(wallpaper.blob, false, {
+    source: 'local',
+    id: wallpaper.id
+  })
 }
 
 // 处理文件上传
