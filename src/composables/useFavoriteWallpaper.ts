@@ -121,7 +121,7 @@ export function useFavoriteWallpaper() {
       // 重新加载数据
       await loadFavoriteWallpapers()
     } catch (error) {
-      console.error('添加收藏壁纸失败:', error)
+      console.error('收藏壁纸失败:', error)
       throw error
     }
   }
