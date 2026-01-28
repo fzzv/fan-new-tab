@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+case
 
 src/auto-imports.d.ts
 extension/manifest.json
